@@ -78,7 +78,7 @@ Used for development. Every request is auto-authenticated as a hardcoded test us
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Create an OAuth 2.0 Client ID (Web application)
-3. Set authorized redirect URI: `http://localhost:8080/login/oauth2/code/google`
+3. Set authorized redirect URI: `http://localhost:3000/login/oauth2/code/google`
 4. Set environment variables:
    ```
    GOOGLE_CLIENT_ID=your-client-id
@@ -90,7 +90,7 @@ Used for development. Every request is auto-authenticated as a hardcoded test us
 
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Create a new OAuth App
-3. Set authorization callback URL: `http://localhost:8080/login/oauth2/code/github`
+3. Set authorization callback URL: `http://localhost:3000/login/oauth2/code/github`
 4. Set environment variables:
    ```
    GITHUB_CLIENT_ID=your-client-id

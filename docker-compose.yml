@@ -24,10 +24,10 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-expense_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-expense_pass}
       AUTH_MODE: ${AUTH_MODE:-fake}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-placeholder}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-placeholder}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-placeholder}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-placeholder}
     depends_on:
       db:
         condition: service_healthy
