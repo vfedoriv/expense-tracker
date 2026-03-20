@@ -1,7 +1,39 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(find /Users/vfedoriv/workspace/expense-tracker/backend -type f -name *.java -o -name *.xml -o -name *.properties -o -name *.yml -o -name *.yaml)",
+      "Bash(grep -E \"\\\\.\\(java|tsx|ts|jsx|js|xml|yml|yaml|properties|gitignore|md|css\\)$|dockerfile|docker-compose\")",
+      "Bash(mvn wrapper:wrapper -Dmaven=3.9.9)",
+      "Bash(npm install:*)",
+      "Bash(./mvnw compile:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(./mvnw test:*)",
+      "Bash(./mvnw test-compile:*)",
+      "Bash(jar tf:*)",
+      "Bash(find /Users/vfedoriv/.m2/repository/org/springframework/boot -name *.jar -path *4.0.0* -exec sh -c \"jar tf \"\"$1\"\" 2>/dev/null | grep -l AutoConfigureMockMvc && echo \"\"$1\"\"\" _ {})",
+      "Bash(2)",
+      "Bash(find /Users/vfedoriv/.m2/repository/org/springframework/boot -name *.jar -path *4.0.0*)",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(find /Users/vfedoriv/.m2/repository/org/springframework/boot -name spring-boot-*-4.0.0.jar)",
+      "Bash(do basename:*)",
+      "Bash(find /Users/vfedoriv/.m2/repository/org/springframework/boot -name spring-boot-*webmvc*test*4.0.0* -o -name spring-boot-*test*webmvc*4.0.0*)",
+      "Bash(./mvnw dependency:tree)",
+      "WebFetch(domain:repo1.maven.org)",
+      "Bash(docker info:*)",
+      "Bash(docker run:*)",
+      "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Dtest=\"CategoryControllerIntegrationTest#createCategory_shouldReturn201WithCreatedCategory\")",
+      "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Dtest=\"CategoryControllerIntegrationTest#createCategory_shouldReturn201WithCreatedCategory\" -Duser.timezone=UTC)",
+      "Bash(grep -v \"^$\")",
+      "Bash(jar xf:*)",
+      "Bash(unzip -p /Users/vfedoriv/.m2/repository/org/springframework/boot/spring-boot-jdbc/4.0.0/spring-boot-jdbc-4.0.0.jar META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports)",
+      "Bash(python3:*)",
+      "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Duser.timezone=UTC)"
     ]
   }
 }

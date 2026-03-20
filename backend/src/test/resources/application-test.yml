@@ -1,0 +1,26 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+            scope: openid,profile,email
+          github:
+            client-id: test-github-client-id
+            client-secret: test-github-client-secret
+            scope: user:email
+
+app:
+  auth:
+    mode: fake
