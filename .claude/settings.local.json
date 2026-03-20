@@ -33,7 +33,9 @@
       "Bash(jar xf:*)",
       "Bash(unzip -p /Users/vfedoriv/.m2/repository/org/springframework/boot/spring-boot-jdbc/4.0.0/spring-boot-jdbc-4.0.0.jar META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports)",
       "Bash(python3:*)",
-      "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Duser.timezone=UTC)"
+      "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Duser.timezone=UTC)",
+      "Bash(find /Users/vfedoriv/workspace/expense-tracker/backend/src -name *.java)",
+      "Bash(git add:*)"
     ]
   }
 }
