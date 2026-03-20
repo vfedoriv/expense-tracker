@@ -35,7 +35,10 @@
       "Bash(python3:*)",
       "Bash(TESTCONTAINERS_RYUK_DISABLED=true ./mvnw test -Duser.timezone=UTC)",
       "Bash(find /Users/vfedoriv/workspace/expense-tracker/backend/src -name *.java)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(docker compose:*)",
+      "Bash(curl -s http://localhost:8080/api/auth/me)",
+      "Bash(curl -s http://localhost:3000)"
     ]
   }
 }

@@ -4,8 +4,10 @@ import io.github.vfedoriv.expensetracker.auth.CustomOAuth2UserService;
 import io.github.vfedoriv.expensetracker.auth.CustomOidcUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -13,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @ConditionalOnProperty(name = "app.auth.mode", havingValue = "oauth2")
+@Import(OAuth2ClientAutoConfiguration.class)
 @RequiredArgsConstructor
 public class OAuth2SecurityConfig {
 
