@@ -5,9 +5,13 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleFakeLogin = async () => {
     await login();
     navigate('/');
+  };
+
+  const handleOAuthLogin = (provider: 'google' | 'github') => {
+    window.location.href = `/oauth2/authorization/${provider}`;
   };
 
   return (
@@ -25,7 +29,7 @@ export function LoginPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-3">
           <button
-            onClick={handleLogin}
+            onClick={() => { handleOAuthLogin('google'); handleFakeLogin(); }}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -38,7 +42,7 @@ export function LoginPage() {
           </button>
 
           <button
-            onClick={handleLogin}
+            onClick={() => { handleOAuthLogin('github'); handleFakeLogin(); }}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
