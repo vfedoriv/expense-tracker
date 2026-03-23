@@ -19,6 +19,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     boolean existsByCategoryId(Long categoryId);
 
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.id = :userId " +
+           "AND t.transactionDate >= :startDate AND t.transactionDate <= :endDate")
+    BigDecimal sumAmountByUserIdAndDateRange(@Param("userId") Long userId,
+                                             @Param("startDate") LocalDate startDate,
+                                             @Param("endDate") LocalDate endDate);
+
     @Query(value = "SELECT t.*, c.name AS cat_name FROM transactions t" +
            " JOIN categories c ON t.category_id = c.id" +
            " WHERE t.user_id = :userId" +

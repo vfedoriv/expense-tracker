@@ -1,0 +1,45 @@
+package com.expensetracker.controller;
+
+import com.expensetracker.config.UserPrincipal;
+import com.expensetracker.dto.request.BudgetRequest;
+import com.expensetracker.dto.response.BudgetResponse;
+import com.expensetracker.service.BudgetService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/budgets")
+public class BudgetController {
+
+    private final BudgetService budgetService;
+
+    public BudgetController(BudgetService budgetService) {
+        this.budgetService = budgetService;
+    }
+
+    @PostMapping
+    public ResponseEntity<BudgetResponse> createOrUpdateBudget(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody BudgetRequest request) {
+        BudgetService.UpsertResult result = budgetService.createOrUpdateBudget(principal.getUserId(), request);
+        HttpStatus status = result.created() ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(result.response());
+    }
+
+    @GetMapping
+    public ResponseEntity<BudgetResponse> getBudget(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam int year,
+            @RequestParam int month) {
+        BudgetResponse response = budgetService.getBudget(principal.getUserId(), year, month);
+        return ResponseEntity.ok(response);
+    }
+}
