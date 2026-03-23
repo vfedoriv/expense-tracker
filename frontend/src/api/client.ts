@@ -2,18 +2,6 @@ import type { ApiError } from '../types';
 
 const BASE_URL = '/api';
 
-// For fake auth (milestones 1-4), we send X-User-Id header
-// The default user ID is 1 (the seed user)
-let currentUserId = '1';
-
-export function setCurrentUserId(userId: string): void {
-  currentUserId = userId;
-}
-
-export function getCurrentUserId(): string {
-  return currentUserId;
-}
-
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`;
@@ -41,7 +29,6 @@ async function handleResponse<T>(response: Response): Promise<T> {
 function getHeaders(): HeadersInit {
   return {
     'Content-Type': 'application/json',
-    'X-User-Id': currentUserId,
   };
 }
 
@@ -50,6 +37,7 @@ export const apiClient = {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'GET',
       headers: getHeaders(),
+      credentials: 'include',
     });
     return handleResponse<T>(response);
   },
@@ -59,6 +47,7 @@ export const apiClient = {
       method: 'POST',
       headers: getHeaders(),
       body: body ? JSON.stringify(body) : undefined,
+      credentials: 'include',
     });
     return handleResponse<T>(response);
   },
@@ -68,6 +57,7 @@ export const apiClient = {
       method: 'PUT',
       headers: getHeaders(),
       body: body ? JSON.stringify(body) : undefined,
+      credentials: 'include',
     });
     return handleResponse<T>(response);
   },
@@ -76,6 +66,7 @@ export const apiClient = {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'DELETE',
       headers: getHeaders(),
+      credentials: 'include',
     });
     return handleResponse<T>(response);
   },

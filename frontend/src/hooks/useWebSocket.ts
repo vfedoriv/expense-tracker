@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useAuth } from './useAuth';
-import { getCurrentUserId } from '../api/client';
 import type { BudgetAlertMessage, BudgetAlertToast } from '../types';
 
 const TOAST_DISMISS_MS = 8000;
@@ -62,13 +61,10 @@ export function useWebSocket() {
       return;
     }
 
-    const userId = getCurrentUserId();
-
+    // In SSO mode, the session cookie is sent automatically.
+    // The /ws endpoint uses the authenticated session for user identification.
     const client = new Client({
-      webSocketFactory: () => new SockJS(`/ws?userId=${encodeURIComponent(userId)}`),
-      connectHeaders: {
-        'X-User-Id': userId,
-      },
+      webSocketFactory: () => new SockJS('/ws'),
       reconnectDelay: RECONNECT_DELAY_MS,
       onConnect: () => {
         client.subscribe('/user/topic/budget-alerts', (message) => {

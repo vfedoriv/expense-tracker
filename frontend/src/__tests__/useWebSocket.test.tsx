@@ -103,17 +103,17 @@ describe('useWebSocket', () => {
     });
   });
 
-  it('passes userId as query parameter in SockJS connection URL', async () => {
+  it('connects to /ws endpoint using SockJS with session cookie', async () => {
     renderWithAuth();
 
     await waitFor(() => {
       expect(mockActivate).toHaveBeenCalled();
     });
 
-    // Call the webSocketFactory to verify the SockJS URL includes userId
+    // Call the webSocketFactory to verify the SockJS URL
     expect(mockWebSocketFactory).not.toBeNull();
     mockWebSocketFactory!();
-    expect(mockSockJSConstructor).toHaveBeenCalledWith('/ws?userId=1');
+    expect(mockSockJSConstructor).toHaveBeenCalledWith('/ws');
   });
 
   it('subscribes to /user/topic/budget-alerts on connect', async () => {

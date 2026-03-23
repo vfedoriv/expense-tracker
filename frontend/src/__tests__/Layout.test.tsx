@@ -8,20 +8,32 @@ import type { User } from '../types';
 
 const mockUser: User = {
   id: 1,
-  provider: 'fake',
-  providerUserId: 'fake-user-1',
-  email: 'admin@test.com',
+  provider: 'google',
+  providerUserId: 'google-user-1',
+  email: 'user@gmail.com',
   displayName: 'Test User',
   avatarUrl: null,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
 };
 
-function renderLayout(initialPath = '/dashboard') {
+const mockUserWithAvatar: User = {
+  ...mockUser,
+  avatarUrl: 'https://example.com/avatar.jpg',
+};
+
+function renderLayout(initialPath = '/dashboard', user: User = mockUser) {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve(user),
+  } as Response);
+
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <AuthProvider>
         <Routes>
+          <Route path="/login" element={<div>Login Page</div>} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<div>Dashboard Content</div>} />
             <Route path="/transactions" element={<div>Transactions Content</div>} />
@@ -35,11 +47,6 @@ function renderLayout(initialPath = '/dashboard') {
 
 beforeEach(() => {
   vi.restoreAllMocks();
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve(mockUser),
-  } as Response);
 });
 
 describe('Layout', () => {
@@ -92,6 +99,47 @@ describe('Layout', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Transactions Content')).toBeInTheDocument();
+    });
+  });
+
+  it('renders logout button', async () => {
+    renderLayout();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('logout-btn')).toBeInTheDocument();
+    });
+  });
+
+  it('redirects to login page after clicking logout', async () => {
+    const user = userEvent.setup();
+    renderLayout();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('logout-btn')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('logout-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Login Page')).toBeInTheDocument();
+    });
+  });
+
+  it('shows avatar placeholder when no avatar URL', async () => {
+    renderLayout('/dashboard', mockUser);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-avatar-placeholder')).toBeInTheDocument();
+      expect(screen.getByTestId('user-avatar-placeholder').textContent).toBe('T');
+    });
+  });
+
+  it('shows avatar image when avatar URL is provided', async () => {
+    renderLayout('/dashboard', mockUserWithAvatar);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-avatar')).toBeInTheDocument();
+      expect(screen.getByTestId('user-avatar')).toHaveAttribute('src', 'https://example.com/avatar.jpg');
     });
   });
 });
