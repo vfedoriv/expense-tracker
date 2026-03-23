@@ -1,0 +1,28 @@
+{
+  "featureId": "websocket-backend",
+  "reviewedAt": "2026-03-23T13:35:04Z",
+  "commitId": "447e0b0",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Core threshold evaluation, state tracking, transaction hooks, and subscribe-triggered initial alerts are implemented, but WebSocket authentication does not enforce the feature requirement to reject unauthenticated clients.",
+    "issues": [
+      {
+        "file": "backend/src/main/java/com/expensetracker/config/WebSocketAuthInterceptor.java",
+        "line": 32,
+        "severity": "blocking",
+        "description": "Handshake auth defaults to user 1 when X-User-Id is missing or invalid (DEFAULT_USER_ID fallback at lines 21, 32, 40), so unauthenticated/invalid clients are accepted instead of rejected. This violates expected behavior 'Unauthenticated WebSocket rejected' and allows implicit access as user 1."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Shared state documents fake-auth default-user behavior for HTTP, but do not clearly define how WebSocket auth should behave under feature-level requirements that demand explicit unauthenticated rejection.",
+      "evidence": "AGENTS.md states FakeAuthFilter injects a hardcoded/default user for milestones 1-4; websocket feature expectedBehavior requires unauthenticated WebSocket rejection; implementation mirrored default-user fallback in WebSocketAuthInterceptor (lines 21, 32, 40)."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed due to a blocking authentication gap: missing/invalid WebSocket auth headers are treated as default user 1, so unauthenticated connections are not rejected as required."
+}

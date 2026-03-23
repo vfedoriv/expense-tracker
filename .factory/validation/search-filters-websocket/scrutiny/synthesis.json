@@ -1,0 +1,75 @@
+{
+  "milestone": "search-filters-websocket",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd backend && mvn test; cd frontend && npm test",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd frontend && npx tsc --noEmit",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd frontend && npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 3,
+    "passed": 2,
+    "failed": 1,
+    "failedFeatures": [
+      "websocket-backend"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "websocket-backend",
+      "severity": "blocking",
+      "description": "WebSocket handshake auth falls back to default user 1 when X-User-Id is missing/invalid, so unauthenticated connections are accepted instead of rejected (violates VAL-WS-011)."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Documented WebSocket auth nuance in .factory/library/architecture.md: backend user identity is set from SockJS/HTTP handshake headers, not STOMP CONNECT headers.",
+      "sourceFeature": "websocket-frontend"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Clarify fake-auth expectations for WebSocket separately from HTTP defaults: if a milestone requires rejecting unauthenticated WebSocket clients, default-user fallback must not be applied in handshake interceptors.",
+      "evidence": "websocket-backend review found DEFAULT_USER_ID fallback in WebSocketAuthInterceptor accepted missing/invalid auth headers and caused a blocking validation failure.",
+      "isSystemic": false
+    },
+    {
+      "target": "skill:frontend-worker",
+      "suggestion": "Relax strict TDD-first requirement for UI-heavy asynchronous behavior (debounce/timers/toggles) to allow implementation-first with immediate test backfill when red-first setup is impractical.",
+      "evidence": "search-filters-frontend-ui review and handoff skillFeedback both indicate TDD red phase was impractical, but final test coverage and validators were still strong.",
+      "isSystemic": true
+    },
+    {
+      "target": "skill:frontend-worker",
+      "suggestion": "Make procedure adherence checks explicit for manual validation and shared-library updates (or mark those steps optional with criteria), and require accurate skillFeedback when steps are skipped.",
+      "evidence": "websocket-frontend review observed no agent-browser/manual verification and no library update despite skill steps requiring both and handoff marking followedProcedure=true.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "Update .factory/library/architecture.md on every incremental frontend change.",
+      "reason": "ambiguous"
+    },
+    {
+      "observation": "frontend-worker procedure mismatch observations from search-filters-frontend-ui and websocket-frontend reviews",
+      "reason": "duplicate"
+    }
+  ],
+  "previousRound": null
+}

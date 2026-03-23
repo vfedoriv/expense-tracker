@@ -13,6 +13,7 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - Global exception handler via `@ControllerAdvice`
 - Fake auth filter injects a hardcoded user into SecurityContext (milestones 1-4), reads X-User-Id header
 - WebSocket via STOMP for budget alerts
+- WebSocket auth identity is established during the SockJS/HTTP handshake (via `WebSocketAuthInterceptor` reading `X-User-Id`), not from STOMP `CONNECT` headers; frontend `connectHeaders` do not affect backend handshake user resolution.
 - `@AutoConfigureMockMvc` import from `org.springframework.boot.webmvc.test.autoconfigure` (Spring Boot 4.0 package change)
 - Integration tests use Docker Compose PostgreSQL on localhost:5432 (not Testcontainers) due to Rancher Desktop quirk
 - JVM arg `-Duser.timezone=UTC` set in maven-surefire-plugin and spring-boot-maven-plugin

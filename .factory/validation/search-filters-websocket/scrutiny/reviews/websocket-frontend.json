@@ -1,0 +1,33 @@
+{
+  "featureId": "websocket-frontend",
+  "reviewedAt": "2026-03-23T13:35:44Z",
+  "commitId": "0d5950a",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Feature requirements are largely met: frontend STOMP/SockJS hook is integrated at Layout level, subscribes to /user/topic/budget-alerts, renders global toast notifications with severity styling, and supports auto/manual dismiss with test coverage.",
+    "issues": [
+      {
+        "file": "frontend/src/hooks/useWebSocket.ts",
+        "line": 69,
+        "severity": "non_blocking",
+        "description": "The client sends X-User-Id via STOMP connectHeaders, but backend auth for WebSocket is performed during SockJS HTTP handshake (WebSocketAuthInterceptor.beforeHandshake reads HTTP header). This means the configured header may be ignored for user selection; current flow still works with default fake user, but user-scoped alert routing can drift for non-default users."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "frontend-worker procedure requires manual verification via agent-browser and updating shared architecture notes, but this worker session did neither while handoff.skillFeedback still marked followedProcedure=true.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md (steps 6 and 7) vs transcript skeleton for workerSessionId bfbbf579-291e-4177-a2a6-e35564cc7ef4 (no agent-browser invocation, no .factory/library/architecture.md update)."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Shared architecture docs do not capture a key WebSocket auth nuance: STOMP CONNECT headers are distinct from HTTP handshake headers used by current backend auth interceptor.",
+      "evidence": "frontend/src/hooks/useWebSocket.ts:69 sends connectHeaders; backend/src/main/java/com/expensetracker/config/WebSocketAuthInterceptor.java:35 reads servlet handshake header USER_ID_HEADER."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "websocket-frontend is functionally implemented and aligns with expected behavior for global alert toasts and subscription flow. I marked one non-blocking integration risk around user identity propagation in WebSocket auth headers and noted two shared-state gaps (skill procedure adherence tracking and missing handshake/header nuance in knowledge docs)."
+}
