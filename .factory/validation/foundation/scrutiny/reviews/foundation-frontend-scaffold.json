@@ -1,0 +1,33 @@
+{
+  "featureId": "foundation-frontend-scaffold",
+  "reviewedAt": "2026-03-23T09:50:36Z",
+  "commitId": "3b96e0e",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Reviewed the feature against its description and expectedBehavior. The commit delivers the requested frontend scaffold: Tailwind CSS v4 integration, React Router v7 routes (/login, /dashboard, /transactions, /categories, root redirect), AuthContext auto-auth check via GET /api/users/me, ProtectedRoute, responsive Layout navigation with user display area, reusable UI components, placeholder pages with empty states, DTO types, Vitest/RTL setup, and Vite proxy for /api (and /ws). One non-blocking requirement mismatch was found in API client base URL configuration.",
+    "issues": [
+      {
+        "file": "frontend/src/api/client.ts",
+        "line": 3,
+        "severity": "non_blocking",
+        "description": "Feature spec and AGENTS frontend convention call for API client base URL http://localhost:8080, but implementation uses relative '/api'. This works in dev via Vite proxy, but it is a documented requirement mismatch."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Shared conventions are inconsistent for API base URL usage: AGENTS mandates an absolute backend URL while the scaffold intentionally uses a proxy-friendly relative '/api' base. This mismatch can create avoidable review noise.",
+      "evidence": "AGENTS.md frontend convention states 'API client in src/api/client.ts with base URL http://localhost:8080'; implementation uses BASE_URL = '/api' in frontend/src/api/client.ts:3 and Vite proxy in frontend/vite.config.ts."
+    },
+    {
+      "area": "skills",
+      "observation": "frontend-worker skill still prescribes strict TDD red-phase for scaffold work; this does not fit initial bootstrap features well and was explicitly called out by the worker.",
+      "evidence": "Skill step 3 requires writing failing tests first and confirming failure (.factory/skills/frontend-worker/SKILL.md lines 24-27). Handoff skillFeedback.suggestedChanges requests adjusting this expectation for foundation scaffolds (handoff file: 2026-03-23T09-43-26-773Z__foundation-frontend-scaffold__c44f51f8-8031-48b5-ac5e-2fd14951431c.json)."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Feature passes review: scaffold implementation is complete and aligned with expected behavior, with one non-blocking spec mismatch around API client base URL. Added shared-state observations for conventions alignment and frontend-worker skill guidance."
+}
