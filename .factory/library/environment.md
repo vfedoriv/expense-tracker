@@ -30,6 +30,10 @@ Environment variables, external dependencies, and setup notes.
 - Database name: expense_tracker
 - Database user: expense_tracker / password: expense_tracker
 - Flyway for schema migrations
+- **PostgreSQL 18 requires** `flyway-database-postgresql` dependency (already in pom.xml)
+- **PostgreSQL 18 volume mount** at `/var/lib/postgresql` (NOT `/var/lib/postgresql/data`) due to pg_ctlcluster directory structure change
+- **Timezone quirk:** PG18 rejects JVM timezone 'Europe/Kiev'. Fixed via `-Duser.timezone=UTC` in surefire and spring-boot-maven-plugin
+- **Testcontainers:** Rancher Desktop has intermittent port-forwarding issues. Use Docker Compose PostgreSQL for integration tests instead. Testcontainers deps remain in pom.xml for future use
 
 ## OAuth (Milestone 5)
 - Google OAuth: requires GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET env vars

@@ -7,12 +7,15 @@ Architectural decisions, patterns, and conventions discovered during the mission
 ---
 
 ## Backend Architecture
-- Spring Boot 4.0 with layered architecture: controller → service → repository
+- Spring Boot 4.0.4 with layered architecture: controller → service → repository
 - Package: `com.expensetracker`
 - DTOs separate from entities (request/response DTOs in `dto/` package)
 - Global exception handler via `@ControllerAdvice`
-- Fake auth filter injects a hardcoded user into SecurityContext (milestones 1-4)
+- Fake auth filter injects a hardcoded user into SecurityContext (milestones 1-4), reads X-User-Id header
 - WebSocket via STOMP for budget alerts
+- `@AutoConfigureMockMvc` import from `org.springframework.boot.webmvc.test.autoconfigure` (Spring Boot 4.0 package change)
+- Integration tests use Docker Compose PostgreSQL on localhost:5432 (not Testcontainers) due to Rancher Desktop quirk
+- JVM arg `-Duser.timezone=UTC` set in maven-surefire-plugin and spring-boot-maven-plugin
 
 ## Frontend Architecture
 - React 19 with TypeScript
