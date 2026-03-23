@@ -1,0 +1,34 @@
+{
+  "featureId": "fix-websocket-auth-rejection",
+  "reviewedAt": "2026-03-23T13:49:12Z",
+  "commitId": "e9dd4991a5afb1ca4f918e0bff242611eb63d967",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The fix removes the default-user fallback and closes the original unauthenticated-handshake acceptance bug, but it introduces a blocking integration regression: the frontend still sends X-User-Id only in STOMP connectHeaders, while the backend now requires that value during the SockJS/HTTP handshake.",
+    "issues": [
+      {
+        "file": "backend/src/main/java/com/expensetracker/config/WebSocketAuthInterceptor.java",
+        "line": 36,
+        "severity": "blocking",
+        "description": "Handshake now hard-rejects missing X-User-Id (lines 36-37), but the frontend provides X-User-Id only in STOMP connectHeaders (frontend/src/hooks/useWebSocket.ts:68-70). Per architecture note, connectHeaders do not affect handshake auth, so browser SockJS clients are rejected before CONNECT and WebSocket alerts regress."
+      },
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/WebSocketAuthInterceptorTest.java",
+        "line": 28,
+        "severity": "non_blocking",
+        "description": "Feature description requested an integration test proving unauthenticated WebSocket connection rejection, but the fix adds only unit tests for beforeHandshake (commit touches only WebSocketAuthInterceptor.java and WebSocketAuthInterceptorTest.java)."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Auth guidance for fake-auth WebSocket flows is split and incomplete in AGENTS.md: it mentions fake auth and /ws STOMP endpoint but not the handshake-vs-connectHeaders constraint, which can lead to backend-only auth fixes that break browser connectivity.",
+      "evidence": "AGENTS.md:61,63; architecture.md:16 explicitly says handshake identity is from SockJS/HTTP and connectHeaders do not affect it; frontend/src/hooks/useWebSocket.ts:68-70 uses connectHeaders only."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/search-filters-websocket/scrutiny/reviews/websocket-backend.json",
+  "summary": "Original blocking fallback issue is removed, but the fix is not acceptable yet because strict handshake header enforcement is incompatible with the current frontend connection path, causing a new blocking regression in WebSocket connectivity."
+}
