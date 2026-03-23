@@ -430,18 +430,42 @@ export function TransactionsPage() {
               autoFocus
             />
 
-            <Input
-              label="Amount"
-              type="number"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                clearFieldError('amount');
-              }}
-              error={formErrors.amount}
-              placeholder="0.00"
-              step="0.01"
-            />
+            <div className="w-full">
+              <label
+                htmlFor="amount"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                Amount (USD)
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-500">
+                  $
+                </span>
+                <input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    clearFieldError('amount');
+                  }}
+                  className={`block w-full rounded-lg border py-2 pl-7 pr-3 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+                    formErrors.amount
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                  placeholder="0.00"
+                  step="0.01"
+                  aria-invalid={formErrors.amount ? 'true' : 'false'}
+                  aria-describedby={formErrors.amount ? 'amount-error' : undefined}
+                />
+              </div>
+              {formErrors.amount && (
+                <p id="amount-error" className="mt-1 text-sm text-red-600">
+                  {formErrors.amount}
+                </p>
+              )}
+            </div>
 
             <Input
               label="Date"

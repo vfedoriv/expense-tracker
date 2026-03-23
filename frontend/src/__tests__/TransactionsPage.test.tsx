@@ -593,6 +593,62 @@ describe('TransactionsPage', () => {
     });
   });
 
+  describe('Currency indicator on form', () => {
+    it('shows $ currency symbol next to the amount input on create form', async () => {
+      const user = userEvent.setup();
+      mockFetch({
+        '/users/me': { ok: true, status: 200, body: mockUser },
+        '/transactions': { ok: true, status: 200, body: [] },
+        '/categories': { ok: true, status: 200, body: mockCategories },
+      });
+
+      renderTransactionsPage();
+
+      await waitFor(() => {
+        expect(screen.getByText('No transactions yet')).toBeInTheDocument();
+      });
+
+      // Open create modal
+      const addButtons = screen.getAllByRole('button', { name: /add transaction/i });
+      await user.click(addButtons[0]);
+
+      const dialog = screen.getByRole('dialog');
+
+      // Verify the label contains USD indicator
+      expect(within(dialog).getByText(/amount \(usd\)/i)).toBeInTheDocument();
+
+      // Verify the '$' symbol is visible next to the amount input
+      expect(within(dialog).getByText('$')).toBeInTheDocument();
+    });
+
+    it('shows $ currency symbol next to the amount input on edit form', async () => {
+      const user = userEvent.setup();
+      mockFetch({
+        '/users/me': { ok: true, status: 200, body: mockUser },
+        '/transactions': { ok: true, status: 200, body: mockTransactions },
+        '/categories': { ok: true, status: 200, body: mockCategories },
+      });
+
+      renderTransactionsPage();
+
+      await waitFor(() => {
+        expectTextPresent('Grocery shopping');
+      });
+
+      // Open edit modal
+      const editButtons = screen.getAllByRole('button', { name: /edit/i });
+      await user.click(editButtons[0]);
+
+      const dialog = screen.getByRole('dialog');
+
+      // Verify the label contains USD indicator
+      expect(within(dialog).getByText(/amount \(usd\)/i)).toBeInTheDocument();
+
+      // Verify the '$' symbol is visible next to the amount input
+      expect(within(dialog).getByText('$')).toBeInTheDocument();
+    });
+  });
+
   describe('Error handling', () => {
     it('shows error message when fetching transactions fails', async () => {
       mockFetch({
