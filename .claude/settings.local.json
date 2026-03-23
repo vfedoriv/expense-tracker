@@ -38,7 +38,8 @@
       "Bash(git add:*)",
       "Bash(docker compose:*)",
       "Bash(curl -s http://localhost:8080/api/auth/me)",
-      "Bash(curl -s http://localhost:3000)"
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl:*)"
     ]
   }
 }
