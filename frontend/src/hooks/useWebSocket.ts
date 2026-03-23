@@ -65,7 +65,7 @@ export function useWebSocket() {
     const userId = getCurrentUserId();
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('/ws'),
+      webSocketFactory: () => new SockJS(`/ws?userId=${encodeURIComponent(userId)}`),
       connectHeaders: {
         'X-User-Id': userId,
       },

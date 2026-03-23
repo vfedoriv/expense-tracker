@@ -12,6 +12,7 @@ const mockSubscribe = vi.fn();
 const mockActivate = vi.fn();
 const mockDeactivate = vi.fn();
 let mockOnConnect: (() => void) | null = null;
+let mockWebSocketFactory: (() => unknown) | null = null;
 
 vi.mock('@stomp/stompjs', () => {
   return {
@@ -23,16 +24,18 @@ vi.mock('@stomp/stompjs', () => {
 
       constructor(config: Record<string, unknown>) {
         mockOnConnect = config.onConnect as () => void;
+        mockWebSocketFactory = config.webSocketFactory as () => unknown;
       }
     },
   };
 });
 
+const mockSockJSConstructor = vi.fn();
 vi.mock('sockjs-client', () => {
   return {
     default: class MockSockJS {
-      constructor() {
-        // no-op
+      constructor(url: string) {
+        mockSockJSConstructor(url);
       }
     },
   };
@@ -74,6 +77,7 @@ describe('useWebSocket', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.restoreAllMocks();
     mockOnConnect = null;
+    mockWebSocketFactory = null;
     vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
@@ -84,6 +88,7 @@ describe('useWebSocket', () => {
     mockSubscribe.mockReset();
     mockActivate.mockReset();
     mockDeactivate.mockReset();
+    mockSockJSConstructor.mockReset();
   });
 
   afterEach(() => {
@@ -96,6 +101,19 @@ describe('useWebSocket', () => {
     await waitFor(() => {
       expect(mockActivate).toHaveBeenCalled();
     });
+  });
+
+  it('passes userId as query parameter in SockJS connection URL', async () => {
+    renderWithAuth();
+
+    await waitFor(() => {
+      expect(mockActivate).toHaveBeenCalled();
+    });
+
+    // Call the webSocketFactory to verify the SockJS URL includes userId
+    expect(mockWebSocketFactory).not.toBeNull();
+    mockWebSocketFactory!();
+    expect(mockSockJSConstructor).toHaveBeenCalledWith('/ws?userId=1');
   });
 
   it('subscribes to /user/topic/budget-alerts on connect', async () => {
