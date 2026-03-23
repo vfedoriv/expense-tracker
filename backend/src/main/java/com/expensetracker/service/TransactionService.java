@@ -21,13 +21,16 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final BudgetAlertService budgetAlertService;
 
     public TransactionService(TransactionRepository transactionRepository,
                               CategoryRepository categoryRepository,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              BudgetAlertService budgetAlertService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.budgetAlertService = budgetAlertService;
     }
 
     @Transactional
@@ -47,6 +50,8 @@ public class TransactionService {
         transaction.setNotes(request.notes());
 
         transaction = transactionRepository.save(transaction);
+
+        budgetAlertService.evaluateAlerts(userId);
 
         return toResponse(transaction);
     }
@@ -78,6 +83,8 @@ public class TransactionService {
 
         transaction = transactionRepository.save(transaction);
 
+        budgetAlertService.evaluateAlerts(userId);
+
         return toResponse(transaction);
     }
 
@@ -87,6 +94,8 @@ public class TransactionService {
             .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
         transactionRepository.delete(transaction);
+
+        budgetAlertService.evaluateAlerts(userId);
     }
 
     private TransactionResponse toResponse(Transaction transaction) {

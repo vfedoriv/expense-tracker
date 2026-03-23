@@ -42,6 +42,9 @@ class TransactionServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private BudgetAlertService budgetAlertService;
+
     @InjectMocks
     private TransactionService transactionService;
 
