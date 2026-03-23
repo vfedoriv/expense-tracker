@@ -16,6 +16,9 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - `@AutoConfigureMockMvc` import from `org.springframework.boot.webmvc.test.autoconfigure` (Spring Boot 4.0 package change)
 - Integration tests use Docker Compose PostgreSQL on localhost:5432 (not Testcontainers) due to Rancher Desktop quirk
 - JVM arg `-Duser.timezone=UTC` set in maven-surefire-plugin and spring-boot-maven-plugin
+- **Jackson 3.x** in Spring Boot 4.0: ObjectMapper is `tools.jackson.databind.ObjectMapper` (NOT `com.fasterxml.jackson.databind.ObjectMapper`). Use `com.jayway.jsonpath.JsonPath` for test response parsing or Jackson 3.x imports.
+- **Hibernate 7 + PG18 TEXT columns:** TEXT columns mapped as bytea, causing LOWER() failures in JPQL. Use native SQL queries with `::text` cast for LOWER/LIKE on TEXT columns, or add `@JdbcTypeCode(SqlTypes.VARCHAR)` to entity fields.
+- **Integration test cleanup:** Use `@BeforeEach` cleanup in integration tests to avoid 409 conflicts on re-runs. Pattern: DELETE rows matching test data prefix before each test.
 
 ## Frontend Architecture
 - React 19 with TypeScript
@@ -25,6 +28,7 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - Custom hooks for data fetching (useCategories, useTransactions, useBudget, etc.)
 - API client with auth headers (Axios or fetch wrapper)
 - Context for auth state
+- Backend `LocalDate` values (`YYYY-MM-DD`) must be formatted with timezone-safe parsing (split components and build `new Date(year, monthIndex, day)`); avoid `new Date(dateString)` because it is UTC-based and can shift the displayed calendar day.
 
 ## Database
 - PostgreSQL 18 with Flyway migrations

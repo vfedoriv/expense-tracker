@@ -1,0 +1,33 @@
+{
+  "featureId": "fix-timezone-date-formatting",
+  "reviewedAt": "2026-03-23T11:10:07Z",
+  "commitId": "4e91106fad1e75572ec02b2d15dd98acdabccf1a",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix directly addresses the original blocking defect: formatDate no longer uses UTC parsing for date-only strings and now constructs a local date from parsed components, preventing day-shift rendering in non-UTC timezones. The update is scoped, and regression tests were added for date formatting behavior.",
+    "issues": [
+      {
+        "file": "frontend/src/__tests__/formatters.test.ts",
+        "line": 31,
+        "severity": "non_blocking",
+        "description": "The regression test validates expected outputs but does not force a negative-offset timezone (where the prior bug manifests), so it may not fail against the old implementation on UTC/positive-offset environments. The code fix is correct, but the test is not timezone-deterministic across all runner environments."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "frontend-worker procedure appears stricter than actual practice/enforcement for small frontend fixes: it mandates agent-browser manual verification and shared-state updates, but both the original and fix worker transcripts completed successfully without agent-browser invocation and without updating shared library docs.",
+      "evidence": ".factory/skills/frontend-worker/SKILL.md:43-51 requires manual verification with agent-browser and updating .factory/library/architecture.md; transcript skeletons for worker sessions 5afea2bb-0e18-4111-8d7e-7d2f73911df1 and d48cf499-eba4-4ab7-88dd-e2aeea41bb0d contain no `\"skill\": \"agent-browser\"` tool call and handoffs still mark followedProcedure=true."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The shared architecture library still lacks an explicit frontend guideline for timezone-safe formatting of backend LocalDate strings, despite this bug and fix.",
+      "evidence": "Fix commit 4e91106 changes frontend/src/utils/formatters.ts and adds frontend/src/__tests__/formatters.test.ts, but .factory/library/architecture.md contains no corresponding LocalDate/date-formatting convention."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/categories-transactions/scrutiny/reviews/transactions-frontend-ui.json",
+  "summary": "Re-run review passed: the timezone date-formatting fix resolves the original blocking issue from transactions-frontend-ui, and the implementation is correctly scoped with added utility regression coverage. One non-blocking test determinism concern and two shared-state documentation/procedure observations were recorded."
+}

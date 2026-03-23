@@ -1,0 +1,87 @@
+{
+  "milestone": "categories-transactions",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd backend && mvn test; cd frontend && npm test",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd frontend && npx tsc --noEmit",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd frontend && npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 5,
+    "passed": 4,
+    "failed": 1,
+    "failedFeatures": [
+      "transactions-frontend-ui"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "transactions-frontend-ui",
+      "severity": "blocking",
+      "description": "Transaction date formatting uses new Date(YYYY-MM-DD), which is timezone-sensitive and can render one day earlier/later for many users; this breaks user-visible date correctness on the Transactions page."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "services.yaml",
+      "description": "Updated `commands.typecheck-frontend` to `cd frontend && npx tsc --noEmit` to align validator behavior with frontend worker guidance and avoid piped output masking.",
+      "sourceFeature": "categories-frontend-ui"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": ".factory/skills/backend-worker/SKILL.md",
+      "suggestion": "Clarify TDD expectations for verification/audit-only features and require explicit deviation reporting when tests-first is intentionally skipped.",
+      "evidence": "Both categories-backend-api and categories-transactions-authorization reviews observed mismatch between strict tests-first wording and actual execution, while handoffs still marked procedure as fully followed.",
+      "isSystemic": true
+    },
+    {
+      "target": ".factory/skills/backend-worker/SKILL.md",
+      "suggestion": "Add a concise Spring Boot 4 + Jackson 3 test guidance note (ObjectMapper usage/config) to reduce avoidable setup confusion.",
+      "evidence": "categories-backend-api review captured explicit handoff feedback that Jackson 3.x differences caused test implementation churn.",
+      "isSystemic": false
+    },
+    {
+      "target": ".factory/skills/frontend-worker/SKILL.md",
+      "suggestion": "Document jsdom responsive-render caveat (multiple breakpoint branches can coexist in tests) and recommended query/assertion patterns.",
+      "evidence": "transactions-frontend-ui review found custom test helpers were needed because both mobile and desktop text nodes appeared during Vitest/jsdom runs.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add a guidance check to keep generated feature expectedBehavior aligned with the actual API surface to avoid acceptance ambiguity.",
+      "evidence": "categories-transactions-authorization review noted expected behavior referenced GET-by-id checks that are not part of current category/transaction controller endpoints.",
+      "isSystemic": false
+    },
+    {
+      "target": ".factory/library",
+      "suggestion": "Add a frontend date-handling note for backend LocalDate strings: avoid `new Date(YYYY-MM-DD)` and format via timezone-safe parsing.",
+      "evidence": "transactions-frontend-ui review found a blocking timezone drift bug rooted in LocalDate parsing strategy.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "Document backend error payload fallback (`error` vs `message`) in shared library immediately.",
+      "reason": "ambiguous"
+    },
+    {
+      "observation": "Second report of strict backend tests-first mismatch.",
+      "reason": "duplicate"
+    }
+  ],
+  "previousRound": null
+}

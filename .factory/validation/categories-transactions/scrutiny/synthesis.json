@@ -1,11 +1,11 @@
 {
   "milestone": "categories-transactions",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
-      "command": "cd backend && mvn test; cd frontend && npm test",
+      "command": "cd backend && mvn test && cd frontend && npm test",
       "exitCode": 0
     },
     "typecheck": {
@@ -20,32 +20,24 @@
     }
   },
   "reviewsSummary": {
-    "total": 5,
-    "passed": 4,
-    "failed": 1,
-    "failedFeatures": [
-      "transactions-frontend-ui"
-    ]
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "transactions-frontend-ui",
-      "severity": "blocking",
-      "description": "Transaction date formatting uses new Date(YYYY-MM-DD), which is timezone-sensitive and can render one day earlier/later for many users; this breaks user-visible date correctness on the Transactions page."
-    }
-  ],
+  "blockingIssues": [],
   "appliedUpdates": [
     {
-      "target": "services.yaml",
-      "description": "Updated `commands.typecheck-frontend` to `cd frontend && npx tsc --noEmit` to align validator behavior with frontend worker guidance and avoid piped output masking.",
-      "sourceFeature": "categories-frontend-ui"
+      "target": "library",
+      "description": "Added timezone-safe frontend LocalDate formatting guidance to .factory/library/architecture.md (avoid `new Date(YYYY-MM-DD)` parsing).",
+      "sourceFeature": "fix-timezone-date-formatting"
     }
   ],
   "suggestedGuidanceUpdates": [
     {
       "target": ".factory/skills/backend-worker/SKILL.md",
       "suggestion": "Clarify TDD expectations for verification/audit-only features and require explicit deviation reporting when tests-first is intentionally skipped.",
-      "evidence": "Both categories-backend-api and categories-transactions-authorization reviews observed mismatch between strict tests-first wording and actual execution, while handoffs still marked procedure as fully followed.",
+      "evidence": "Both categories-backend-api and categories-transactions-authorization reviews observed mismatch between strict tests-first wording and actual execution while handoffs marked followedProcedure=true.",
       "isSystemic": true
     },
     {
@@ -57,31 +49,35 @@
     {
       "target": ".factory/skills/frontend-worker/SKILL.md",
       "suggestion": "Document jsdom responsive-render caveat (multiple breakpoint branches can coexist in tests) and recommended query/assertion patterns.",
-      "evidence": "transactions-frontend-ui review found custom test helpers were needed because both mobile and desktop text nodes appeared during Vitest/jsdom runs.",
+      "evidence": "transactions-frontend-ui review found custom helper assertions were needed because mobile and desktop text nodes can coexist in Vitest/jsdom.",
+      "isSystemic": true
+    },
+    {
+      "target": ".factory/skills/frontend-worker/SKILL.md",
+      "suggestion": "Clarify when agent-browser/manual checks and shared-library updates are mandatory vs optional for narrowly scoped UI/utility fixes, and require explicit deviation logging when skipped.",
+      "evidence": "Both transactions-frontend-ui and fix-timezone-date-formatting workers completed without agent-browser calls or library updates while marking followedProcedure=true.",
       "isSystemic": true
     },
     {
       "target": "AGENTS.md",
       "suggestion": "Add a guidance check to keep generated feature expectedBehavior aligned with the actual API surface to avoid acceptance ambiguity.",
-      "evidence": "categories-transactions-authorization review noted expected behavior referenced GET-by-id checks that are not part of current category/transaction controller endpoints.",
+      "evidence": "categories-transactions-authorization review noted expected behavior referenced GET-by-id checks not present in current category/transaction controllers.",
       "isSystemic": false
-    },
-    {
-      "target": ".factory/library",
-      "suggestion": "Add a frontend date-handling note for backend LocalDate strings: avoid `new Date(YYYY-MM-DD)` and format via timezone-safe parsing.",
-      "evidence": "transactions-frontend-ui review found a blocking timezone drift bug rooted in LocalDate parsing strategy.",
-      "isSystemic": true
     }
   ],
   "rejectedObservations": [
+    {
+      "observation": "Frontend typecheck command mismatch in services.yaml.",
+      "reason": "already-documented"
+    },
     {
       "observation": "Document backend error payload fallback (`error` vs `message`) in shared library immediately.",
       "reason": "ambiguous"
     },
     {
-      "observation": "Second report of strict backend tests-first mismatch.",
+      "observation": "Repeated reports about backend tests-first mismatch.",
       "reason": "duplicate"
     }
   ],
-  "previousRound": null
+  "previousRound": ".factory/validation/categories-transactions/scrutiny/synthesis.round1.json"
 }
