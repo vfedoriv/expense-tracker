@@ -1,0 +1,82 @@
+{
+  "groupId": "group-c-oauth-mode",
+  "testedAt": "2026-03-23T16:56:30Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "backendApi": "http://localhost:8080",
+    "authMode": "OAUTH2 MODE",
+    "browserSession": "5442a6e39b06__uc1"
+  },
+  "toolsUsed": ["agent-browser", "curl"],
+  "assertions": [
+    {
+      "id": "VAL-AUTH-002",
+      "title": "Login page displays two SSO buttons",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to http://localhost:5173/login",
+          "expected": "Login page displayed",
+          "observed": "Login page loaded at http://localhost:5173/login with title 'Expense Tracker'"
+        },
+        {
+          "action": "Take annotated screenshot of login page",
+          "expected": "Screenshot captured showing interactive elements",
+          "observed": "Screenshot captured; annotated output shows exactly 2 interactive elements: [1] link 'Continue with Google', [2] link 'Continue with GitHub'"
+        },
+        {
+          "action": "Snapshot interactive elements",
+          "expected": "Exactly two sign-in buttons/links visible",
+          "observed": "snapshot -i returned: link 'Continue with Google' [ref=e1], link 'Continue with GitHub' [ref=e2] — exactly two, no others"
+        },
+        {
+          "action": "Check console errors",
+          "expected": "No console errors",
+          "observed": "No console errors reported"
+        }
+      ],
+      "evidence": {
+        "screenshots": ["sso-deployment/group-c/VAL-AUTH-002-login-page.png"],
+        "consoleErrors": "none",
+        "network": "n/a (static page load)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-AUTH-009",
+      "title": "Unauthenticated user redirected to login",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to http://localhost:5173/dashboard without logging in",
+          "expected": "Redirect to /login page",
+          "observed": "URL after navigation resolved to http://localhost:5173/login"
+        },
+        {
+          "action": "Take annotated screenshot after redirect",
+          "expected": "Login page showing two SSO buttons",
+          "observed": "Screenshot shows two elements: [1] link 'Continue with Google', [2] link 'Continue with GitHub' — login page confirmed"
+        },
+        {
+          "action": "Check console errors after redirect",
+          "expected": "No console errors",
+          "observed": "No console errors reported"
+        },
+        {
+          "action": "GET http://localhost:8080/api/categories (unauthenticated)",
+          "expected": "HTTP 401 Unauthorized",
+          "observed": "HTTP/1.1 401 — response body empty, Spring Security headers present (X-Content-Type-Options, X-XSS-Protection, Cache-Control)"
+        }
+      ],
+      "evidence": {
+        "screenshots": ["sso-deployment/group-c/VAL-AUTH-009-dashboard-redirect.png"],
+        "consoleErrors": "none",
+        "network": "GET http://localhost:8080/api/categories -> 401"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 2 assertions: 2 passed. VAL-AUTH-002: login page displays exactly two SSO buttons ('Continue with Google' and 'Continue with GitHub') with no console errors. VAL-AUTH-009: navigating to /dashboard without auth redirects to /login showing the two SSO buttons; GET /api/categories returns 401."
+}

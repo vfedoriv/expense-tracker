@@ -1,0 +1,96 @@
+{
+  "milestone": "sso-deployment",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 19,
+    "passed": 10,
+    "failed": 0,
+    "blocked": 9
+  },
+  "passedAssertions": [
+    "VAL-AUTH-002",
+    "VAL-AUTH-009",
+    "VAL-CROSS-002",
+    "VAL-CROSS-004",
+    "VAL-CROSS-008",
+    "VAL-CROSS-010",
+    "VAL-TEST-001",
+    "VAL-DOCS-001",
+    "VAL-DEPLOY-001",
+    "VAL-CROSS-009"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    {
+      "id": "VAL-AUTH-003",
+      "blockedBy": "Requires real Google OAuth credentials (GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET) and completing the full browser OAuth flow with Google's authentication server. No real credentials available in test environment."
+    },
+    {
+      "id": "VAL-AUTH-004",
+      "blockedBy": "Requires real GitHub OAuth credentials (GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET) and completing the full browser OAuth flow with GitHub's authentication server. No real credentials available in test environment."
+    },
+    {
+      "id": "VAL-AUTH-005",
+      "blockedBy": "Depends on VAL-AUTH-003: requires completing real Google OAuth flow to trigger auto-creation of local user record."
+    },
+    {
+      "id": "VAL-AUTH-006",
+      "blockedBy": "Depends on VAL-AUTH-004: requires completing real GitHub OAuth flow to trigger auto-creation of local user record."
+    },
+    {
+      "id": "VAL-AUTH-007",
+      "blockedBy": "Requires an authenticated OAuth session (from real SSO sign-in) to test logout. Without real OAuth credentials, no session can be established to test logout."
+    },
+    {
+      "id": "VAL-AUTH-008",
+      "blockedBy": "Requires an authenticated OAuth session to test auth persistence across page refresh. Cannot establish OAuth session without real credentials."
+    },
+    {
+      "id": "VAL-AUTH-010",
+      "blockedBy": "Requires a real GitHub OAuth flow with a GitHub user whose email is private. No real GitHub credentials and matching test account available."
+    },
+    {
+      "id": "VAL-AUTH-011",
+      "blockedBy": "Requires completing real OAuth flows for both Google AND GitHub to verify they create separate user accounts. No real credentials available for either provider."
+    },
+    {
+      "id": "VAL-CROSS-001",
+      "blockedBy": "Requires completing a full OAuth flow (Google or GitHub) to authenticate and be redirected to dashboard. Cannot be completed without real OAuth credentials."
+    }
+  ],
+  "appliedUpdates": [],
+  "previousRound": null,
+  "testDetails": {
+    "groups": [
+      {
+        "id": "group-a-ui-fake-auth",
+        "assertions": ["VAL-CROSS-002", "VAL-CROSS-004", "VAL-CROSS-008", "VAL-CROSS-010"],
+        "tool": "agent-browser",
+        "mode": "fake-auth dev mode",
+        "result": "all passed"
+      },
+      {
+        "id": "group-b-tests-docs",
+        "assertions": ["VAL-TEST-001", "VAL-DOCS-001"],
+        "tool": "mvn, npm",
+        "mode": "CLI commands",
+        "result": "all passed"
+      },
+      {
+        "id": "group-c-oauth-mode",
+        "assertions": ["VAL-AUTH-002", "VAL-AUTH-009"],
+        "tool": "agent-browser",
+        "mode": "OAuth2 mode with fake credentials (to activate SSO UI)",
+        "result": "all passed"
+      },
+      {
+        "id": "group-d-docker-compose",
+        "assertions": ["VAL-DEPLOY-001", "VAL-CROSS-009"],
+        "tool": "agent-browser + docker compose",
+        "mode": "Full Docker Compose stack",
+        "result": "all passed"
+      }
+    ]
+  }
+}

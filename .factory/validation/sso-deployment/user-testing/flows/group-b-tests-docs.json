@@ -1,0 +1,100 @@
+{
+  "groupId": "group-b-tests-docs",
+  "testedAt": "2026-03-23T16:47:30Z",
+  "isolation": {
+    "backendApi": "http://localhost:8080",
+    "postgresql": "localhost:5432",
+    "database": "expense_tracker",
+    "noBrowserNeeded": true
+  },
+  "toolsUsed": ["mvn", "npm"],
+  "assertions": [
+    {
+      "id": "VAL-TEST-001",
+      "title": "Automated test suite passes locally",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run: cd /Users/vfedoriv/workspace/expense-tracker/backend && mvn test -Duser.timezone=UTC",
+          "expected": "BUILD SUCCESS with no test failures",
+          "observed": "BUILD SUCCESS — Tests run: 170, Failures: 0, Errors: 0, Skipped: 0 — Total time: 10.721s"
+        },
+        {
+          "action": "Run: cd /Users/vfedoriv/workspace/expense-tracker/frontend && npm test -- --run",
+          "expected": "All tests pass",
+          "observed": "11 test files passed, 136 tests passed, 0 failures — Duration: 3.36s"
+        }
+      ],
+      "evidence": {
+        "terminalOutputBackend": "sso-deployment/group-b/VAL-TEST-001-backend-output.txt",
+        "terminalOutputFrontend": "sso-deployment/group-b/VAL-TEST-001-frontend-output.txt",
+        "consoleErrors": "none (frontend tests emitted act(...) warnings to stderr which are advisory only — not failures)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-DOCS-001",
+      "title": "README contains all required sections",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Read /Users/vfedoriv/workspace/expense-tracker/README.md",
+          "expected": "File exists and is readable",
+          "observed": "README.md exists with comprehensive content"
+        },
+        {
+          "action": "Verify section: Run instructions (how to start services)",
+          "expected": "Section present with instructions to start services",
+          "observed": "FOUND: '## How to Run Locally' section with Option A (individual services) and Option B (Docker Compose full stack)"
+        },
+        {
+          "action": "Verify section: Test instructions (how to run tests)",
+          "expected": "Section present with commands to run tests",
+          "observed": "FOUND: '## How to Run Tests' section with backend (mvn test) and frontend (npm test) instructions"
+        },
+        {
+          "action": "Verify section: API description (REST endpoints)",
+          "expected": "Section present describing REST endpoints",
+          "observed": "FOUND: '## API Description' section with Health, Auth, Categories, Transactions, Monthly Budget, and Dashboard endpoints, with request/response examples and error tables"
+        },
+        {
+          "action": "Verify section: Category deletion behavior explanation",
+          "expected": "Section explaining how category deletion works",
+          "observed": "FOUND: '## Category Deletion Behavior' section explaining block-on-transactions approach, 409 Conflict vs 204 No Content responses, and rationale"
+        },
+        {
+          "action": "Verify section: Google OAuth configuration instructions",
+          "expected": "Step-by-step Google OAuth setup guide",
+          "observed": "FOUND: '## Google OAuth Configuration' section with 4 steps (create GCP project, consent screen, OAuth 2.0 credentials, set env vars) including callback URL"
+        },
+        {
+          "action": "Verify section: GitHub OAuth configuration instructions",
+          "expected": "Step-by-step GitHub OAuth setup guide",
+          "observed": "FOUND: '## GitHub OAuth Configuration' section with 3 steps (register OAuth app, generate secret, set env vars) including callback URL"
+        },
+        {
+          "action": "Verify section: WebSocket message format and budget alert rules",
+          "expected": "WebSocket connection details, message format, and alert rules",
+          "observed": "FOUND: '## WebSocket Message Format' section with connection details, STOMP connection flow, client-to-server subscribe frame format, server-to-client JSON alert format, and 6 budget alert rules covering thresholds (50/80/100%), current-month-only, once-per-threshold, trigger conditions, no-budget=no-alerts, and unauthenticated rejection"
+        }
+      ],
+      "evidence": {
+        "fileContentVerification": "sso-deployment/group-b/VAL-DOCS-001-readme-verification.txt",
+        "sectionsFound": [
+          "## How to Run Locally",
+          "## How to Run Tests",
+          "## API Description",
+          "## Category Deletion Behavior",
+          "## Google OAuth Configuration",
+          "## GitHub OAuth Configuration",
+          "## WebSocket Message Format"
+        ],
+        "consoleErrors": "N/A (file verification, no browser)"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 2 assertions: both passed. VAL-TEST-001: Backend mvn test produced BUILD SUCCESS with 170 tests passing (0 failures); frontend npm test passed all 136 tests across 11 test files. VAL-DOCS-001: README.md contains all 7 required sections — run instructions, test instructions, API description, category deletion behavior, Google OAuth config, GitHub OAuth config, and WebSocket message format with alert rules."
+}

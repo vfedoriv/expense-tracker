@@ -1,0 +1,199 @@
+{
+  "groupId": "group-a-ui-fake-auth",
+  "testedAt": "2026-03-23T16:50:00Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "backendApi": "http://localhost:8080",
+    "authMode": "FAKE AUTH",
+    "fakeUser": "Test User",
+    "browserSession": "5442a6e39b06__ua1"
+  },
+  "toolsUsed": ["agent-browser", "curl"],
+  "assertions": [
+    {
+      "id": "VAL-CROSS-002",
+      "title": "Navigation reachability",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Open http://localhost:5173",
+          "expected": "App loads and redirects to /dashboard",
+          "observed": "Redirected to http://localhost:5173/dashboard"
+        },
+        {
+          "action": "Screenshot Dashboard page",
+          "expected": "Dashboard content visible with nav links",
+          "observed": "Dashboard loaded with nav: Dashboard (active), Transactions, Categories, Test User, Logout"
+        },
+        {
+          "action": "Click Transactions nav link",
+          "expected": "Navigates to /transactions and shows transactions list",
+          "observed": "Navigated to http://localhost:5173/transactions, transactions table with Add Transaction button visible"
+        },
+        {
+          "action": "Click Categories nav link",
+          "expected": "Navigates to /categories and shows categories list",
+          "observed": "Navigated to http://localhost:5173/categories, categories grid with Create Category button visible"
+        },
+        {
+          "action": "Check console errors",
+          "expected": "No console errors",
+          "observed": "No console errors"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "sso-deployment/group-a/VAL-CROSS-002-initial-page.png",
+          "sso-deployment/group-a/VAL-CROSS-002-dashboard.png",
+          "sso-deployment/group-a/VAL-CROSS-002-transactions.png",
+          "sso-deployment/group-a/VAL-CROSS-002-categories.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /dashboard -> 200, GET /transactions -> 200, GET /categories -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-004",
+      "title": "Category deletion blocked by transactions",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to /categories and click Create Category",
+          "expected": "Create category modal appears",
+          "observed": "Modal appeared with name input field"
+        },
+        {
+          "action": "Fill name 'TestCat-Del-Cross004' and click Create",
+          "expected": "Category created and appears in list",
+          "observed": "Category 'TestCat-Del-Cross004' created (id=4226) and appeared in list"
+        },
+        {
+          "action": "Create transaction via API: POST /api/transactions with categoryId=4226",
+          "expected": "Transaction created linked to category",
+          "observed": "Transaction 'TestTxn-Cross004' created (id=1934) linked to TestCat-Del-Cross004"
+        },
+        {
+          "action": "Click Delete for TestCat-Del-Cross004",
+          "expected": "Confirmation dialog appears",
+          "observed": "Confirmation dialog appeared with Cancel/Confirm buttons"
+        },
+        {
+          "action": "Click Confirm to delete category",
+          "expected": "Error message shown, category remains",
+          "observed": "Error message 'Cannot delete category with existing transactions' shown in modal; category still visible in list"
+        },
+        {
+          "action": "Verify via API: DELETE /api/categories/4226",
+          "expected": "HTTP 409 returned",
+          "observed": "HTTP 409 returned"
+        },
+        {
+          "action": "Verify transaction still exists via API: GET /api/transactions?search=TestTxn-Cross004",
+          "expected": "Transaction still exists",
+          "observed": "Transaction found with id=1934, categoryName='TestCat-Del-Cross004'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "sso-deployment/group-a/VAL-CROSS-004-confirm-dialog.png",
+          "sso-deployment/group-a/VAL-CROSS-004-after-delete-attempt.png",
+          "sso-deployment/group-a/VAL-CROSS-004-error-message.png",
+          "sso-deployment/group-a/VAL-CROSS-004-category-remains.png"
+        ],
+        "consoleErrors": "none",
+        "network": "DELETE /api/categories/4226 -> 409"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-008",
+      "title": "Consistent layout and styling",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to /dashboard and take full-page screenshot",
+          "expected": "Dashboard shows header/nav with Expense Tracker logo, nav links, user info, logout; light theme",
+          "observed": "Dashboard: light white/gray background, header with 'Expense Tracker' logo (blue), nav pills (Dashboard active/blue), Transactions, Categories, user avatar 'T', 'Test User', 'Logout'"
+        },
+        {
+          "action": "Navigate to /transactions and take full-page screenshot",
+          "expected": "Transactions page shows same header/nav structure and light theme",
+          "observed": "Transactions: same header with 'Expense Tracker' logo, nav pills (Transactions active), same light theme, table with edit/delete actions"
+        },
+        {
+          "action": "Navigate to /categories and take full-page screenshot",
+          "expected": "Categories page shows same header/nav structure and light theme",
+          "observed": "Categories: same header with 'Expense Tracker' logo, nav pills (Categories active), same light theme, grid of category cards with Edit/Delete buttons"
+        },
+        {
+          "action": "Check console errors",
+          "expected": "No console errors",
+          "observed": "No console errors"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "sso-deployment/group-a/VAL-CROSS-008-dashboard.png",
+          "sso-deployment/group-a/VAL-CROSS-008-transactions.png",
+          "sso-deployment/group-a/VAL-CROSS-008-categories.png"
+        ],
+        "consoleErrors": "none",
+        "network": "N/A"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-010",
+      "title": "Responsive layout across all pages",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Set viewport to 375x812 (mobile width)",
+          "expected": "Viewport changed to 375px wide",
+          "observed": "Viewport set to 375x812"
+        },
+        {
+          "action": "Navigate to /dashboard and screenshot",
+          "expected": "Dashboard adapts: hamburger menu, stacked cards, readable content",
+          "observed": "Dashboard: hamburger menu (≡) replaces nav links, budget cards stack vertically (full-width), budget bar visible and readable"
+        },
+        {
+          "action": "Navigate to /transactions and screenshot",
+          "expected": "Transactions adapts: hamburger menu, card-style rows, Search and Add button visible",
+          "observed": "Transactions: hamburger menu visible, transactions display as card-style rows (title, amount, category, date, Edit/Delete per row), Search and Filters buttons present, Add Transaction button in header"
+        },
+        {
+          "action": "Navigate to /categories and screenshot",
+          "expected": "Categories adapts: hamburger menu, single-column card list",
+          "observed": "Categories: hamburger menu visible, categories as single-column cards, Edit/Delete buttons accessible on each card"
+        },
+        {
+          "action": "Click hamburger menu toggle",
+          "expected": "Navigation overlay opens showing all nav links",
+          "observed": "Navigation overlay shows Dashboard, Transactions, Categories (active), Test User, Logout - all accessible"
+        },
+        {
+          "action": "Open Add Transaction form and screenshot",
+          "expected": "Form is usable at 375px: all fields visible and interactable",
+          "observed": "Add Transaction form fully visible: Title input (focused), Amount (USD) field, Date field, Category dropdown, Notes textarea, Cancel/Create buttons"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "sso-deployment/group-a/VAL-CROSS-010-dashboard-375px.png",
+          "sso-deployment/group-a/VAL-CROSS-010-transactions-375px.png",
+          "sso-deployment/group-a/VAL-CROSS-010-categories-375px.png",
+          "sso-deployment/group-a/VAL-CROSS-010-hamburger-open.png",
+          "sso-deployment/group-a/VAL-CROSS-010-add-transaction-form-375px.png"
+        ],
+        "consoleErrors": "none",
+        "network": "N/A"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 4 assertions: all 4 passed. VAL-CROSS-002: All major screens (Dashboard, Transactions, Categories) reachable via navigation and load correctly. VAL-CROSS-004: Category deletion with linked transactions blocked with 'Cannot delete category with existing transactions' error, 409 returned by API, category and transaction remain intact. VAL-CROSS-008: All pages share consistent header/nav (Expense Tracker logo, nav pills with active highlight, user info, logout), light theme, and typography. VAL-CROSS-010: At 375px viewport all pages adapt - hamburger menu replaces nav links, budget cards stack vertically, transactions show as card-style rows, categories show as single-column cards, and the Add Transaction form is fully usable."
+}
