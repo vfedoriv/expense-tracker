@@ -1,0 +1,31 @@
+commands:
+  install-backend: cd backend && mvn dependency:resolve -q
+  install-frontend: cd frontend && npm install
+  build-backend: cd backend && mvn package -DskipTests -q
+  build-frontend: cd frontend && npm run build
+  test-backend: cd backend && mvn test
+  test-frontend: cd frontend && npm test
+  lint-frontend: cd frontend && npm run lint
+  typecheck-frontend: cd frontend && npm run build -- --mode development 2>&1 | head -50
+
+services:
+  postgres:
+    start: docker compose up -d postgres
+    stop: docker compose stop postgres
+    healthcheck: docker compose exec postgres pg_isready -U expense_tracker -h localhost -p 5432
+    port: 5432
+    depends_on: []
+
+  backend:
+    start: cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=dev -q &
+    stop: lsof -ti :8080 | xargs kill -9 2>/dev/null || true
+    healthcheck: curl -sf http://localhost:8080/actuator/health || curl -sf http://localhost:8080/api/health
+    port: 8080
+    depends_on: [postgres]
+
+  frontend:
+    start: cd frontend && npm run dev -- --port 5173 &
+    stop: lsof -ti :5173 | xargs kill -9 2>/dev/null || true
+    healthcheck: curl -sf http://localhost:5173
+    port: 5173
+    depends_on: [backend]
