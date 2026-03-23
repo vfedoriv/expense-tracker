@@ -1,6 +1,7 @@
 package com.expensetracker.controller;
 
 import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +33,14 @@ class CategoryControllerTest {
     private javax.sql.DataSource dataSource;
 
     private static final String USER_ID_HEADER = "X-User-Id";
+
+    @BeforeEach
+    void setUp() {
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        // Clean up test data from previous runs (transactions first due to FK constraints)
+        jdbc.execute("DELETE FROM transactions WHERE category_id IN (SELECT id FROM categories WHERE name LIKE 'IntTest%')");
+        jdbc.execute("DELETE FROM categories WHERE name LIKE 'IntTest%'");
+    }
 
     private String categoryJson(String name) {
         return "{\"name\": \"" + name + "\"}";
