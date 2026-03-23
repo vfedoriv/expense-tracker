@@ -1,0 +1,79 @@
+{
+  "featureId": "sso-auth-backend",
+  "reviewedAt": "2026-03-23T16:10:00.000Z",
+  "commitId": "212162dbb6427e38a37d78019de3c2b5dfa82fd7",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The core implementation is well-structured and correct: CustomOAuth2UserService (GitHub), CustomOidcUserService (Google OIDC), OAuth2ClientConfig with programmatic env-var-driven registration, SecurityConfig branching between fake-auth and OAuth2 modes, CookieCsrfTokenRepository for SPA, session-based auth, and OAuth2UserPrincipalFilter for compatibility with existing controllers. However, the tests fail to validate the core user provisioning logic. All 11 new tests bypass CustomOAuth2UserService and CustomOidcUserService entirely by pre-creating users in the DB and injecting pre-built wrapper objects via authentication() post-processor. This means the critical 'creates user on first login, reuses on returning login' behavior—a core feature requirement—is completely untested.",
+    "issues": [
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+        "line": 81,
+        "severity": "blocking",
+        "description": "googleLogin_newUser_createsUserAndReturnsData pre-creates the user via userRepository.save() before the test, then asserts the user is in the DB. The assertion is trivially true and CustomOidcUserService.loadUser() is never called. The test name claims to verify 'creates new user' but the user service that does this creation is bypassed entirely. The same applies to githubLogin_newUser_createsUserRecord (line 187) and all other login tests."
+      },
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+        "line": 123,
+        "severity": "blocking",
+        "description": "googleLogin_existingUser_reusesRecord verifies the 'reuses existing record' requirement by pre-creating the user and checking that repeated calls to /api/users/me return the same ID. However, the findByProviderAndProviderUserId() lookup in CustomOidcUserService is never exercised because the authentication token is injected directly. A bug in the upsert logic (e.g., always creating a new record) would not be caught by this test."
+      },
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+        "line": 316,
+        "severity": "non_blocking",
+        "description": "logout_sessionInvalidated_subsequentRequestsGet401 does not test session invalidation. It simply performs an unauthenticated request (no session involved at all) and asserts 401. This test would pass even if logout did not invalidate the session. A proper test would create a session, capture the session cookie, perform logout, then reuse the same session cookie and expect 401."
+      },
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+        "line": 1,
+        "severity": "blocking",
+        "description": "The feature description explicitly requires 'Write tests using WireMock to mock Google/GitHub token and userinfo endpoints.' WireMock was not used. The worker acknowledged this deviation in skillFeedback. Without WireMock (or equivalent full-flow testing), the actual OAuth2 callback pipeline—token exchange, userinfo fetch, CustomOAuth2UserService.loadUser() invocation—is never tested end-to-end. The Spring Security Test approach only tests behavior after authentication is already established."
+      },
+      {
+        "file": "backend/src/main/java/com/expensetracker/config/SecurityConfig.java",
+        "line": 68,
+        "severity": "non_blocking",
+        "description": "isFakeAuthActive() only checks for OAuth env vars, but the feature spec requires it to also check spring.profiles.active=dev. In the current implementation, if OAuth env vars are absent in a production environment, FakeAuthFilter would silently activate (permitting all requests as user 1). The spec intended dev profile as an additional guard. This is a latent security risk for misconfigured production deployments."
+      },
+      {
+        "file": "backend/src/main/java/com/expensetracker/config/OAuth2ClientConfig.java",
+        "line": 53,
+        "severity": "non_blocking",
+        "description": "When no OAuth env vars are set, a placeholder ClientRegistration is added to InMemoryClientRegistrationRepository to avoid NPE. This is a code smell—a placeholder with fake credentials creates unnecessary noise. A cleaner approach would be a @ConditionalOnBean or making the ClientRegistrationRepository optional. Not a functional defect but fragile."
+      },
+      {
+        "file": "backend/src/main/java/com/expensetracker/config/SecurityConfig.java",
+        "line": 106,
+        "severity": "non_blocking",
+        "description": "The OAuth2 success redirect URL (http://localhost:5173) is hardcoded in oAuth2AuthenticationSuccessHandler(). For a feature intended for deployment, this should be a configurable property (e.g., app.frontend-url=${FRONTEND_URL:http://localhost:5173}). Not blocking for current scope but will require a fix before production use."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The backend-worker skill requires TDD (write tests first) and specifically requires WireMock for OAuth2 testing. The worker deviated from both: implemented code first, then wrote tests, and replaced WireMock with Spring Security Test's authentication() post-processor. The deviation from WireMock was justified with 'WireMock-based full OAuth2 flow testing is fragile and complex with Spring Boot 4.0 auto-configuration' — this rationale is valid and Spring Security Test's built-in support is generally preferred for Spring Boot apps. The skill's WireMock prescription may be overly specific for Spring-native projects and could be updated to mention Spring Security Test's oauth2Login()/oidcLogin() as the preferred approach for Spring Boot 4.0+ OAuth2 testing.",
+      "evidence": "Handoff skillFeedback.deviations[1]: worker chose Spring Security Test over WireMock. SKILL.md step 3 says 'Write tests FIRST (TDD red phase)' and feature description says 'Write tests using WireMock'."
+    },
+    {
+      "area": "conventions",
+      "observation": "The OAuth2 mode activation pattern (checking for env vars at startup via isFakeAuthActive()) and the application-oauth-test.yml profile pattern for activating OAuth2 mode in tests are new patterns not documented in AGENTS.md or architecture.md. Future workers doing OAuth-adjacent work will need to understand these conventions.",
+      "evidence": "SecurityConfig.java:68 isFakeAuthActive() checks GOOGLE_CLIENT_ID/GITHUB_CLIENT_ID. backend/src/test/resources/application-oauth-test.yml sets fake client IDs to trigger OAuth mode. Neither pattern is in AGENTS.md or .factory/library/architecture.md."
+    },
+    {
+      "area": "conventions",
+      "observation": "AGENTS.md states FakeAuthFilter is 'active only when spring.profiles.active=dev and no OAuth env vars set', but the implementation only checks for env vars (not the dev profile). The AGENTS.md description is now out of sync with the actual implementation.",
+      "evidence": "AGENTS.md: 'Fake auth (milestones 1-4): FakeAuthFilter injects a hardcoded user into SecurityContext'. SecurityConfig.java:68 isFakeAuthActive() - no profile check."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The worker discovered that InMemoryClientRegistrationRepository requires at least one registration at startup (cannot be empty), necessitating the placeholder registration workaround when OAuth env vars are absent. This pattern/quirk should be documented in architecture.md or environment.md for future OAuth-related work.",
+      "evidence": "OAuth2ClientConfig.java:53 - placeholderRegistration() created specifically to avoid NPE when registrations list is empty."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The OAuth2 backend implementation is architecturally correct and well-structured. All 168 tests pass. However, the feature has three blocking issues: (1) tests bypass CustomOAuth2UserService and CustomOidcUserService entirely—the core 'create user on first login, reuse on returning login' logic is not exercised by any test; (2) as a consequence, the WireMock requirement from the feature spec was explicitly not met; (3) the 'session invalidated after logout' test does not actually test session invalidation. The implementation code is likely correct, but the absence of tests for the user provisioning services means regressions in that code would be invisible. This feature should be revised to add tests that exercise the actual user service load paths."
+}

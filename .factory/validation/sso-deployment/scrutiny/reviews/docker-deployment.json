@@ -1,0 +1,50 @@
+{
+  "featureId": "docker-deployment",
+  "reviewedAt": "2026-03-23T16:30:00.000Z",
+  "commitId": "b5e64523b1db722768385c4276787d57e9845905",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation is complete and correct. All required Docker files were created: multi-stage backend/Dockerfile (maven:3.9-eclipse-temurin-25 → eclipse-temurin:25-jre-alpine), multi-stage frontend/Dockerfile (node:25-alpine → nginx:alpine), nginx.conf with proxies for /api/, /ws, /oauth2/, /login/ and SPA try_files routing, docker-compose.yml with all three services (postgres with healthcheck, backend depends_on postgres with service_healthy condition, frontend mapped 5173:80), .env.example with all OAuth and DB vars documented, and .dockerignore files for both backend and frontend. A pre-existing bug was also fixed: tsconfig.app.json now excludes test files to prevent tsc -b failures in the Docker build. Verification was thorough — docker compose build, up, curl for health/proxy/SPA routing, and Flyway log checks. All 168 backend + 136 frontend tests pass.",
+    "issues": [
+      {
+        "file": "frontend/nginx.conf",
+        "line": 11,
+        "severity": "non_blocking",
+        "description": "All proxy locations use `proxy_set_header Host $host;`, which strips the port from the Host header. When a browser accesses http://localhost:5173, nginx receives `Host: localhost:5173` but `$host` resolves to just `localhost` (no port). This means Spring Security constructs OAuth2 redirect URIs as `http://localhost/login/oauth2/code/{provider}` instead of `http://localhost:5173/login/oauth2/code/{provider}`. Using `$http_host` instead of `$host` would preserve the port and produce the correct redirect URI. Not blocking since OAuth2 integration testing wasn't required by verification steps, but it will cause OAuth2 login to fail in Docker when real credentials are configured unless the OAuth provider is specifically configured with port 80 redirect URIs."
+      },
+      {
+        "file": "frontend/nginx.conf",
+        "line": 19,
+        "severity": "non_blocking",
+        "description": "The WebSocket proxy location /ws does not set proxy_read_timeout or proxy_send_timeout. The nginx default of 60 seconds means idle WebSocket connections (no STOMP heartbeat activity) will be dropped by nginx after 60 seconds. This is acceptable for development but may cause surprise disconnects in production. Recommended: add `proxy_read_timeout 3600s; proxy_send_timeout 3600s;` to the /ws location."
+      },
+      {
+        "file": ".env.example",
+        "line": 2,
+        "severity": "non_blocking",
+        "description": "The .env.example documents POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, but docker-compose.yml has these values hardcoded (not using ${POSTGRES_DB} substitution). Users who copy .env.example to .env and change DB credentials will not see any effect. Either docker-compose.yml should use ${POSTGRES_*:-expense_tracker} variable substitution for postgres environment vars, or the .env.example comment should note that these are informational only and must be changed in docker-compose.yml directly to take effect."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "The worker discovered that frontend/tsconfig.app.json included test files in the production TypeScript build (`include: [\"src\"]` without exclusions), causing `tsc -b` to fail in Docker because vitest globals (afterEach etc.) are not available outside the vitest test runner. The fix — adding `exclude: [\"src/**/*.test.ts\", \"src/**/*.test.tsx\", \"src/test\"]` — is non-obvious and will affect any future worker who adds frontend test files. This quirk should be documented in environment.md or architecture.md under Frontend.",
+      "evidence": "frontend/tsconfig.app.json line 27-28: added exclude array. Handoff discoveredIssues[0] confirms this was a pre-existing issue fixed during this feature."
+    },
+    {
+      "area": "services",
+      "observation": "Docker Compose full-stack commands (docker compose build, docker compose up -d, docker compose down, docker compose ps) are not documented in .factory/services.yaml. The services.yaml only covers individual dev-mode services (postgres, backend dev runner, frontend dev server). Future workers working on Docker or deployment features would benefit from having compose commands documented, or at minimum a note about how the full stack is started in Docker vs. dev mode.",
+      "evidence": ".factory/services.yaml has postgres, backend, frontend as individual services with dev-mode start commands. No docker-compose full-stack entry exists."
+    },
+    {
+      "area": "knowledge",
+      "observation": "nginx's `$host` variable strips the port number from the Host header, while `$http_host` preserves it. In Docker setups where nginx runs on port 80 but is externally accessible on a non-standard port (e.g., 5173), using `proxy_set_header Host $host;` causes Spring Security's `{baseUrl}` resolution to lose the external port. This is a common Docker+nginx+OAuth2 gotcha. It should be documented in environment.md or architecture.md so future workers configuring nginx proxies for Spring Security OAuth2 get it right the first time.",
+      "evidence": "frontend/nginx.conf lines 11, 24, 33, 43: all proxy locations use `$host`. OAuth2ClientConfig.java uses `{baseUrl}/login/oauth2/code/{registrationId}` which relies on Spring Security resolving baseUrl from the incoming Host header."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The docker-deployment feature is fully and correctly implemented. All required files were created (backend/Dockerfile, frontend/Dockerfile, nginx.conf, updated docker-compose.yml, .env.example, .dockerignore files for both services). The worker also fixed a pre-existing tsconfig.app.json build failure that would have blocked the Docker build. Verification was thorough: docker compose build succeeded, all 3 containers started, nginx proxied /api/* and /ws/* correctly, SPA routing worked, Flyway ran all 7 migrations, and all 168 backend + 136 frontend tests still pass. Three non-blocking issues identified: nginx $host dropping port (OAuth2 redirect URI breakage), WebSocket proxy timeout defaults, and .env.example DB vars not referenced by compose file. None are blocking for the specified feature requirements."
+}

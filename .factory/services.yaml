@@ -7,6 +7,10 @@ commands:
   test-frontend: cd frontend && npm test
   lint-frontend: cd frontend && npm run lint
   typecheck-frontend: cd frontend && npx tsc --noEmit
+  docker-build: docker compose build
+  docker-up: docker compose up -d
+  docker-down: docker compose down
+  docker-status: docker compose ps
 
 services:
   postgres:

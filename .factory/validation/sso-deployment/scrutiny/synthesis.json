@@ -1,0 +1,138 @@
+{
+  "milestone": "sso-deployment",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test-backend": {
+      "passed": true,
+      "command": "cd backend && mvn test",
+      "exitCode": 0,
+      "note": "168 tests run, 0 failures"
+    },
+    "test-frontend": {
+      "passed": true,
+      "command": "cd frontend && npm test",
+      "exitCode": 0,
+      "note": "136 tests run, 0 failures"
+    },
+    "lint-frontend": {
+      "passed": true,
+      "command": "cd frontend && npm run lint",
+      "exitCode": 0
+    },
+    "typecheck-frontend": {
+      "passed": true,
+      "command": "cd frontend && npx tsc --noEmit",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 5,
+    "passed": 3,
+    "failed": 2,
+    "failedFeatures": [
+      "sso-auth-backend",
+      "sso-auth-frontend"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "sso-auth-backend",
+      "severity": "blocking",
+      "description": "Tests bypass CustomOAuth2UserService and CustomOidcUserService entirely by pre-creating users in the DB and injecting pre-built wrapper tokens via authentication() post-processor. The critical 'creates user on first login, reuses on returning login' logic is never exercised by any test. A regression in user provisioning would be invisible.",
+      "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+      "suggestedFix": "Rewrite tests to actually invoke the service layer: either use WireMock to mock OAuth provider endpoints and let Spring Security's full callback pipeline run, or call CustomOidcUserService/CustomOAuth2UserService directly with mock OidcUser/OAuth2User inputs to test the upsert logic."
+    },
+    {
+      "featureId": "sso-auth-backend",
+      "severity": "blocking",
+      "description": "The 'logout_sessionInvalidated_subsequentRequestsGet401' test does not test session invalidation. It issues a plain unauthenticated request (no session involved) and asserts 401 — this would pass even if logout did nothing to the session.",
+      "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+      "line": 316,
+      "suggestedFix": "Rewrite the test: create a session (authenticate), capture the session cookie, perform logout, then re-use the original session cookie and assert 401. The current test provides no evidence that logout invalidates sessions."
+    },
+    {
+      "featureId": "sso-auth-frontend",
+      "severity": "blocking",
+      "description": "The API client (src/api/client.ts) never reads the XSRF-TOKEN cookie nor sends the X-XSRF-TOKEN header. The backend SecurityConfig uses CookieCsrfTokenRepository.withHttpOnlyFalse(), requiring this header on all POST/PUT/DELETE requests in OAuth2 mode. POST /api/logout returns 403, leaving the backend session alive. On page refresh, GET /api/users/me still returns 200 (session valid), silently re-authenticating the user. This breaks VAL-AUTH-007.",
+      "file": "frontend/src/api/client.ts",
+      "line": 30,
+      "suggestedFix": "In getHeaders() or in the request methods (post/put/delete), read document.cookie for 'XSRF-TOKEN=<value>' and include it as 'X-XSRF-TOKEN: <value>' header on all mutating requests."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "library/architecture.md",
+      "description": "Fixed stale WebSocket auth note: clarified that SSO mode uses session cookie (no X-User-Id), while fake-auth mode uses X-User-Id query param. Added OAuth2 mode activation behavior (env-var check only, no profile check). Added CSRF token requirement in OAuth2 mode.",
+      "sourceFeature": "sso-auth-backend, sso-auth-frontend"
+    },
+    {
+      "target": "library/architecture.md",
+      "description": "Added note that frontend/tsconfig.app.json must exclude test files to prevent tsc -b failures in Docker builds.",
+      "sourceFeature": "docker-deployment"
+    },
+    {
+      "target": "library/environment.md",
+      "description": "Documented InMemoryClientRegistrationRepository placeholder workaround, OAuth2 success handler hardcoded redirect URL. Added Docker deployment section: nginx $host vs $http_host gotcha for OAuth2 redirect URIs, WebSocket proxy timeout, .env.example DB vars not substituted in compose.",
+      "sourceFeature": "docker-deployment, sso-auth-backend"
+    },
+    {
+      "target": "services.yaml",
+      "description": "Added docker-build, docker-up, docker-down, docker-status commands for full-stack Docker Compose operations.",
+      "sourceFeature": "docker-deployment"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add Frontend convention: All <input>, <select>, and <textarea> elements must have the hover:border-gray-400 class. All card container divs must have focus-within:ring-2 focus-within:ring-blue-500 for keyboard accessibility. These patterns were introduced in cross-area-navigation-styling and should be followed consistently.",
+      "evidence": "cross-area-navigation-styling review: reviewer noted these patterns were applied uniformly but not documented. Without documentation, future workers creating new form fields or cards will create inconsistency.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Update the FakeAuthFilter description from 'active only when spring.profiles.active=dev and no OAuth env vars set' to 'active only when OAuth env vars (GOOGLE_CLIENT_ID, GITHUB_CLIENT_ID) are absent at startup'. The current description is out of sync with the actual implementation in SecurityConfig.isFakeAuthActive().",
+      "evidence": "sso-auth-backend review: AGENTS.md says 'FakeAuthFilter injects a hardcoded user into SecurityContext' with profile check, but SecurityConfig.java:68 isFakeAuthActive() only checks for env vars, no profile check.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add a Backend convention: In OAuth2 mode, the backend uses CookieCsrfTokenRepository.withHttpOnlyFalse(). All frontend POST/PUT/DELETE requests must send the X-XSRF-TOKEN header (read from the XSRF-TOKEN cookie). Frontend workers modifying or creating API client code must implement this CSRF header pattern.",
+      "evidence": "sso-auth-frontend review (blocking issue): API client missing CSRF header causes 403 on all mutations including logout. Pattern must be documented for future frontend workers.",
+      "isSystemic": false
+    },
+    {
+      "target": "skills/backend-worker",
+      "suggestion": "The skill specifies WireMock as the mandatory approach for OAuth2 testing. For Spring Boot 4.0+ projects, Spring Security Test's oauth2Login() and oidcLogin() post-processors are the idiomatic and more maintainable approach for most OAuth2 integration tests. The skill should note that Spring Security Test is preferred for testing post-authentication behavior, while WireMock (or similar) is needed specifically for testing the full OAuth2 callback pipeline (token exchange, userinfo fetch, user provisioning). The feature should distinguish these two testing needs.",
+      "evidence": "sso-auth-backend review: worker deviated from WireMock prescription citing fragility. The Spring Security Test approach is valid for testing post-auth behavior but missed the user provisioning logic. The skill should clarify which OAuth2 behaviors require which testing approach.",
+      "isSystemic": false
+    },
+    {
+      "target": "skills/frontend-worker",
+      "suggestion": "Step 6 (agent-browser verification) is particularly important for visual/styling features and should not be skipped. For SSO-gated features where real OAuth2 credentials are unavailable, add guidance: verify the login page UI (which is accessible without credentials), document what cannot be tested in browser (the post-auth flow), and note this explicitly in the handoff. The skill should not allow skipping agent-browser for visual features.",
+      "evidence": "sso-auth-frontend and cross-area-navigation-styling reviews: both workers skipped agent-browser verification. For sso-auth-frontend, the login page UI is verifiable without credentials. For cross-area-navigation-styling, visual consistency is the entire feature — screenshots are the most appropriate validation.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills/fullstack-worker",
+      "suggestion": "Add a conditional path for documentation-only features: when the feature makes no code changes (only creates/edits documentation files), skip the TDD steps and agent-browser verification. Note what tests to run (existing regression check only). The current skill procedure implies these steps are mandatory for all features, confusing workers on doc-only tasks.",
+      "evidence": "readme-documentation review: worker correctly skipped TDD and agent-browser but marked followedProcedure: true. The skill has no documented exception for doc-only work.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "sso-auth-backend: isFakeAuthActive() should check dev profile in addition to env vars",
+      "reason": "This was flagged as non-blocking in the review and is a design decision (checking profile vs env vars) that belongs to the orchestrator's normative guidance, not the library. Added to AGENTS.md suggestion instead."
+    },
+    {
+      "observation": "sso-auth-backend: placeholder ClientRegistration in OAuth2ClientConfig is a code smell",
+      "reason": "Non-blocking implementation detail. The workaround is now documented in environment.md. Changing the implementation approach is a future improvement, not library documentation."
+    },
+    {
+      "observation": "sso-auth-backend: OAuth2 success redirect URL hardcoded",
+      "reason": "Non-blocking, already documented in environment.md. The fix (FRONTEND_URL env var) would be a separate feature, not a library/guidance change."
+    }
+  ],
+  "previousRound": null
+}

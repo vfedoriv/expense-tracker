@@ -1,0 +1,56 @@
+{
+  "featureId": "sso-auth-frontend",
+  "reviewedAt": "2026-03-23T19:00:00.000Z",
+  "commitId": "7a9b8999000aa497f30cc5d2fb9776a436a4e613",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The LoginPage, AuthContext, Layout, API client, WebSocket hook, and Vite proxy are all well-implemented and meet most feature requirements. However, a blocking issue exists: in OAuth2 mode the backend requires CSRF tokens (via CookieCsrfTokenRepository) on all POST/PUT/DELETE requests, but the frontend never reads the XSRF-TOKEN cookie nor sends the X-XSRF-TOKEN header. This means POST /api/logout returns 403 and the backend session is never invalidated. The frontend clears local auth state (setUser(null)), but on next page refresh GET /api/users/me still succeeds (session alive), re-authenticating the user — a broken logout that fails VAL-AUTH-007.",
+    "issues": [
+      {
+        "file": "frontend/src/api/client.ts",
+        "line": 30,
+        "severity": "blocking",
+        "description": "getHeaders() only returns Content-Type. In OAuth2 mode the backend uses CookieCsrfTokenRepository.withHttpOnlyFalse() (SecurityConfig.java:52-58), which requires all POST/PUT/DELETE requests to include the X-XSRF-TOKEN header populated from the XSRF-TOKEN cookie. Without it, all mutation requests (including POST /api/logout) will receive 403. Fix: read document.cookie for 'XSRF-TOKEN=' and include it as 'X-XSRF-TOKEN' header in POST/PUT/DELETE methods."
+      },
+      {
+        "file": "frontend/src/context/AuthContext.tsx",
+        "line": 38,
+        "severity": "blocking",
+        "description": "The logout() function calls fetch('/api/logout', { method: 'POST', credentials: 'include' }) without the CSRF header. fetch() does not throw on 403 responses, so the catch block is not reached; setUser(null) is still called, giving the illusion of a successful logout. The backend session is NOT invalidated (JSESSIONID cookie remains). On page refresh, AuthProvider.fetchUser() calls GET /api/users/me which still returns 200 (session valid), re-authenticating the user. This breaks VAL-AUTH-007 ('Logout clears session and redirects to login')."
+      },
+      {
+        "file": "frontend/src/__tests__/Layout.test.tsx",
+        "line": 102,
+        "severity": "non_blocking",
+        "description": "The 'redirects to login page after clicking logout' test passes because fetch is uniformly mocked to return 200. The test does not assert that the backend received a valid logout request nor that the mock was called with the right arguments. This creates false confidence about the logout flow — the real POST /api/logout call would fail (403) in OAuth2 mode but the test would still pass."
+      },
+      {
+        "file": "frontend/src/pages/LoginPage.tsx",
+        "line": 1,
+        "severity": "non_blocking",
+        "description": "Minor: the app logo SVG renders a currency/dollar-sign icon (the path data describes a dollar-sign circle). The test checking for it ('renders the app logo icon') only verifies that at least one SVG exists in the document, which could be satisfied by the OAuth button icons alone. The test would not catch removal of the logo SVG specifically. Low impact."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "AGENTS.md does not document the CSRF token handling pattern required in OAuth2 mode. The backend SecurityConfig uses CookieCsrfTokenRepository.withHttpOnlyFalse() + CsrfTokenRequestAttributeHandler with setCsrfRequestAttributeName(null), meaning all POST/PUT/DELETE requests must send X-XSRF-TOKEN header (read from the XSRF-TOKEN cookie). This pattern must be followed by all frontend code making mutations in OAuth2 mode, but is not documented anywhere in AGENTS.md or the library.",
+      "evidence": "backend/src/main/java/com/expensetracker/config/SecurityConfig.java lines 52-62 (CSRF config); frontend/src/api/client.ts lines 29-31 (getHeaders missing X-XSRF-TOKEN)"
+    },
+    {
+      "area": "skills",
+      "observation": "The frontend-worker SKILL.md step 6 explicitly requires manual verification via agent-browser ('Take at least 2 screenshots (desktop + mobile width)'). The worker skipped this step entirely — no agent-browser invocations appear in the transcript skeleton and the handoff's verification section has no 'interactiveChecks' entries. The worker nonetheless reported skillFeedback.followedProcedure: true with deviations: []. The deviation should have been reported. For SSO features specifically, agent-browser verification is limited by the need for real OAuth2 credentials, which suggests the skill procedure may need a note about how to handle SSO-gated pages (e.g., verify the login page UI, skip the post-auth flow with a note).",
+      "evidence": "Transcript skeleton: no Skill{skill: 'agent-browser'} call found; handoff verification.commandsRun has 3 entries (test, lint, tsc) but no interactiveChecks; SKILL.md step 6 requires agent-browser invocation"
+    },
+    {
+      "area": "conventions",
+      "observation": "architecture.md documents WebSocket auth as X-User-Id based ('WebSocket auth identity is established during the SockJS/HTTP handshake via WebSocketAuthInterceptor reading X-User-Id'). After this feature, SSO mode uses session cookies instead. The architecture note is now partially stale — it describes only the fake-auth mode behavior and doesn't describe the SSO/cookie-based WebSocket auth path.",
+      "evidence": ".factory/library/architecture.md line referencing WebSocketAuthInterceptor + X-User-Id; frontend/src/hooks/useWebSocket.ts now uses new SockJS('/ws') without userId param"
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The SSO frontend implementation is largely correct: LoginPage has proper OAuth2 buttons, AuthContext uses cookie-based auth with 401 redirect, Layout shows avatar/display name and a logout button, ProtectedRoute redirects unauthenticated users, and Vite proxy is configured. However, a blocking CSRF issue prevents logout from working in OAuth2 mode: the frontend never sends the X-XSRF-TOKEN header required by the backend's CookieCsrfTokenRepository configuration, so POST /api/logout returns 403, leaving the backend session alive. On page refresh the user is silently re-authenticated, breaking VAL-AUTH-007. Additionally, the skill's required agent-browser verification was skipped without acknowledgment, and architecture.md needs updating for the SSO WebSocket auth pattern."
+}

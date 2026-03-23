@@ -38,4 +38,11 @@ Environment variables, external dependencies, and setup notes.
 ## OAuth (Milestone 5)
 - Google OAuth: requires GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET env vars
 - GitHub OAuth: requires GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET env vars
-- Credentials deferred to milestone 5 (fake auth until then)
+- `InMemoryClientRegistrationRepository` requires at least one registration at startup — cannot be empty. When OAuth env vars are absent, `OAuth2ClientConfig` registers a placeholder ClientRegistration to avoid NPE.
+- OAuth2 success handler redirects to `http://localhost:5173` (hardcoded; will need `FRONTEND_URL` env var for production).
+
+## Docker Deployment (Milestone 5)
+- Full-stack Docker Compose: `docker compose build`, `docker compose up -d`, `docker compose down`
+- **nginx `$host` strips port:** In Docker, `proxy_set_header Host $host` resolves to just `localhost` (without `:5173`), so Spring Security constructs OAuth2 redirect URIs without the port. Use `$http_host` to preserve the full host:port. Required when configuring real OAuth2 providers in Docker.
+- nginx WebSocket proxy needs `proxy_read_timeout 3600s; proxy_send_timeout 3600s;` to avoid 60s idle disconnect.
+- `.env.example` lists `POSTGRES_*` vars but `docker-compose.yml` has hardcoded values; to change DB credentials, edit compose directly.

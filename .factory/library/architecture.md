@@ -13,7 +13,9 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - Global exception handler via `@ControllerAdvice`
 - Fake auth filter injects a hardcoded user into SecurityContext (milestones 1-4), reads X-User-Id header
 - WebSocket via STOMP for budget alerts
-- WebSocket auth identity is established during the SockJS/HTTP handshake (via `WebSocketAuthInterceptor` reading `X-User-Id`), not from STOMP `CONNECT` headers; frontend `connectHeaders` do not affect backend handshake user resolution.
+- **Dev mode (FakeAuth):** WebSocket auth identity is established during the SockJS/HTTP handshake via `WebSocketAuthInterceptor` reading `X-User-Id` query param; frontend appends `?userId=<id>` to the SockJS URL. **SSO mode:** WebSocket handshake is authenticated via session cookie (no X-User-Id); frontend uses `new SockJS('/ws')` without userId param.
+- **OAuth2 / SSO mode (milestone 5+):** `SecurityConfig.isFakeAuthActive()` activates fake auth only when OAuth env vars (`GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`) are absent — there is no profile check. The `application-oauth-test.yml` profile sets fake env-var values to force OAuth2 mode in integration tests.
+- **CSRF in OAuth2 mode:** `SecurityConfig` uses `CookieCsrfTokenRepository.withHttpOnlyFalse()`, meaning all POST/PUT/DELETE requests must include the `X-XSRF-TOKEN` header (read from the `XSRF-TOKEN` cookie). Frontend API client must extract the cookie and include it as a header for all mutating requests; otherwise 403 is returned.
 - `@AutoConfigureMockMvc` import from `org.springframework.boot.webmvc.test.autoconfigure` (Spring Boot 4.0 package change)
 - Integration tests use Docker Compose PostgreSQL on localhost:5432 (not Testcontainers) due to Rancher Desktop quirk
 - JVM arg `-Duser.timezone=UTC` set in maven-surefire-plugin and spring-boot-maven-plugin
@@ -31,6 +33,7 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - API client with auth headers (Axios or fetch wrapper)
 - Context for auth state
 - Backend `LocalDate` values (`YYYY-MM-DD`) must be formatted with timezone-safe parsing (split components and build `new Date(year, monthIndex, day)`); avoid `new Date(dateString)` because it is UTC-based and can shift the displayed calendar day.
+- **tsconfig.app.json must exclude test files** (`src/**/*.test.ts`, `src/**/*.test.tsx`) to prevent `tsc -b` (used in Docker build) from failing on vitest global references (`afterEach`, etc.) that are not available outside the vitest runner.
 
 ## Database
 - PostgreSQL 18 with Flyway migrations
