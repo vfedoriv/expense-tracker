@@ -61,3 +61,9 @@ To test multi-user isolation, the fake auth should support switching users via a
 ## Known UI Testing Frictions
 
 - Dashboard month selection currently uses previous/next controls only (no direct month picker), so reaching far-future test months can require many clicks. Prefer choosing closer test months when possible, or pre-seed data via API for long-range month scenarios.
+- The `global is not defined` frontend crash from round 1 has been fixed (Vite config `define: { global: 'globalThis' }`).
+- **WS alert DB state**: The backend only fires budget alerts for thresholds NOT yet marked as fired in `budget_alert_states` table. If `threshold_50_fired=true`, no 50% alert will be sent even on fresh WS connection, even if spending exceeds 50%. Always check/reset `budget_alert_states` via DB before testing WS threshold assertions.
+  Reset command: `docker compose -f /path/to/docker-compose.yml exec -T postgres psql -U expense_tracker -d expense_tracker -c "UPDATE budget_alert_states SET threshold_50_fired=false, threshold_80_fired=false, threshold_100_fired=false WHERE user_id=1 AND year=2026 AND month=3;"`
+- **Toast auto-dismiss**: Budget alert toast notifications auto-dismiss after ~8 seconds. Screenshot within 800ms of page load or transaction submission to capture them.
+- **Budget API**: The budget create/update endpoint is POST /api/budgets (upsert), not PUT /api/budgets/{id}. There is no separate PUT endpoint.
+- **Search filter UI**: When chaining multiple filter interactions (search + category + date range) in agent-browser, re-snapshot after each filter change to get fresh element refs before the next action.

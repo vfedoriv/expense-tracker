@@ -1,0 +1,44 @@
+{
+  "milestone": "search-filters-websocket",
+  "round": 2,
+  "status": "pass",
+  "assertionsSummary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-SRCH-001",
+    "VAL-SRCH-002",
+    "VAL-SRCH-003",
+    "VAL-SRCH-004",
+    "VAL-SRCH-005",
+    "VAL-SRCH-006",
+    "VAL-SRCH-007",
+    "VAL-SRCH-008",
+    "VAL-SRCH-009",
+    "VAL-SRCH-010",
+    "VAL-WS-001",
+    "VAL-WS-003",
+    "VAL-WS-004",
+    "VAL-WS-005",
+    "VAL-WS-010",
+    "VAL-CROSS-005"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Documented that backend only fires WS budget alerts for thresholds not yet marked as fired in budget_alert_states table. Added reset command, toast timing guidance (8s auto-dismiss, screenshot at 800ms), budget API upsert pattern (POST not PUT), and search filter UI re-snapshot guidance.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": ".factory/validation/search-filters-websocket/user-testing/synthesis-round1.json",
+  "flowReports": [
+    ".factory/validation/search-filters-websocket/user-testing/flows/group-srch.json",
+    ".factory/validation/search-filters-websocket/user-testing/flows/group-ws.json"
+  ],
+  "notes": "Round 1 was blocked entirely by frontend runtime crash ('global is not defined' from sockjs-client/stompjs). After fix (Vite define global: globalThis), round 2 validated all 16 previously blocked assertions. Search/filter UI (VAL-SRCH-001 to 010): all filters work correctly with AND logic, proper empty states, clear/reset functionality. WebSocket UI (VAL-WS-001, 003, 004, 005, 010): STOMP WS connection established automatically, all three threshold alerts (50%/80%/100%) display as categorized toast notifications. Transaction-triggered alerts (VAL-CROSS-005): creating a transaction that crosses a threshold immediately triggers alert toast via WebSocket."
+}

@@ -1,0 +1,195 @@
+{
+  "groupId": "group-ws",
+  "testedAt": "2026-03-23T15:10:00Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "auth": "Fake auth — all requests auto-authenticated as user ID 1",
+    "backendApi": "http://localhost:8080/api",
+    "webSocket": "ws://localhost:8080/ws"
+  },
+  "toolsUsed": ["agent-browser", "curl"],
+  "assertions": [
+    {
+      "id": "VAL-WS-001",
+      "title": "WebSocket connects after authentication",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Navigate to http://localhost:5173",
+          "expected": "App loads and WebSocket connection is established",
+          "observed": "App loaded as authenticated user (Test User). SockJS resources loaded: sockjs-client.js, @stomp/stompjs, and /ws/info?userId=1 endpoint responded with {websocket:true}"
+        },
+        {
+          "action": "Wait for WS connection and subscription",
+          "expected": "Client subscribes to /user/topic/budget-alerts and receives alerts",
+          "observed": "After resetting alert thresholds in DB, page reload triggered all 3 budget alerts (50%, 80%, 100%) to appear as toasts — confirming WS STOMP connection was established and subscription to /user/topic/budget-alerts was active"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-WS-001-initial-page-load.png",
+          "search-filters-websocket/group-ws/VAL-WS-alerts-at-800ms.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /ws/info?userId=1 -> 200 {websocket:true}; SockJS + STOMP connection confirmed by alerts appearing on subscription"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-003",
+      "title": "50% threshold alert",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Reset alert threshold states in DB (set all to false) with spending $887.99 > 50% of $100 budget",
+          "expected": "Thresholds reset to not-fired state",
+          "observed": "DB updated: threshold_50_fired=false, threshold_80_fired=false, threshold_100_fired=false"
+        },
+        {
+          "action": "Reload browser — WS connects and subscribes",
+          "expected": "50% alert toast appears immediately on subscription (since spending already > 50%)",
+          "observed": "Blue 'Info: Budget 50%' toast appeared at ~800ms after page load, showing 'You have spent 50% of your monthly budget. $887.99 of $100.00 spent.'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-WS-alerts-at-800ms.png"
+        ],
+        "consoleErrors": "none",
+        "network": "WS STOMP frame received via /user/topic/budget-alerts subscription with 50% threshold alert"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-004",
+      "title": "80% threshold alert",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Reset alert threshold states in DB (set all to false) with spending $887.99 > 80% of $100 budget",
+          "expected": "Thresholds reset",
+          "observed": "DB updated: all thresholds set to false"
+        },
+        {
+          "action": "Reload browser — WS connects and subscribes",
+          "expected": "80% alert toast appears immediately on subscription",
+          "observed": "Yellow 'Warning: Budget 80%' toast appeared at ~800ms after page load, showing 'You have spent 80% of your monthly budget. $887.99 of $100.00 spent.'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-WS-alerts-at-800ms.png"
+        ],
+        "consoleErrors": "none",
+        "network": "WS STOMP frame received via /user/topic/budget-alerts subscription with 80% threshold alert"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-005",
+      "title": "100% threshold alert",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Reset alert threshold states in DB (set all to false) with spending $887.99 > 100% of $100 budget",
+          "expected": "Thresholds reset",
+          "observed": "DB updated: all thresholds set to false"
+        },
+        {
+          "action": "Reload browser — WS connects and subscribes",
+          "expected": "100% alert toast appears immediately on subscription",
+          "observed": "Red 'Alert: Budget 100%' toast appeared at ~800ms after page load, showing 'You have spent 100% of your monthly budget. $887.99 of $100.00 spent.'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-WS-alerts-at-800ms.png"
+        ],
+        "consoleErrors": "none",
+        "network": "WS STOMP frame received via /user/topic/budget-alerts subscription with 100% threshold alert"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-010",
+      "title": "Alert visible in UI",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Observe UI after WS subscription delivers alerts",
+          "expected": "Budget alerts rendered as visible toast notifications with threshold percentage",
+          "observed": "Three distinct toasts visible simultaneously in top-right corner: (1) red 'Alert: Budget 100%', (2) yellow 'Warning: Budget 80%', (3) blue 'Info: Budget 50%'. Each shows threshold percentage, spending message, and amount detail. Dismiss (X) button present on each."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-WS-alerts-at-800ms.png",
+          "search-filters-websocket/group-ws/VAL-WS-010-alerts-visible.png"
+        ],
+        "consoleErrors": "none",
+        "network": "alerts delivered via STOMP WS frame to /user/topic/budget-alerts"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-005",
+      "title": "Budget alert triggered by transaction creation",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Reset alert states in DB, set budget to $20,000 for March 2026",
+          "expected": "All thresholds reset to false; spending $887.99 = 4.44% of $20,000 (well below 50%)",
+          "observed": "DB updated; dashboard shows Budget=$20,000, Spent=$887.99, Usage=4.4%"
+        },
+        {
+          "action": "Reload browser — confirm no alerts fire on WS connection",
+          "expected": "No alert toasts appear since spending < 50%",
+          "observed": "Page loaded with no toast notifications appearing"
+        },
+        {
+          "action": "Navigate to Transactions page and create transaction: title='FLOW-WS-CrossTest threshold', amount=$10,100, date=2026-03-23, category=Food, notes='WS threshold test'",
+          "expected": "Transaction created; total spending = $887.99 + $10,100 = $10,987.99 = 54.94% of $20,000 → crosses 50% threshold",
+          "observed": "Transaction created successfully (API returned transaction ID 1387 with amount=$10,100). Toast 'Info: Budget 50% - You have spent 50% of your monthly budget. $10987.99 of $20000.00 spent.' appeared immediately after submission"
+        },
+        {
+          "action": "Verify DB alert state updated",
+          "expected": "threshold_50_fired = true after transaction creation",
+          "observed": "DB shows threshold_50_fired=true, threshold_80_fired=false, threshold_100_fired=false"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-ws/VAL-CROSS-005-no-alert-before-transaction.png",
+          "search-filters-websocket/group-ws/VAL-CROSS-005-transactions-page.png",
+          "search-filters-websocket/group-ws/VAL-CROSS-005-form-filled.png",
+          "search-filters-websocket/group-ws/VAL-CROSS-005-after-submit-800ms.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/transactions -> 201 (transaction ID 1387); WS alert frame delivered to /user/topic/budget-alerts with threshold=50, currentSpending=10987.99, budgetAmount=20000.00"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "The parent task plan assumed alerts would fire on WS connection when all thresholds are already fired (spending $887.99 >> $100 budget). However, the backend only fires alerts for thresholds NOT yet marked as fired in budget_alert_states table. When all 3 thresholds were already fired, no alerts were sent on subscription. Had to manually reset the DB alert states before testing.",
+      "resolved": true,
+      "resolution": "Used docker compose exec postgres psql to reset threshold_50_fired, threshold_80_fired, threshold_100_fired to false before testing Phase 1.",
+      "affectedAssertions": ["VAL-WS-003", "VAL-WS-004", "VAL-WS-005", "VAL-WS-010"]
+    },
+    {
+      "description": "The budget PUT endpoint referenced in the test plan does not exist. The BudgetController only has POST (createOrUpdate) and GET endpoints.",
+      "resolved": true,
+      "resolution": "Used POST /api/budgets instead of PUT /api/budgets/{id} to update the budget to $20,000.",
+      "affectedAssertions": ["VAL-CROSS-005"]
+    },
+    {
+      "description": "Toast notifications auto-dismiss after ~8 seconds. The initial approach of waiting 3 seconds after page load missed the toasts entirely. Had to use rapid screenshots at ~800ms after page load to capture them.",
+      "resolved": true,
+      "resolution": "Used agent-browser wait 800 immediately after reload to catch toasts before they dismiss.",
+      "affectedAssertions": ["VAL-WS-003", "VAL-WS-004", "VAL-WS-005", "VAL-WS-010"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 6 assertions: all 6 passed. VAL-WS-001 confirmed WebSocket connection via SockJS/STOMP with successful alert delivery. VAL-WS-003/004/005 confirmed all three threshold alerts (50%/80%/100%) appear as toasts when thresholds are crossed (verified by resetting DB state and reconnecting). VAL-WS-010 confirmed alerts are rendered as visible categorized toast notifications with severity styling. VAL-CROSS-005 confirmed that creating a transaction crossing the 50% threshold triggers an immediate WebSocket alert toast in the UI."
+}

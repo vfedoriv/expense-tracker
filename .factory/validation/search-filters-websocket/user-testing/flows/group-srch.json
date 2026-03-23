@@ -1,0 +1,181 @@
+{
+  "groupId": "group-srch",
+  "testedAt": "2026-03-23T14:55:00Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "backendApi": "http://localhost:8080/api",
+    "auth": "Fake auth - X-User-Id: 1",
+    "dataPrefix": "FLOW-SRCH-",
+    "testCategories": {
+      "CatA": { "id": 3028, "name": "FLOW-SRCH-CatA-20260323" },
+      "CatB": { "id": 3029, "name": "FLOW-SRCH-CatB-20260323" }
+    },
+    "testTransactions": {
+      "titleTest": { "id": 1382, "title": "FLOW-SRCH-TitleTest apple budget", "amount": 15.00, "date": "2026-03-10", "categoryId": 3028 },
+      "notesTest": { "id": 1383, "title": "FLOW-SRCH-NotesTest invoice", "amount": 25.00, "date": "2026-03-15", "categoryId": 3029, "notes": "FLOW-SRCH-unique-note-xyz search this" },
+      "lastMonth": { "id": 1384, "title": "FLOW-SRCH-LastMonth grocery", "amount": 50.00, "date": "2026-02-15", "categoryId": 3028 },
+      "customRange": { "id": 1385, "title": "FLOW-SRCH-CustomRange item", "amount": 75.00, "date": "2026-01-20", "categoryId": 3029 },
+      "highAmount": { "id": 1386, "title": "FLOW-SRCH-HighAmount expensive", "amount": 500.00, "date": "2026-03-20", "categoryId": 3028 }
+    }
+  },
+  "toolsUsed": ["agent-browser", "curl"],
+  "assertions": [
+    {
+      "id": "VAL-SRCH-001",
+      "title": "Search transactions by title",
+      "status": "pass",
+      "steps": [
+        { "action": "Navigate to /transactions", "expected": "Transactions page with search input", "observed": "Transactions page loaded with search input visible" },
+        { "action": "Type 'apple' in search input", "expected": "Results filtered to transactions containing 'apple' in title", "observed": "2 transactions shown: 'FLOW-SRCH-TitleTest apple budget' and 'UTV-SRCH-A-20260323141945-TITLE-APPLE'" },
+        { "action": "Verify API request", "expected": "GET /api/transactions?search=apple", "observed": "HTTP 200 - 2 results, both have 'apple' in title" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-001-search-apple.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?search=apple -> 200, 2 results (both contain 'apple' in title)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-002",
+      "title": "Search transactions by notes",
+      "status": "pass",
+      "steps": [
+        { "action": "Type 'FLOW-SRCH-unique-note-xyz' in search input", "expected": "Transaction with this term in notes returned even though title doesn't match", "observed": "'FLOW-SRCH-NotesTest invoice' returned; its title doesn't contain 'FLOW-SRCH-unique-note-xyz' but its notes field does" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-002-search-notes.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?search=FLOW-SRCH-unique-note-xyz -> 200, 1 result with matching notes 'FLOW-SRCH-unique-note-xyz search this'"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-003",
+      "title": "Filter by category",
+      "status": "pass",
+      "steps": [
+        { "action": "Open Filters panel and select 'FLOW-SRCH-CatA-20260323' from Category dropdown", "expected": "Only transactions in CatA (id=3028) shown", "observed": "3 transactions shown: all belonging to FLOW-SRCH-CatA-20260323" },
+        { "action": "Verify API request", "expected": "GET /api/transactions?categoryId=3028", "observed": "HTTP 200 - 3 results, all with categoryId=3028 (FLOW-SRCH-CatA-20260323)" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-003-filter-category.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?categoryId=3028 -> 200, 3 results all in FLOW-SRCH-CatA-20260323"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-004",
+      "title": "Filter by date range - this month",
+      "status": "pass",
+      "steps": [
+        { "action": "Select 'This Month' from Date Range dropdown", "expected": "Only transactions dated in March 2026 (current month) shown", "observed": "14 transactions shown, all dated 2026-03-01 to 2026-03-31; FLOW-SRCH-LastMonth (Feb) and FLOW-SRCH-CustomRange (Jan) correctly excluded" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-004-this-month.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?dateFrom=2026-03-01&dateTo=2026-03-31 -> 200, 14 results all in March 2026"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-005",
+      "title": "Filter by date range - last month",
+      "status": "pass",
+      "steps": [
+        { "action": "Select 'Last Month' from Date Range dropdown", "expected": "Only transactions dated in February 2026 shown", "observed": "4 transactions shown: Taxi ride (Feb 28), Restaurant dinner (Feb 17), FLOW-SRCH-LastMonth grocery (Feb 15), UTV-SRCH-A-...-LAST-MONTH (Feb 11)" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-005-last-month.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?dateFrom=2026-02-01&dateTo=2026-02-28 -> 200, 4 results all in February 2026"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-006",
+      "title": "Filter by date range - custom range",
+      "status": "pass",
+      "steps": [
+        { "action": "Select 'Custom' from Date Range, set From=2026-01-01 and To=2026-01-31", "expected": "Only January 2026 transactions shown", "observed": "1 transaction shown: 'FLOW-SRCH-CustomRange item' (Jan 20, 2026). Date inputs displayed as 01.01.2026 to 31.01.2026 in European locale format" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-006-custom-range.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?dateFrom=2026-01-01&dateTo=2026-01-31 -> 200, 1 result (FLOW-SRCH-CustomRange item)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-007",
+      "title": "Filter by amount range",
+      "status": "pass",
+      "steps": [
+        { "action": "Set Minimum amount = 400", "expected": "Only transactions with amount >= 400 shown", "observed": "1 transaction shown: 'FLOW-SRCH-HighAmount expensive' ($500.00)" },
+        { "action": "Verify API request", "expected": "GET /api/transactions?amountMin=400", "observed": "HTTP 200 - 1 result with amount=500" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-007-amount-min.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?amountMin=400 -> 200, 1 result (FLOW-SRCH-HighAmount expensive, $500)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-008",
+      "title": "Combining multiple filters",
+      "status": "pass",
+      "steps": [
+        { "action": "Set search='apple', category='FLOW-SRCH-CatA-20260323', date range='This Month'", "expected": "Only transactions matching ALL conditions returned (AND logic)", "observed": "1 transaction returned: 'FLOW-SRCH-TitleTest apple budget' (has 'apple' in title, is in CatA, dated Mar 10, 2026). The 'UTV-SRCH-A-...-TITLE-APPLE' transaction (different category) was correctly excluded" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-008-combined-filters-v2.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?categoryId=3028&dateFrom=2026-03-01&dateTo=2026-03-31&search=apple -> 200, 1 result (AND logic confirmed)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-009",
+      "title": "No search results empty state",
+      "status": "pass",
+      "steps": [
+        { "action": "Type 'FLOW-SRCH-nonexistent-xyz-99999' in search with active category+date filters", "expected": "Empty state message displayed instead of blank/empty table", "observed": "Empty state shown with magnifying glass icon, 'No transactions found' heading, 'Try adjusting your search or filters to find what you're looking for.' message, and 'Clear Filters' button" }
+      ],
+      "evidence": {
+        "screenshots": ["search-filters-websocket/group-srch/VAL-SRCH-009-empty-state.png"],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions?search=FLOW-SRCH-nonexistent-xyz-99999&... -> 200, [] (empty array)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-SRCH-010",
+      "title": "Clear/reset filters",
+      "status": "pass",
+      "steps": [
+        { "action": "With active filters (search + category + date range), click 'Clear Filters' button", "expected": "All filters reset, full transaction list restored", "observed": "Search input cleared, Category reset to 'All Categories', Date Range reset to 'All Time', amount fields cleared, full transaction list restored with all transactions visible" }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/group-srch/VAL-SRCH-009-empty-state.png",
+          "search-filters-websocket/group-srch/VAL-SRCH-010-after-clear.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> 200, full list returned"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "When chaining multiple filter selects (fill search + select category + select date range) in a single command chain, the category selection sometimes does not take effect if element refs become stale. Required re-snapshotting to get fresh refs and selecting category separately.",
+      "resolved": true,
+      "resolution": "Re-snapshotted after page interaction to get fresh element refs, then applied filters one by one",
+      "affectedAssertions": ["VAL-SRCH-008"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 10 assertions: all 10 passed. Search by title (VAL-SRCH-001) and by notes (VAL-SRCH-002) work correctly via iLIKE matching on both fields. Category filter (VAL-SRCH-003) correctly isolates by categoryId. Date range presets 'This Month' (VAL-SRCH-004) and 'Last Month' (VAL-SRCH-005) return correct month boundaries. Custom date range (VAL-SRCH-006) works with inclusive start/end dates. Amount range filter (VAL-SRCH-007) using amountMin/amountMax params functions correctly. Combining all three filters (VAL-SRCH-008) applies AND logic properly. Empty state (VAL-SRCH-009) shows a proper 'No transactions found' message with helper text. Clear Filters (VAL-SRCH-010) resets all filters and restores the full list."
+}

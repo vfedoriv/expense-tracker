@@ -1,0 +1,316 @@
+{
+  "groupId": "ws-thresholds",
+  "testedAt": "2026-03-23T14:33:00Z",
+  "isolation": {
+    "milestone": "search-filters-websocket",
+    "missionDir": "/Users/vfedoriv/.factory/missions/d8a68c31-9307-406c-aa73-3708051bbbdc",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "wsEndpoint": "ws://localhost:8080/ws",
+    "ports": [5173, 8080, 5432],
+    "fakeAuthUsers": ["1", "2"],
+    "dataPrefix": "UTV-WS-B-2026-03-23T14-32-03-308Z"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "node (native WebSocket + fetch STOMP probe)",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-WS-001",
+      "title": "WebSocket connects after authentication",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Open app in agent-browser at /dashboard and inspect network/console.",
+          "expected": "Frontend authenticates and auto-establishes STOMP WS connection.",
+          "observed": "Frontend crashed before rendering (console error: global is not defined), no browser WS requests emitted."
+        },
+        {
+          "action": "Run protocol probe connect for user 2.",
+          "expected": "WebSocket handshake + STOMP CONNECTED succeed for authenticated user context.",
+          "observed": "Connected via ws://localhost:8080/ws/websocket?userId=2 and received CONNECTED frame."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png",
+          "search-filters-websocket/ws-thresholds/ui-root.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json, search-filters-websocket/ws-thresholds/ui-errors-root.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.clients.u2Sub.framesIn[0]"
+      },
+      "issues": "UI runtime failure blocked direct browser-surface verification of auto-connect after auth."
+    },
+    {
+      "id": "VAL-WS-002",
+      "title": "Client sends subscribe message to server",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Connect user 2 subscribed client and parallel user 2 non-subscribed client.",
+          "expected": "Subscribed client receives alert messages; non-subscribed client does not.",
+          "observed": "Subscribed client received threshold alert frames; non-subscribed client received none."
+        },
+        {
+          "action": "POST transaction crossing threshold while both connections active.",
+          "expected": "Only subscribed path gets pushed alert.",
+          "observed": "u2Sub received MESSAGE threshold=80; u2NoSub received zero messages."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.slices.u2SubAfterCreate, #ws.slices.u2NoSubAfterCreate, #ws.clients.u2Sub.framesOut(SUBSCRIBE)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-003",
+      "title": "50% threshold alert",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Set user 2 budget below pre-existing spending ratio and subscribe to /user/topic/budget-alerts.",
+          "expected": "50% alert is pushed and shown in UI.",
+          "observed": "Protocol MESSAGE threshold=50 arrived immediately after subscribe; UI could not be rendered due runtime crash."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.clients.u2Sub.messageFrames[0]"
+      },
+      "issues": "UI visibility portion not testable because frontend is blank in agent-browser (global is not defined)."
+    },
+    {
+      "id": "VAL-WS-004",
+      "title": "80% threshold alert",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Create user 2 transaction that crosses 80% usage with active subscription.",
+          "expected": "80% alert pushed and displayed in UI.",
+          "observed": "Protocol MESSAGE threshold=80 received after POST /api/transactions; UI alert not verifiable due frontend crash."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.slices.u2SubAfterCreate"
+      },
+      "issues": "UI rendering blocker prevents visual confirmation."
+    },
+    {
+      "id": "VAL-WS-005",
+      "title": "100% threshold alert",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Update user 2 transaction to exceed 100% usage with active subscription.",
+          "expected": "100% alert pushed and displayed in UI.",
+          "observed": "Protocol MESSAGE threshold=100 received after PUT /api/transactions/{id}; UI alert not verifiable due frontend crash."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.slices.u2SubAfterUpdate"
+      },
+      "issues": "UI rendering blocker prevents visual confirmation."
+    },
+    {
+      "id": "VAL-WS-006",
+      "title": "Once per threshold per month - no spam",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Trigger 50, 80, 100 alerts once for user 2.",
+          "expected": "Each threshold fires once.",
+          "observed": "Received exactly one alert for each threshold (50/80/100)."
+        },
+        {
+          "action": "Oscillate spend via multiple transaction updates above/below 80 and 100.",
+          "expected": "No duplicate threshold messages.",
+          "observed": "No additional alert messages during oscillation sequence."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#checks.ws006_thresholdCounts, #checks.ws006_noNewAlertsDuringOscillation, #ws.slices.u2SubAfterOscillation"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-007",
+      "title": "Alert on connection open if threshold already crossed",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Keep user 2 spending above 50% before subscribing.",
+          "expected": "Upon subscribe/connect, initial alert is sent immediately.",
+          "observed": "Immediately after SUBSCRIBE, MESSAGE threshold=50 was delivered."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#checks.initialThresholdsAfterSubscribe, #ws.clients.u2Sub.events"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-008",
+      "title": "Alert after transaction create/update/delete",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Create transaction crossing 80%.",
+          "expected": "Newly crossed threshold alert is pushed.",
+          "observed": "POST /api/transactions -> 201 and MESSAGE threshold=80 received."
+        },
+        {
+          "action": "Update transaction crossing 100%.",
+          "expected": "Newly crossed threshold alert is pushed.",
+          "observed": "PUT /api/transactions/{id} -> 200 and MESSAGE threshold=100 received."
+        },
+        {
+          "action": "Delete transaction.",
+          "expected": "Mutation triggers recalculation; only newly crossed thresholds should alert.",
+          "observed": "DELETE /api/transactions/{id} -> 204; no new WS alert (no newly crossed threshold)."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.slices.u2SubAfterCreate, #ws.slices.u2SubAfterUpdate, #ws.slices.u2SubAfterDelete"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-009",
+      "title": "No alerts when no budget set",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Confirm user 2 has no current-month budget.",
+          "expected": "Budget endpoint indicates missing budget.",
+          "observed": "GET /api/budgets?year=2026&month=3 -> 404 Budget not found."
+        },
+        {
+          "action": "Subscribe user 2 and create transaction while budget is absent.",
+          "expected": "No budget alerts are generated.",
+          "observed": "POST /api/transactions -> 201 and zero WS MESSAGE frames received."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#checks.user2BudgetBefore, #ws.slices.noBudgetMessages"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-WS-010",
+      "title": "Alert visible in UI",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Open frontend pages in agent-browser and look for budget alert notifications.",
+          "expected": "Visible toast/banner/panel showing threshold message.",
+          "observed": "Frontend did not render interactive UI; page remained blank with runtime error 'global is not defined'."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png",
+          "search-filters-websocket/ws-thresholds/ui-root.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json, search-filters-websocket/ws-thresholds/ui-errors-root.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json (protocol confirms alert frames but not UI rendering)"
+      },
+      "issues": "UI runtime crash blocks visible-notification validation."
+    },
+    {
+      "id": "VAL-WS-011",
+      "title": "WebSocket authorized per user",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Attempt unauthenticated and invalid-user WebSocket connections.",
+          "expected": "Handshake rejected.",
+          "observed": "Connections without userId and with userId=999 closed with socket error/1006 and never reached CONNECTED."
+        },
+        {
+          "action": "Keep user 1 and user 2 subscribers active, then trigger user 2 alerts.",
+          "expected": "Only user 2 receives user 2 alerts.",
+          "observed": "User 2 received threshold=80/100; user 1 received zero messages during those events."
+        }
+      ],
+      "evidence": {
+        "screenshots": [],
+        "consoleErrors": "n/a (protocol assertion)",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.clients.noAuth, #ws.clients.invalidUser, #ws.slices.u1SubAfterCreate, #ws.slices.u1SubAfterUpdate"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-005",
+      "title": "Budget alert triggered by transaction creation",
+      "status": "blocked",
+      "steps": [
+        {
+          "action": "Create user 2 transaction that crosses threshold while subscribed.",
+          "expected": "WS alert frame after POST /api/transactions and visible UI notification.",
+          "observed": "WS alert frame threshold=80 arrived immediately after POST /api/transactions 201, but UI notification could not be verified because frontend did not render."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/ws-thresholds/ui-dashboard-initial.png"
+        ],
+        "consoleErrors": "search-filters-websocket/ws-thresholds/ui-errors-initial.json",
+        "network": "search-filters-websocket/ws-thresholds/ws-probe-results.json#ws.slices.u2SubAfterCreate and #apiCalls(POST /transactions status 201)"
+      },
+      "issues": "UI runtime crash prevented confirmation of alert presentation in browser."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser could load the app origin but UI never rendered; snapshots had no interactive elements and JS error was 'global is not defined'.",
+      "resolved": false,
+      "resolution": "Used supplemental protocol-level STOMP/WebSocket probe to validate server-side alert contract while marking UI-dependent assertions blocked.",
+      "affectedAssertions": [
+        "VAL-WS-001",
+        "VAL-WS-003",
+        "VAL-WS-004",
+        "VAL-WS-005",
+        "VAL-WS-010",
+        "VAL-CROSS-005"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Frontend runtime error 'global is not defined' on http://localhost:5173 prevented real UI rendering and interaction in agent-browser.",
+      "affectedAssertions": [
+        "VAL-WS-001",
+        "VAL-WS-003",
+        "VAL-WS-004",
+        "VAL-WS-005",
+        "VAL-WS-010",
+        "VAL-CROSS-005"
+      ],
+      "quickFixAttempted": "Retried routes (/ and /dashboard), reloaded, and collected screenshots/errors/network logs; issue persisted."
+    }
+  ],
+  "summary": "Validated 12 assigned assertions with protocol evidence: 6 passed (VAL-WS-002, VAL-WS-006, VAL-WS-007, VAL-WS-008, VAL-WS-009, VAL-WS-011) and 6 blocked by frontend runtime crash impacting UI-surface verification (VAL-WS-001, VAL-WS-003, VAL-WS-004, VAL-WS-005, VAL-WS-010, VAL-CROSS-005). STOMP/WebSocket probe confirmed threshold alerts (50/80/100), once-per-threshold behavior, no-budget suppression, and auth/user isolation at protocol level."
+}

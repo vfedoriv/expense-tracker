@@ -1,0 +1,323 @@
+{
+  "groupId": "search-filters",
+  "testedAt": "2026-03-23T14:23:30Z",
+  "isolation": {
+    "milestone": "search-filters-websocket",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "ports": [5173, 8080, 5432],
+    "fakeAuthUser": "default",
+    "xUserId": "1",
+    "dataPrefix": "UTV-SRCH-A-20260323141945",
+    "missionDir": "/Users/vfedoriv/.factory/missions/d8a68c31-9307-406c-aa73-3708051bbbdc"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-SRCH-001",
+      "title": "Search transactions by title",
+      "status": "blocked",
+      "reason": "UI was not renderable in agent-browser (blank page with runtime error: 'global is not defined'), so title search could not be executed via real user surface.",
+      "steps": [
+        {
+          "action": "Open /transactions and try to interact with search input",
+          "expected": "Transactions page and search input are visible",
+          "observed": "Blank page; no interactive elements"
+        },
+        {
+          "action": "Check browser errors and retry (reload, headed mode)",
+          "expected": "UI recovers and search flow can be tested",
+          "observed": "Repeated runtime error 'global is not defined'"
+        },
+        {
+          "action": "Run supplemental API query GET /api/transactions?search=UTV-SRCH-A-20260323141945-TITLE-APPLE",
+          "expected": "At least the title-matching scoped transaction is returned",
+          "observed": "HTTP 200; count=1"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json (contains repeated 'global is not defined')",
+        "network": "UI: search-filters-websocket/search-filters/ui-network-requests.txt (No requests captured). Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.searchByTitle"
+      },
+      "issues": "Frontend runtime crash blocks interactive search validation."
+    },
+    {
+      "id": "VAL-SRCH-002",
+      "title": "Search transactions by notes",
+      "status": "blocked",
+      "reason": "UI did not render due runtime error, so notes-based search could not be tested through the browser surface.",
+      "steps": [
+        {
+          "action": "Open /transactions and attempt notes search flow",
+          "expected": "Search field available and list updates",
+          "observed": "Blank page; flow unavailable"
+        },
+        {
+          "action": "Run supplemental API query GET /api/transactions?search=UTV-SRCH-A-20260323141945-NOTE-ONLY-MATCH",
+          "expected": "Record matched by notes is returned",
+          "observed": "HTTP 200; count=1; expected scoped record returned"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.searchByNotes"
+      },
+      "issues": "Cannot validate UI search interaction due frontend crash."
+    },
+    {
+      "id": "VAL-SRCH-003",
+      "title": "Filter by category",
+      "status": "blocked",
+      "reason": "Category filter UI was unavailable because /transactions stayed blank with runtime error.",
+      "steps": [
+        {
+          "action": "Open /transactions and expand filters",
+          "expected": "Category dropdown is visible and selectable",
+          "observed": "Blank page; no filter controls"
+        },
+        {
+          "action": "Run supplemental API query GET /api/transactions?categoryId=<scoped-cat-b-id>",
+          "expected": "Only scoped category transactions are returned",
+          "observed": "HTTP 200; all returned records match the selected categoryId"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.filterByCategory and api-search-filters-checks.json#filterByCategory"
+      },
+      "issues": "Cannot verify category filter behavior in UI."
+    },
+    {
+      "id": "VAL-SRCH-004",
+      "title": "Filter by date range - this month",
+      "status": "blocked",
+      "reason": "Date preset controls were not accessible because transactions page did not render.",
+      "steps": [
+        {
+          "action": "Open /transactions and attempt 'This Month' preset",
+          "expected": "Only current-month transactions displayed",
+          "observed": "Blank page; preset controls unavailable"
+        },
+        {
+          "action": "Run supplemental API query with current-month dateFrom/dateTo",
+          "expected": "All returned rows are in current month",
+          "observed": "HTTP 200; all returned rows were in current month"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.dateRangeThisMonthLike and api-search-filters-checks.json#dateRangeThisMonthLike"
+      },
+      "issues": "Cannot validate preset selection and UI rendering of filtered rows."
+    },
+    {
+      "id": "VAL-SRCH-005",
+      "title": "Filter by date range - last month",
+      "status": "blocked",
+      "reason": "Last-month preset flow could not be executed because UI failed to load.",
+      "steps": [
+        {
+          "action": "Open /transactions and attempt 'Last Month' preset",
+          "expected": "Only previous-month transactions displayed",
+          "observed": "Blank page; preset controls unavailable"
+        },
+        {
+          "action": "Run supplemental API query with previous-month dateFrom/dateTo",
+          "expected": "All returned rows are in previous month",
+          "observed": "HTTP 200; all returned rows were in previous month"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.dateRangeLastMonthLike and api-search-filters-checks.json#dateRangeLastMonthLike"
+      },
+      "issues": "Cannot validate UI date preset behavior."
+    },
+    {
+      "id": "VAL-SRCH-006",
+      "title": "Filter by date range - custom range",
+      "status": "blocked",
+      "reason": "Custom date inputs were not accessible due frontend runtime crash.",
+      "steps": [
+        {
+          "action": "Open /transactions and attempt to set custom start/end dates",
+          "expected": "Rows filtered to inclusive custom range",
+          "observed": "Blank page; custom date controls unavailable"
+        },
+        {
+          "action": "Run supplemental API query with dateFrom=YYYY-MM-10 and dateTo=YYYY-MM-20",
+          "expected": "All returned rows are within inclusive range",
+          "observed": "HTTP 200; all returned rows satisfy inclusive range"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.customDateRange and api-search-filters-checks.json#customDateRange"
+      },
+      "issues": "Cannot validate custom date picker interaction in UI."
+    },
+    {
+      "id": "VAL-SRCH-007",
+      "title": "Filter by amount range",
+      "status": "blocked",
+      "reason": "Amount min/max UI controls were unavailable because transactions page did not render.",
+      "steps": [
+        {
+          "action": "Open /transactions and attempt to set min/max amount",
+          "expected": "Rows filtered to amount bounds",
+          "observed": "Blank page; amount controls unavailable"
+        },
+        {
+          "action": "Run supplemental API query GET /api/transactions?amountMin=50&amountMax=90",
+          "expected": "All rows satisfy 50 <= amount <= 90",
+          "observed": "HTTP 200; all returned rows within bounds"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.amountRange and api-search-filters-checks.json#amountRange"
+      },
+      "issues": "Cannot validate UI amount filter controls."
+    },
+    {
+      "id": "VAL-SRCH-008",
+      "title": "Combining multiple filters",
+      "status": "blocked",
+      "reason": "Could not apply combined search/category/date filters in UI because page remained blank.",
+      "steps": [
+        {
+          "action": "Open /transactions and apply search + category + date filters",
+          "expected": "AND logic in result set",
+          "observed": "Blank page; no controls available"
+        },
+        {
+          "action": "Run supplemental API query with search+categoryId+dateFrom+dateTo",
+          "expected": "All returned rows match every condition",
+          "observed": "HTTP 200; returned rows satisfy AND logic"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.combinedFilters and api-search-filters-checks.json#combinedFilters"
+      },
+      "issues": "Cannot validate combined filter UX behavior due frontend crash."
+    },
+    {
+      "id": "VAL-SRCH-009",
+      "title": "No search results empty state",
+      "status": "blocked",
+      "reason": "UI empty-state rendering could not be validated because list page failed to render at all.",
+      "steps": [
+        {
+          "action": "Open /transactions and apply a no-hit search term",
+          "expected": "UI shows 'No results found' empty state",
+          "observed": "Blank page; no empty-state component visible"
+        },
+        {
+          "action": "Run supplemental API query with guaranteed no-hit term",
+          "expected": "Backend returns empty array",
+          "observed": "HTTP 200; count=0"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.noResultsSearch and api-search-filters-checks.json#noResultsSearch"
+      },
+      "issues": "No way to verify UI empty-state text due render failure."
+    },
+    {
+      "id": "VAL-SRCH-010",
+      "title": "Clear/reset filters",
+      "status": "blocked",
+      "reason": "Clear Filters control was not testable because transactions UI did not render.",
+      "steps": [
+        {
+          "action": "Open /transactions, apply filters, click Clear Filters",
+          "expected": "All filters reset and full list restored",
+          "observed": "Blank page; clear/reset control unavailable"
+        },
+        {
+          "action": "Run supplemental API baseline comparison (filtered vs unfiltered)",
+          "expected": "Unfiltered baseline has >= filtered result count",
+          "observed": "HTTP 200 for both; baseline count (17) >= filtered count (1)"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "search-filters-websocket/search-filters/ui-transactions-blank.png"
+        ],
+        "consoleErrors": "search-filters-websocket/search-filters/ui-console-errors.json",
+        "network": "Supplemental API: search-filters-websocket/search-filters/api-search-filters-evidence.json#queries.clearFiltersBaseline and api-search-filters-checks.json#clearFiltersBaseline"
+      },
+      "issues": "Unable to verify actual UI reset interaction due frontend render failure."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser surfaced only a terse runtime error ('global is not defined') with no stack trace in `errors` output, making root-cause localization slower.",
+      "resolved": true,
+      "resolution": "Captured both `errors` and `console` JSON outputs and added supplemental API checks so assertion intent could still be partially evidenced while marking UI assertions blocked.",
+      "affectedAssertions": [
+        "VAL-SRCH-001",
+        "VAL-SRCH-002",
+        "VAL-SRCH-003",
+        "VAL-SRCH-004",
+        "VAL-SRCH-005",
+        "VAL-SRCH-006",
+        "VAL-SRCH-007",
+        "VAL-SRCH-008",
+        "VAL-SRCH-009",
+        "VAL-SRCH-010"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Frontend UI did not render in agent-browser for /, /dashboard, and /transactions. Page stayed blank and console error repeatedly reported: 'global is not defined'.",
+      "affectedAssertions": [
+        "VAL-SRCH-001",
+        "VAL-SRCH-002",
+        "VAL-SRCH-003",
+        "VAL-SRCH-004",
+        "VAL-SRCH-005",
+        "VAL-SRCH-006",
+        "VAL-SRCH-007",
+        "VAL-SRCH-008",
+        "VAL-SRCH-009",
+        "VAL-SRCH-010"
+      ],
+      "quickFixAttempted": "Retried reloads, switched headless/headed mode, navigated directly to routes, and attempted temporary in-session network shim; runtime error persisted and UI remained blank."
+    }
+  ],
+  "summary": "Attempted all 10 assigned search/filter assertions via agent-browser, but all are blocked by frontend runtime failure (`global is not defined`) causing blank UI. Supplemental API checks with scoped data prefix UTV-SRCH-A-20260323141945 returned expected 200 responses and correct filter semantics, but UI contract verification remains blocked."
+}

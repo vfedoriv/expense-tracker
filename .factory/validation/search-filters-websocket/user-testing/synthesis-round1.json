@@ -1,0 +1,46 @@
+{
+  "milestone": "search-filters-websocket",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 22,
+    "passed": 6,
+    "failed": 0,
+    "blocked": 16
+  },
+  "passedAssertions": [
+    "VAL-WS-002",
+    "VAL-WS-006",
+    "VAL-WS-007",
+    "VAL-WS-008",
+    "VAL-WS-009",
+    "VAL-WS-011"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    { "id": "VAL-SRCH-001", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; title-search interaction could not be executed in browser." },
+    { "id": "VAL-SRCH-002", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; notes-search interaction could not be executed in browser." },
+    { "id": "VAL-SRCH-003", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; category filter UI could not be exercised." },
+    { "id": "VAL-SRCH-004", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; 'This Month' preset could not be exercised." },
+    { "id": "VAL-SRCH-005", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; 'Last Month' preset could not be exercised." },
+    { "id": "VAL-SRCH-006", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; custom date-range controls could not be exercised." },
+    { "id": "VAL-SRCH-007", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; amount range controls could not be exercised." },
+    { "id": "VAL-SRCH-008", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; combined filter UX could not be exercised." },
+    { "id": "VAL-SRCH-009", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; no-results empty state could not be verified in UI." },
+    { "id": "VAL-SRCH-010", "blockedBy": "Blocked: frontend runtime error 'global is not defined' caused blank Transactions UI; clear/reset filters control could not be exercised." },
+    { "id": "VAL-WS-001", "blockedBy": "Blocked: frontend runtime error 'global is not defined' prevented verifying automatic post-auth WS connection in browser UI." },
+    { "id": "VAL-WS-003", "blockedBy": "Blocked: protocol-level 50% alert frame observed, but UI notification visibility could not be verified due frontend runtime crash." },
+    { "id": "VAL-WS-004", "blockedBy": "Blocked: protocol-level 80% alert frame observed, but UI notification visibility could not be verified due frontend runtime crash." },
+    { "id": "VAL-WS-005", "blockedBy": "Blocked: protocol-level 100% alert frame observed, but UI notification visibility could not be verified due frontend runtime crash." },
+    { "id": "VAL-WS-010", "blockedBy": "Blocked: alert frames were produced, but alert presentation in UI could not be verified because frontend UI did not render." },
+    { "id": "VAL-CROSS-005", "blockedBy": "Blocked: transaction-triggered WS alert frame was observed, but UI alert display could not be verified due frontend runtime crash." }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Documented current blocker for search-filters-websocket: frontend runtime crash ('global is not defined') causing blank UI in browser automation.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null
+}
