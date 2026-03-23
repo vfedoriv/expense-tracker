@@ -2,6 +2,19 @@ import type { ApiError } from '../types';
 
 const BASE_URL = '/api';
 
+/**
+ * Reads the XSRF-TOKEN cookie value from document.cookie.
+ * Spring Security's CookieCsrfTokenRepository sets this cookie (httpOnly=false)
+ * so the frontend can read it and send it back as the X-XSRF-TOKEN header.
+ */
+export function getCsrfToken(): string | null {
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('XSRF-TOKEN='));
+  if (!match) return null;
+  return decodeURIComponent(match.split('=')[1]);
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let message = `Request failed with status ${response.status}`;
@@ -32,6 +45,21 @@ function getHeaders(): HeadersInit {
   };
 }
 
+/**
+ * Returns headers for mutation requests (POST/PUT/DELETE).
+ * Includes the X-XSRF-TOKEN header when the CSRF cookie is available.
+ */
+function getMutationHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    headers['X-XSRF-TOKEN'] = csrfToken;
+  }
+  return headers;
+}
+
 export const apiClient = {
   async get<T>(path: string): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
@@ -45,7 +73,7 @@ export const apiClient = {
   async post<T>(path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers: getMutationHeaders(),
       body: body ? JSON.stringify(body) : undefined,
       credentials: 'include',
     });
@@ -55,7 +83,7 @@ export const apiClient = {
   async put<T>(path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'PUT',
-      headers: getHeaders(),
+      headers: getMutationHeaders(),
       body: body ? JSON.stringify(body) : undefined,
       credentials: 'include',
     });
@@ -65,7 +93,7 @@ export const apiClient = {
   async delete<T>(path: string): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'DELETE',
-      headers: getHeaders(),
+      headers: getMutationHeaders(),
       credentials: 'include',
     });
     return handleResponse<T>(response);

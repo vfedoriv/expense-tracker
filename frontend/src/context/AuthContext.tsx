@@ -6,6 +6,7 @@ import {
 } from 'react';
 import type { User } from '../types';
 import { AuthContext } from './authContextDef';
+import { getCsrfToken } from '../api/client';
 
 const BASE_URL = '/api';
 
@@ -39,9 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        headers['X-XSRF-TOKEN'] = csrfToken;
+      }
       await fetch(`${BASE_URL}/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers,
       });
     } catch {
       // Even if the logout request fails, clear the local state
