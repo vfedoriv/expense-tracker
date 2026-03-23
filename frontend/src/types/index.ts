@@ -68,11 +68,22 @@ export interface ApiError {
   status: number;
 }
 
-export interface BudgetAlert {
+export interface BudgetAlertMessage {
+  type: string;
   threshold: number;
+  currentSpending: number;
+  budgetAmount: number;
+  yearMonth: string;
+}
+
+export interface BudgetAlertToast {
+  id: string;
+  threshold: number;
+  currentSpending: number;
+  budgetAmount: number;
+  yearMonth: string;
+  severity: 'info' | 'warning' | 'danger';
   message: string;
-  year: number;
-  month: number;
 }
 
 export interface TransactionFilters {

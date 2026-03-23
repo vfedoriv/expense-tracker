@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../../hooks/useAuth';
+import { useWebSocket } from '../../hooks/useWebSocket';
+import { BudgetAlertNotification } from '../BudgetAlertNotification';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -11,9 +13,11 @@ const navItems = [
 export function Layout() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { alerts, dismissAlert } = useWebSocket();
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <BudgetAlertNotification alerts={alerts} onDismiss={dismissAlert} />
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
