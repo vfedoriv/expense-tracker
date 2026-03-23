@@ -11,14 +11,13 @@ import java.util.Map;
 
 /**
  * Intercepts WebSocket handshake to authenticate the user.
- * Extracts X-User-Id header (or defaults to user 1) and stores
- * the UserPrincipal in the WebSocket session attributes.
- * Rejects the handshake if no valid user is found.
+ * Extracts X-User-Id header and stores the UserPrincipal in the
+ * WebSocket session attributes. Rejects the handshake if the header
+ * is missing, invalid, or references a non-existent user.
  */
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
     private static final String USER_ID_HEADER = "X-User-Id";
-    private static final Long DEFAULT_USER_ID = 1L;
 
     private final UserRepository userRepository;
 
@@ -29,22 +28,25 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                     WebSocketHandler wsHandler, Map<String, Object> attributes) {
-        Long userId = DEFAULT_USER_ID;
+        if (!(request instanceof ServletServerHttpRequest servletRequest)) {
+            return false; // Reject non-servlet requests
+        }
 
-        if (request instanceof ServletServerHttpRequest servletRequest) {
-            String userIdHeader = servletRequest.getServletRequest().getHeader(USER_ID_HEADER);
-            if (userIdHeader != null && !userIdHeader.isBlank()) {
-                try {
-                    userId = Long.parseLong(userIdHeader.trim());
-                } catch (NumberFormatException e) {
-                    userId = DEFAULT_USER_ID;
-                }
-            }
+        String userIdHeader = servletRequest.getServletRequest().getHeader(USER_ID_HEADER);
+        if (userIdHeader == null || userIdHeader.isBlank()) {
+            return false; // Reject: missing X-User-Id header
+        }
+
+        Long userId;
+        try {
+            userId = Long.parseLong(userIdHeader.trim());
+        } catch (NumberFormatException e) {
+            return false; // Reject: invalid X-User-Id header
         }
 
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return false; // Reject handshake
+            return false; // Reject: non-existent user
         }
 
         UserPrincipal principal = new UserPrincipal(
