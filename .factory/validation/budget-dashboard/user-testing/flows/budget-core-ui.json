@@ -1,0 +1,168 @@
+{
+  "groupId": "budget-core-ui",
+  "testedAt": "2026-03-23T12:48:25Z",
+  "isolation": {
+    "missionDir": "/Users/vfedoriv/.factory/missions/d8a68c31-9307-406c-aa73-3708051bbbdc",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "user": "fake-auth default user (User A)",
+    "months": ["2030-06", "2030-07", "2030-08"],
+    "ports": [5173, 8080, 5432]
+  },
+  "toolsUsed": ["agent-browser"],
+  "assertions": [
+    {
+      "id": "VAL-BUD-006",
+      "title": "No budget set empty state",
+      "status": "pass",
+      "reason": "On 2030-07 the dashboard showed explicit 'No budget set' empty state with Set Budget CTA, rather than misleading budget usage values.",
+      "steps": [
+        {
+          "action": "Navigate dashboard month selector to July 2030",
+          "expected": "Selected month changes to July 2030",
+          "observed": "Header changed to 'July 2030'."
+        },
+        {
+          "action": "Inspect budget panel in month with no budget",
+          "expected": "Explicit 'No budget set' state",
+          "observed": "Budget panel showed 'No budget set' and empty-state copy with Set Budget button."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/budget-core-ui/VAL-BUD-006-2030-07-no-budget.png"
+        ],
+        "consoleErrors": "none (budget-dashboard/budget-core-ui/VAL-BUD-006-console-errors.txt)",
+        "network": "GET /api/dashboard?year=2030&month=7 -> 200 (see budget-dashboard/budget-core-ui/network-performance-budgets.json)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-001",
+      "title": "Set a monthly budget",
+      "status": "pass",
+      "reason": "For 2030-08, saving a new budget persisted and displayed the amount on dashboard.",
+      "steps": [
+        {
+          "action": "Navigate to August 2030 (no budget state)",
+          "expected": "Month shows no budget",
+          "observed": "August 2030 showed 'No budget set'."
+        },
+        {
+          "action": "Open Set Budget modal, enter 1200, and save",
+          "expected": "Budget is created and shown on dashboard",
+          "observed": "Dashboard updated to Budget $1,200.00, Remaining $1,200.00, Usage 0.0%."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/budget-core-ui/VAL-BUD-001-2030-08-budget-set-1200.png"
+        ],
+        "consoleErrors": "none (budget-dashboard/budget-core-ui/VAL-BUD-001-console-errors.txt)",
+        "network": "POST /api/budgets -> 201 and follow-up GET /api/dashboard?year=2030&month=8 -> 200 (see budget-dashboard/budget-core-ui/network-performance-budgets.json; endpoint is implemented as POST for budget save)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-002",
+      "title": "Update an existing monthly budget",
+      "status": "pass",
+      "reason": "Existing 2030-08 budget was edited from 1500 to 1700 and displayed updated value without duplicate behavior.",
+      "steps": [
+        {
+          "action": "Open Edit Budget for August 2030",
+          "expected": "Modal prefilled with current amount",
+          "observed": "Budget input was prefilled with 1500."
+        },
+        {
+          "action": "Change amount to 1700 and save",
+          "expected": "Budget updates in-place and remains single logical month budget",
+          "observed": "Dashboard showed Budget $1,700.00 and Remaining $1,700.00; no duplicate budget display appeared."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/budget-core-ui/VAL-BUD-002-2030-08-budget-updated-1700.png"
+        ],
+        "consoleErrors": "none (budget-dashboard/budget-core-ui/VAL-BUD-002-console-errors.txt)",
+        "network": "POST /api/budgets -> 200 then GET /api/dashboard?year=2030&month=8 -> 200 (see budget-dashboard/budget-core-ui/network-performance-budgets.json; update uses POST in current implementation)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-008",
+      "title": "Dashboard with zero transactions shows $0 spent",
+      "status": "pass",
+      "reason": "With budget set for 2030-06 and no transactions in that month, dashboard showed zero spent, full remaining budget, and zero usage.",
+      "steps": [
+        {
+          "action": "Navigate to June 2030 and set budget to 900",
+          "expected": "Budget saved for month",
+          "observed": "Dashboard updated to Budget $900.00."
+        },
+        {
+          "action": "Verify calculated fields with no transactions",
+          "expected": "Spent $0, Remaining full budget, Usage 0%",
+          "observed": "Total Spent $0.00, Remaining $900.00, Budget Usage 0.0%."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/budget-core-ui/VAL-BUD-008-2030-06-budget-900-zero-transactions.png"
+        ],
+        "consoleErrors": "none (budget-dashboard/budget-core-ui/VAL-BUD-008-console-errors.txt)",
+        "network": "POST /api/budgets -> 201 then GET /api/dashboard?year=2030&month=6 -> 200 (see budget-dashboard/budget-core-ui/network-performance-budgets.json)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-007",
+      "title": "Month selector works correctly",
+      "status": "pass",
+      "reason": "Switching months among 2030-08, 2030-07, and 2030-06 consistently refreshed dashboard values to the selected month context.",
+      "steps": [
+        {
+          "action": "Capture dashboard at August 2030",
+          "expected": "August values shown",
+          "observed": "Budgeted month showed Budget $1,500.00/$1,700.00 in August snapshots."
+        },
+        {
+          "action": "Change month to July 2030",
+          "expected": "Dashboard values update to July context",
+          "observed": "July displayed no budget state."
+        },
+        {
+          "action": "Change month to June 2030",
+          "expected": "Dashboard values update to June context",
+          "observed": "June displayed Budget $900.00 with Spent $0.00 and Usage 0.0%."
+        },
+        {
+          "action": "Return to August 2030",
+          "expected": "Dashboard values revert to August context",
+          "observed": "August displayed updated Budget $1,700.00 again."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/budget-core-ui/VAL-BUD-007-before-2030-08.png",
+          "budget-dashboard/budget-core-ui/VAL-BUD-007-after-2030-07.png",
+          "budget-dashboard/budget-core-ui/VAL-BUD-007-after-2030-06.png",
+          "budget-dashboard/budget-core-ui/VAL-BUD-007-after-return-2030-08.png"
+        ],
+        "consoleErrors": "none (budget-dashboard/budget-core-ui/VAL-BUD-007-console-errors.txt)",
+        "network": "GET /api/dashboard calls for month transitions (2030-08 -> 2030-07 -> 2030-06 -> 2030-08), all 200 (see budget-dashboard/budget-core-ui/network-performance-budgets.json)"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Month picker is previous/next only; reaching 2030 test months from default 2026 month required many repeated clicks.",
+      "resolved": true,
+      "resolution": "Used repeated month-navigation clicks in the same browser session and captured evidence at each target month.",
+      "affectedAssertions": ["VAL-BUD-006", "VAL-BUD-001", "VAL-BUD-002", "VAL-BUD-007", "VAL-BUD-008"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 5 assertions (VAL-BUD-001, VAL-BUD-002, VAL-BUD-006, VAL-BUD-007, VAL-BUD-008): all passed on the real UI surface for User A with evidence captured under missionDir/evidence/budget-dashboard/budget-core-ui/."
+}

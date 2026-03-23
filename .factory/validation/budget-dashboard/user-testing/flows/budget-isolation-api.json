@@ -1,0 +1,220 @@
+{
+  "groupId": "budget-isolation-api",
+  "testedAt": "2026-03-23T12:55:00.903944+00:00",
+  "isolation": {
+    "apiUrl": "http://localhost:8080/api",
+    "userA": {
+      "header": "X-User-Id",
+      "value": "1"
+    },
+    "userB": {
+      "header": "X-User-Id",
+      "value": "2"
+    },
+    "months": [
+      "2032-04",
+      "2032-05"
+    ],
+    "prefix": "ut-bud-iso-20260323"
+  },
+  "toolsUsed": [
+    "python",
+    "curl-style HTTP requests via urllib"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-BUD-009",
+      "title": "User cannot see another user's budget",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "User A POST /api/budgets (2032-04, 1111.11)",
+          "expected": "Budget created/updated for User A",
+          "observed": "HTTP 201; amount=1111.11; evidence: budget-dashboard/budget-isolation-api/02-val-bud-009-a-set-budget-2032-04.json"
+        },
+        {
+          "action": "User A GET /api/budgets?year=2032&month=4",
+          "expected": "HTTP 200 with User A budget amount 1111.11",
+          "observed": "HTTP 200; id=76, amount=1111.11; evidence: budget-dashboard/budget-isolation-api/03-val-bud-009-a-get-budget-2032-04.json"
+        },
+        {
+          "action": "User B GET /api/budgets?year=2032&month=4 before creating own budget",
+          "expected": "Does not expose User A budget (404/403 or different record)",
+          "observed": "HTTP 404; response={'error': 'Budget not found for 2032-4'}; evidence: budget-dashboard/budget-isolation-api/04-val-bud-009-b-get-before-own-budget.json"
+        },
+        {
+          "action": "User B POST /api/budgets (2032-04, 2222.22)",
+          "expected": "Budget created/updated for User B only",
+          "observed": "HTTP 201; amount=2222.22; evidence: budget-dashboard/budget-isolation-api/05-val-bud-009-b-set-budget-2032-04.json"
+        },
+        {
+          "action": "User B GET /api/budgets?year=2032&month=4 after own create",
+          "expected": "HTTP 200 with amount 2222.22",
+          "observed": "HTTP 200; id=77, amount=2222.22; evidence: budget-dashboard/budget-isolation-api/06-val-bud-009-b-get-after-own-budget.json"
+        },
+        {
+          "action": "User A GET /api/budgets?year=2032&month=4 after User B update",
+          "expected": "Still returns User A amount 1111.11",
+          "observed": "HTTP 200; id=76, amount=1111.11; evidence: budget-dashboard/budget-isolation-api/07-val-bud-009-a-get-after-b-update.json"
+        },
+        {
+          "action": "User A GET /api/dashboard?year=2032&month=4",
+          "expected": "Dashboard budgetAmount reflects User A budget",
+          "observed": "HTTP 200; dashboard={'totalSpent': 0, 'budgetAmount': 1111.11, 'remaining': 1111.11, 'usagePercentage': 0.0}; evidence: budget-dashboard/budget-isolation-api/08-val-bud-009-a-dashboard-2032-04.json"
+        },
+        {
+          "action": "User B GET /api/dashboard?year=2032&month=4",
+          "expected": "Dashboard budgetAmount reflects User B budget",
+          "observed": "HTTP 200; dashboard={'totalSpent': 0, 'budgetAmount': 2222.22, 'remaining': 2222.22, 'usagePercentage': 0.0}; evidence: budget-dashboard/budget-isolation-api/09-val-bud-009-b-dashboard-2032-04.json"
+        }
+      ],
+      "evidence": {
+        "requestResponseFiles": [
+          "budget-dashboard/budget-isolation-api/02-val-bud-009-a-set-budget-2032-04.json",
+          "budget-dashboard/budget-isolation-api/03-val-bud-009-a-get-budget-2032-04.json",
+          "budget-dashboard/budget-isolation-api/04-val-bud-009-b-get-before-own-budget.json",
+          "budget-dashboard/budget-isolation-api/05-val-bud-009-b-set-budget-2032-04.json",
+          "budget-dashboard/budget-isolation-api/06-val-bud-009-b-get-after-own-budget.json",
+          "budget-dashboard/budget-isolation-api/07-val-bud-009-a-get-after-b-update.json",
+          "budget-dashboard/budget-isolation-api/08-val-bud-009-a-dashboard-2032-04.json",
+          "budget-dashboard/budget-isolation-api/09-val-bud-009-b-dashboard-2032-04.json"
+        ],
+        "network": [
+          "POST /api/budgets (User A) -> 201",
+          "GET /api/budgets?year=2032&month=4 (User B before own) -> 404",
+          "POST /api/budgets (User B) -> 201",
+          "GET /api/dashboard?year=2032&month=4 UserA/UserB -> 200/200"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-007",
+      "title": "Data isolation across all areas",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "User A POST /api/categories name=ut-bud-iso-20260323-a-cat-125500",
+          "expected": "HTTP 201 with User A category id",
+          "observed": "HTTP 201; id=1731, name=ut-bud-iso-20260323-a-cat-125500; evidence: budget-dashboard/budget-isolation-api/10-val-cross-007-a-create-category.json"
+        },
+        {
+          "action": "User B POST /api/categories name=ut-bud-iso-20260323-b-cat-125500",
+          "expected": "HTTP 201 with User B category id",
+          "observed": "HTTP 201; id=1732, name=ut-bud-iso-20260323-b-cat-125500; evidence: budget-dashboard/budget-isolation-api/11-val-cross-007-b-create-category.json"
+        },
+        {
+          "action": "User A GET /api/categories",
+          "expected": "Includes User A category and excludes User B category",
+          "observed": "HTTP 200; containsA=True, containsB=False; evidence: budget-dashboard/budget-isolation-api/12-val-cross-007-a-list-categories.json"
+        },
+        {
+          "action": "User B GET /api/categories",
+          "expected": "Includes User B category and excludes User A category",
+          "observed": "HTTP 200; containsB=True, containsA=False; evidence: budget-dashboard/budget-isolation-api/13-val-cross-007-b-list-categories.json"
+        },
+        {
+          "action": "User A/B POST /api/budgets for 2032-05 with distinct amounts",
+          "expected": "Each user has own budget value",
+          "observed": "HTTP 201; UserA amount=1300.0; UserB status=201 amount=2300.0; evidence: budget-dashboard/budget-isolation-api/14-val-cross-007-a-set-budget-2032-05.json"
+        },
+        {
+          "action": "User A GET /api/budgets?year=2032&month=5",
+          "expected": "Returns 1300.00 for User A",
+          "observed": "HTTP 200; id=78, amount=1300.0; evidence: budget-dashboard/budget-isolation-api/16-val-cross-007-a-get-budget-2032-05.json"
+        },
+        {
+          "action": "User B GET /api/budgets?year=2032&month=5",
+          "expected": "Returns 2300.00 for User B",
+          "observed": "HTTP 200; id=79, amount=2300.0; evidence: budget-dashboard/budget-isolation-api/17-val-cross-007-b-get-budget-2032-05.json"
+        },
+        {
+          "action": "User A/B GET /api/dashboard before new transactions",
+          "expected": "Baseline totals captured per user",
+          "observed": "HTTP 200; A totalSpent=0, B totalSpent=0; evidence: budget-dashboard/budget-isolation-api/18-val-cross-007-a-dashboard-before.json"
+        },
+        {
+          "action": "User A POST /api/transactions title=ut-bud-iso-20260323-a-tx-125500",
+          "expected": "HTTP 201 with User A transaction id",
+          "observed": "HTTP 201; id=779, amount=123.45; evidence: budget-dashboard/budget-isolation-api/20-val-cross-007-a-create-transaction.json"
+        },
+        {
+          "action": "User A GET /api/transactions after A create",
+          "expected": "Contains A transaction title",
+          "observed": "HTTP 200; containsA=True, containsB=False; evidence: budget-dashboard/budget-isolation-api/21-val-cross-007-a-list-transactions-after-a-create.json"
+        },
+        {
+          "action": "User B GET /api/transactions after A create",
+          "expected": "Does not contain A transaction title",
+          "observed": "HTTP 200; containsA=False; evidence: budget-dashboard/budget-isolation-api/22-val-cross-007-b-list-transactions-after-a-create.json"
+        },
+        {
+          "action": "User B GET /api/dashboard after User A transaction",
+          "expected": "User B totalSpent remains unchanged",
+          "observed": "HTTP 200; before=0, afterA=0; evidence: budget-dashboard/budget-isolation-api/24-val-cross-007-b-dashboard-after-a-tx.json"
+        },
+        {
+          "action": "User B POST /api/transactions title=ut-bud-iso-20260323-b-tx-125500",
+          "expected": "HTTP 201 with User B transaction id",
+          "observed": "HTTP 201; id=780, amount=67.89; evidence: budget-dashboard/budget-isolation-api/25-val-cross-007-b-create-transaction.json"
+        },
+        {
+          "action": "User B GET /api/transactions after B create",
+          "expected": "Contains B transaction and not A-only leakage concerns",
+          "observed": "HTTP 200; containsB=True, containsA=False; evidence: budget-dashboard/budget-isolation-api/26-val-cross-007-b-list-transactions-after-b-create.json"
+        },
+        {
+          "action": "User A GET /api/transactions after B create",
+          "expected": "Does not contain B transaction title",
+          "observed": "HTTP 200; containsB=False; evidence: budget-dashboard/budget-isolation-api/27-val-cross-007-a-list-transactions-after-b-create.json"
+        },
+        {
+          "action": "User A GET /api/dashboard after User B transaction",
+          "expected": "User A totalSpent unchanged from post-A state",
+          "observed": "HTTP 200; afterA=123.45, afterB=123.45; evidence: budget-dashboard/budget-isolation-api/28-val-cross-007-a-dashboard-after-b-tx.json"
+        },
+        {
+          "action": "User B PUT /api/transactions/779 (User A transaction id)",
+          "expected": "HTTP 403/404 denies cross-user modification",
+          "observed": "HTTP 404; response={'error': 'Transaction not found'}; evidence: budget-dashboard/budget-isolation-api/30-val-cross-007-b-update-a-transaction-attempt.json"
+        }
+      ],
+      "evidence": {
+        "requestResponseFiles": [
+          "budget-dashboard/budget-isolation-api/10-val-cross-007-a-create-category.json",
+          "budget-dashboard/budget-isolation-api/11-val-cross-007-b-create-category.json",
+          "budget-dashboard/budget-isolation-api/12-val-cross-007-a-list-categories.json",
+          "budget-dashboard/budget-isolation-api/13-val-cross-007-b-list-categories.json",
+          "budget-dashboard/budget-isolation-api/14-val-cross-007-a-set-budget-2032-05.json",
+          "budget-dashboard/budget-isolation-api/15-val-cross-007-b-set-budget-2032-05.json",
+          "budget-dashboard/budget-isolation-api/16-val-cross-007-a-get-budget-2032-05.json",
+          "budget-dashboard/budget-isolation-api/17-val-cross-007-b-get-budget-2032-05.json",
+          "budget-dashboard/budget-isolation-api/18-val-cross-007-a-dashboard-before.json",
+          "budget-dashboard/budget-isolation-api/19-val-cross-007-b-dashboard-before.json",
+          "budget-dashboard/budget-isolation-api/20-val-cross-007-a-create-transaction.json",
+          "budget-dashboard/budget-isolation-api/21-val-cross-007-a-list-transactions-after-a-create.json",
+          "budget-dashboard/budget-isolation-api/22-val-cross-007-b-list-transactions-after-a-create.json",
+          "budget-dashboard/budget-isolation-api/23-val-cross-007-a-dashboard-after-a-tx.json",
+          "budget-dashboard/budget-isolation-api/24-val-cross-007-b-dashboard-after-a-tx.json",
+          "budget-dashboard/budget-isolation-api/25-val-cross-007-b-create-transaction.json",
+          "budget-dashboard/budget-isolation-api/26-val-cross-007-b-list-transactions-after-b-create.json",
+          "budget-dashboard/budget-isolation-api/27-val-cross-007-a-list-transactions-after-b-create.json",
+          "budget-dashboard/budget-isolation-api/28-val-cross-007-a-dashboard-after-b-tx.json",
+          "budget-dashboard/budget-isolation-api/29-val-cross-007-b-dashboard-after-b-tx.json",
+          "budget-dashboard/budget-isolation-api/30-val-cross-007-b-update-a-transaction-attempt.json"
+        ],
+        "network": [
+          "GET /api/categories UserA/UserB -> 200/200",
+          "GET /api/transactions UserA/UserB -> 200/200",
+          "GET /api/budgets?year=2032&month=5 UserA/UserB -> 200/200",
+          "GET /api/dashboard?year=2032&month=5 snapshots -> A:200/200/200 B:200/200/200",
+          "PUT /api/transactions/{UserAId} as UserB -> 404"
+        ]
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 2 assertions: 2 passed, 0 failed, 0 blocked."
+}

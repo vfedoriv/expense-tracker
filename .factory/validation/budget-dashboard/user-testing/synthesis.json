@@ -1,0 +1,34 @@
+{
+  "milestone": "budget-dashboard",
+  "round": 1,
+  "status": "pass",
+  "assertionsSummary": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-BUD-001",
+    "VAL-BUD-002",
+    "VAL-BUD-003",
+    "VAL-BUD-004",
+    "VAL-BUD-005",
+    "VAL-BUD-006",
+    "VAL-BUD-007",
+    "VAL-BUD-008",
+    "VAL-BUD-009",
+    "VAL-CROSS-006",
+    "VAL-CROSS-007"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Documented dashboard month-selector friction (prev/next-only) and guidance to prefer nearby months or API pre-seeding for long-range scenarios.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null
+}

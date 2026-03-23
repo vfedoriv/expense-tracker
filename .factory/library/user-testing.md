@@ -57,3 +57,7 @@ To test multi-user isolation, the fake auth should support switching users via a
 - Keep all requests within project ports (`8080` only for API checks) and never call external services.
 - Record exact request/response status codes and payload snippets for each assertion under test.
 - Save command transcripts and JSON responses only under the assigned mission evidence directory.
+
+## Known UI Testing Frictions
+
+- Dashboard month selection currently uses previous/next controls only (no direct month picker), so reaching far-future test months can require many clicks. Prefer choosing closer test months when possible, or pre-seed data via API for long-range month scenarios.

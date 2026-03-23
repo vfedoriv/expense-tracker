@@ -1,0 +1,157 @@
+{
+  "groupId": "dashboard-aggregates-ui",
+  "testedAt": "2026-03-23T12:50:01.234538+00:00",
+  "isolation": {
+    "user": "fake-auth default user (User A)",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "month": "2031-03",
+    "dataPrefix": "ut-bud-agg-20260323",
+    "ports": [
+      5173,
+      8080,
+      5432
+    ]
+  },
+  "toolsUsed": [
+    "agent-browser"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-BUD-003",
+      "title": "Dashboard shows total spent for selected month",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Create category ut-bud-agg-20260323-cat and seed March 2031 transactions: txn-1=$40 (2031-03-05), txn-2=$30 (2031-03-10)",
+          "expected": "Dashboard totalSpent equals sum of month transactions",
+          "observed": "Dashboard for March 2031 showed Total Spent $70.00; independent sum is 40+30=70"
+        },
+        {
+          "action": "Create txn-3=$20 (2031-03-15), then edit txn-3 amount to $50, then delete txn-3",
+          "expected": "totalSpent updates with CRUD",
+          "observed": "After create totalSpent=$90.00 (40+30+20), after edit totalSpent=$120.00 (40+30+50), after delete totalSpent returned to $70.00"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-baseline-budget100-spent70.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-create-txn3-spent90.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-edit-txn3-overspent.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-delete-txn3-spent70.png"
+        ],
+        "consoleErrors": "none (agent-browser errors returned no entries)",
+        "network": "network-dashboard-baseline.json: GET /api/dashboard?year=2031&month=3 -> 200 totalSpent 70.00; network-dashboard-after-create.json -> 200 totalSpent 90.00; network-dashboard-after-edit.json -> 200 totalSpent 120.00; network-dashboard-after-delete.json -> 200 totalSpent 70.00"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-004",
+      "title": "Dashboard shows remaining budget",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Set budget to $100 for March 2031 with totalSpent $70",
+          "expected": "remaining = budget - totalSpent",
+          "observed": "Dashboard Remaining displayed $30.00, matching 100-70=30"
+        },
+        {
+          "action": "Edit txn-3 to raise March 2031 totalSpent to $120",
+          "expected": "remaining becomes negative/overspent indicator visible",
+          "observed": "Dashboard Remaining displayed -$20.00 and Over budget indicator, matching 100-120=-20"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-baseline-budget100-spent70.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-edit-txn3-overspent.png"
+        ],
+        "consoleErrors": "none (agent-browser errors returned no entries)",
+        "network": "network-dashboard-baseline.json and network-dashboard-after-edit.json include GET /api/dashboard responses with remaining 30.00 and -20.00"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-BUD-005",
+      "title": "Dashboard shows budget usage percentage",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "With budget $100 and March 2031 totalSpent $70",
+          "expected": "usage percentage reflects (70/100)*100",
+          "observed": "Dashboard showed 70.0% with progress bar labeled 'Budget usage: 70.0%'"
+        },
+        {
+          "action": "After editing txn-3 so March 2031 totalSpent is $120",
+          "expected": "usage percentage supports >100% overspend case",
+          "observed": "Dashboard showed 120.0% with progress bar labeled 'Budget usage: 120.0%'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-baseline-budget100-spent70.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-edit-txn3-overspent.png"
+        ],
+        "consoleErrors": "none (agent-browser errors returned no entries)",
+        "network": "network-dashboard-baseline.json -> usagePercentage 70.00; network-dashboard-after-edit.json -> usagePercentage 120.00"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-006",
+      "title": "Dashboard updates after transaction CRUD",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Baseline on dashboard for March 2031 after budget set",
+          "expected": "Known starting aggregates before CRUD",
+          "observed": "Spent=$70.00, Remaining=$30.00, Usage=70.0%"
+        },
+        {
+          "action": "Create transaction ut-bud-agg-20260323-txn-3 ($20, 2031-03-15)",
+          "expected": "Dashboard increases totals accordingly",
+          "observed": "After create: Spent=$90.00, Remaining=$10.00, Usage=90.0%"
+        },
+        {
+          "action": "Edit transaction ut-bud-agg-20260323-txn-3 amount from $20 to $50",
+          "expected": "Dashboard reflects edited amount",
+          "observed": "After edit: Spent=$120.00, Remaining=-$20.00, Usage=120.0%, Over budget shown"
+        },
+        {
+          "action": "Delete transaction ut-bud-agg-20260323-txn-3",
+          "expected": "Dashboard returns to pre-create aggregates",
+          "observed": "After delete: Spent=$70.00, Remaining=$30.00, Usage=70.0%"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-baseline-budget100-spent70.png",
+          "budget-dashboard/dashboard-aggregates-ui/transactions-after-create-txn3.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-create-txn3-spent90.png",
+          "budget-dashboard/dashboard-aggregates-ui/transactions-after-edit-txn3.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-edit-txn3-overspent.png",
+          "budget-dashboard/dashboard-aggregates-ui/transactions-after-delete-txn3.png",
+          "budget-dashboard/dashboard-aggregates-ui/dashboard-after-delete-txn3-spent70.png"
+        ],
+        "consoleErrors": "none (agent-browser errors returned no entries)",
+        "network": "network-transaction-create.json: POST /api/transactions -> 201; network-transaction-edit.json: PUT /api/transactions/778 -> 200; network-transaction-delete.json: DELETE /api/transactions/778 -> 204; network-dashboard-after-create.json / after-edit / after-delete show corresponding GET /api/dashboard aggregates"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Dashboard month selector is only previous/next buttons. Reaching 2031-03 from default 2026-03 required many month steps each time dashboard was reopened.",
+      "resolved": true,
+      "resolution": "Used repeated UI clicks in the same browser session to move month context to March 2031 before each dashboard verification.",
+      "affectedAssertions": [
+        "VAL-BUD-003",
+        "VAL-BUD-004",
+        "VAL-BUD-005",
+        "VAL-CROSS-006"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 4 assertions (VAL-BUD-003, VAL-BUD-004, VAL-BUD-005, VAL-CROSS-006): all passed. Dashboard aggregates matched manual calculations for March 2031 and updated correctly after transaction create/edit/delete, including overspent (>100%) behavior."
+}
