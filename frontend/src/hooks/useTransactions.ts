@@ -1,27 +1,47 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../api/client';
-import type { Transaction, TransactionRequest, ApiError } from '../types';
+import type { Transaction, TransactionRequest, TransactionFilters, ApiError } from '../types';
 
 interface UseTransactionsResult {
   transactions: Transaction[];
   loading: boolean;
   error: string | null;
+  filters: TransactionFilters;
+  setFilters: (filters: TransactionFilters) => void;
   fetchTransactions: () => Promise<void>;
   createTransaction: (request: TransactionRequest) => Promise<Transaction>;
   updateTransaction: (id: number, request: TransactionRequest) => Promise<Transaction>;
   deleteTransaction: (id: number) => Promise<void>;
 }
 
+function buildQueryString(filters: TransactionFilters): string {
+  const params = new URLSearchParams();
+  if (filters.search) params.set('search', filters.search);
+  if (filters.categoryId !== undefined) params.set('categoryId', String(filters.categoryId));
+  if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
+  if (filters.dateTo) params.set('dateTo', filters.dateTo);
+  if (filters.amountMin !== undefined) params.set('amountMin', String(filters.amountMin));
+  if (filters.amountMax !== undefined) params.set('amountMax', String(filters.amountMax));
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
 export function useTransactions(): UseTransactionsResult {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<TransactionFilters>({});
+  const filtersRef = useRef<TransactionFilters>(filters);
+
+  // Keep ref in sync for use in callbacks
+  filtersRef.current = filters;
 
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiClient.get<Transaction[]>('/transactions');
+      const qs = buildQueryString(filtersRef.current);
+      const data = await apiClient.get<Transaction[]>(`/transactions${qs}`);
       setTransactions(data);
     } catch (err: unknown) {
       const apiError = err as ApiError;
@@ -33,7 +53,7 @@ export function useTransactions(): UseTransactionsResult {
 
   useEffect(() => {
     void fetchTransactions();
-  }, [fetchTransactions]);
+  }, [fetchTransactions, filters]);
 
   const createTransaction = useCallback(async (request: TransactionRequest): Promise<Transaction> => {
     const created = await apiClient.post<Transaction>('/transactions', request);
@@ -56,6 +76,8 @@ export function useTransactions(): UseTransactionsResult {
     transactions,
     loading,
     error,
+    filters,
+    setFilters,
     fetchTransactions,
     createTransaction,
     updateTransaction,

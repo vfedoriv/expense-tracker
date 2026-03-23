@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
+import { TransactionFilters as TransactionFiltersBar } from '../components/TransactionFilters';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/Input';
@@ -30,6 +31,8 @@ export function TransactionsPage() {
     transactions,
     loading,
     error,
+    filters,
+    setFilters,
     fetchTransactions,
     createTransaction,
     updateTransaction,
@@ -208,25 +211,14 @@ export function TransactionsPage() {
     return text.slice(0, maxLength) + '…';
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <div>
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">Transactions</h1>
-        <LoadingSpinner size="lg" message="Loading transactions..." />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div>
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">Transactions</h1>
-        <ErrorMessage message="Failed to load transactions" onRetry={fetchTransactions} />
-      </div>
-    );
-  }
+  const hasActiveFilters = !!(
+    filters.search ||
+    filters.categoryId !== undefined ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.amountMin !== undefined ||
+    filters.amountMax !== undefined
+  );
 
   return (
     <div>
@@ -258,8 +250,41 @@ export function TransactionsPage() {
         <Button onClick={openCreateModal}>Add Transaction</Button>
       </div>
 
-      {/* Empty state */}
-      {transactions.length === 0 ? (
+      {/* Search and filter controls — always rendered so they survive loading re-renders */}
+      <TransactionFiltersBar
+        filters={filters}
+        onFiltersChange={setFilters}
+        categories={categories}
+      />
+
+      {/* Loading state */}
+      {loading ? (
+        <LoadingSpinner size="lg" message="Loading transactions..." />
+      ) : error ? (
+        /* Error state */
+        <ErrorMessage message="Failed to load transactions" onRetry={fetchTransactions} />
+      ) : transactions.length === 0 && hasActiveFilters ? (
+        <EmptyState
+          title="No transactions found"
+          description="Try adjusting your search or filters to find what you're looking for."
+          icon={
+            <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          }
+          action={
+            <Button variant="secondary" onClick={() => setFilters({})}>
+              Clear Filters
+            </Button>
+          }
+        />
+      ) : transactions.length === 0 ? (
+        /* Empty state — no transactions at all */
         <EmptyState
           title="No transactions yet"
           description="Start tracking your expenses by adding your first transaction."

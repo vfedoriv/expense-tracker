@@ -74,3 +74,12 @@ export interface BudgetAlert {
   year: number;
   month: number;
 }
+
+export interface TransactionFilters {
+  search?: string;
+  categoryId?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  amountMin?: number;
+  amountMax?: number;
+}
