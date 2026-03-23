@@ -1,0 +1,34 @@
+{
+  "featureId": "budget-backend-api",
+  "reviewedAt": "2026-03-23T12:18:49Z",
+  "commitId": "776418d",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Core budget/dashboard flows and isolation are implemented, but request parameter validation gaps allow invalid month inputs to trigger 500 responses and year values to overflow into SMALLINT-backed storage.",
+    "issues": [
+      {
+        "file": "backend/src/main/java/com/expensetracker/service/DashboardService.java",
+        "line": 29,
+        "severity": "blocking",
+        "description": "`YearMonth.of(year, month)` is called without validating query params first. For invalid `month` (e.g., 0 or 13), this throws `DateTimeException`, which falls through to the global `Exception` handler and returns HTTP 500 instead of a clear 400 validation error."
+      },
+      {
+        "file": "backend/src/main/java/com/expensetracker/service/BudgetService.java",
+        "line": 35,
+        "severity": "non_blocking",
+        "description": "`request.year().shortValue()` (and corresponding casts in lookup) can silently overflow because API accepts `Integer year` without range constraints while DB column is `SMALLINT`. Inputs above `Short.MAX_VALUE` are wrapped to incorrect years, causing data corruption/incorrect API echoes."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "`backend-worker` skill mandates tests-first TDD (write failing tests before implementation), but transcript shows implementation files were created before tests; `handoff.skillFeedback.followedProcedure` still reports true. Procedure adherence checks appear inconsistent with actual execution.",
+      "evidence": "Skill step 3 in `.factory/skills/backend-worker/SKILL.md` says 'Write tests FIRST (TDD red phase)'. Transcript skeleton shows: 'Now let me create all the DTOs, services, controllers, and tests. I'll start with the DTOs' followed later by 'Now let me write the unit tests...'."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed due to missing month/year request validation safeguards: invalid dashboard month can surface as 500, and unchecked year-to-short conversion can overflow. Shared-state note: skill procedure compliance reporting appears inaccurate versus transcript sequence."
+}

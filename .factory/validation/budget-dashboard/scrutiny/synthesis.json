@@ -1,0 +1,53 @@
+{
+  "milestone": "budget-dashboard",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "mvn test -f /Users/vfedoriv/workspace/expense-tracker/backend/pom.xml && npm --prefix /Users/vfedoriv/workspace/expense-tracker/frontend test",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd /Users/vfedoriv/workspace/expense-tracker/frontend && npx tsc --noEmit",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "npm --prefix /Users/vfedoriv/workspace/expense-tracker/frontend run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 1,
+    "failed": 1,
+    "failedFeatures": [
+      "budget-backend-api"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "budget-backend-api",
+      "severity": "blocking",
+      "description": "DashboardService calls YearMonth.of(year, month) without request validation, so invalid month values can throw DateTimeException and return HTTP 500 instead of a clear 400 response."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "skills",
+      "suggestion": "Require workers to report TDD-order deviations in handoff.skillFeedback whenever tests are not written first, and add a scrutiny check to flag mismatches between transcript sequence and 'followedProcedure=true'.",
+      "evidence": "Both budget-backend-api and budget-dashboard-frontend-ui review reports observed implementation code created before tests while skill feedback still claimed full procedure adherence.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "Frontend review shared-state note about TDD/procedure mismatch",
+      "reason": "duplicate"
+    }
+  ],
+  "previousRound": null
+}
