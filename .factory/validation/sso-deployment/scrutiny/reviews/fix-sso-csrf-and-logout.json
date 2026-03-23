@@ -1,0 +1,59 @@
+{
+  "featureId": "fix-sso-csrf-and-logout",
+  "reviewedAt": "2026-03-23T17:00:00.000Z",
+  "commitId": "87aca61e3625364c3ed9a79ad7740baf45344db9",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix adequately addresses the three core blocking issues identified in the prior reviews. (1) CSRF: frontend/src/api/client.ts now correctly reads XSRF-TOKEN from document.cookie via getCsrfToken() and includes X-XSRF-TOKEN on all POST/PUT/DELETE requests via getMutationHeaders(). (2) Logout: AuthContext.logout() now reads the CSRF token and includes X-XSRF-TOKEN in the POST /api/logout request; setUser(null) is called unconditionally after the fetch (even on error), and Layout.tsx's handleLogout() navigates to /login via useNavigate — this is correct architecture since AuthContext is outside the Router. (3) nginx.conf: all 4 proxy_set_header Host directives changed to $http_host. (4) Logout session invalidation test: the new logout_invalidatesSession_subsequentRequestReturns401 test properly authenticates, captures the session, POSTs logout with that session, then verifies the same session returns 401. One non-blocking issue remains: the two new 'service provisioning' tests (customOidcUserService_loadUser_provisionsUser and customOAuth2UserService_isWired) verify Spring bean wiring and repository operations but do NOT call loadUser() on either service, so the core find-or-create provisioning logic of those services is still untested via the service method itself. This is non-blocking because the feature description offered option (b) — fixing the logout test — as an alternative to option (a) unit tests with mocks, and option (b) is fully implemented.",
+    "issues": [
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2AuthenticationTest.java",
+        "line": 158,
+        "severity": "non_blocking",
+        "description": "customOidcUserService_loadUser_provisionsUser() does NOT call customOidcUserService.loadUser(). It asserts assertNotNull(customOidcUserService) (wiring check) and then performs a direct userRepository.save/findBy call. The test name implies the service provisioning is tested, but the service's own code path is never exercised. The worker's comment acknowledges this ('The actual loadUser() makes an HTTP call to the OIDC provider, which we can't do in integration tests') — but this reasoning is incomplete: loadUser() could be tested by @MockitoBean-mocking the parent DefaultOAuth2UserService/OidcUserService and injecting a mock OAuth2User/OidcUser, which would let the find-or-create logic in CustomOidcUserService run without any HTTP call. The same applies to customOAuth2UserService_isWired() at line 246. These tests add wiring assurance but leave the actual provisioning logic path untested through the service."
+      },
+      {
+        "file": "frontend/src/api/client.ts",
+        "line": 14,
+        "severity": "non_blocking",
+        "description": "getCsrfToken() uses match.split('=')[1] to extract the cookie value. If the CSRF token value contains '=' (e.g., Base64-encoded tokens with padding), only the portion before the first '=' would be returned. Spring's default CookieCsrfTokenRepository generates UUID tokens (no '='), so this is safe for the current backend. However, using match.split('=').slice(1).join('=') would be more robust. This is a latent edge case with no current impact."
+      },
+      {
+        "file": "frontend/src/context/AuthContext.tsx",
+        "line": 40,
+        "severity": "non_blocking",
+        "description": "The CSRF header logic in logout() duplicates getMutationHeaders() from client.ts. Both read getCsrfToken() and build headers in the same pattern. logout() uses fetch() directly (rather than apiClient.post()) because /api/logout is a Spring Security endpoint, not a custom API route. This is a deliberate and reasonable architectural choice, but the duplication could be reduced in a future refactor by extracting a shared buildMutationHeaders() utility."
+      },
+      {
+        "file": "frontend/src/__tests__/Layout.test.tsx",
+        "line": 102,
+        "severity": "non_blocking",
+        "description": "The existing logout test (from sso-auth-frontend, non-blocking issue) still mocks fetch uniformly returning 200 and does not verify that the logout request includes the X-XSRF-TOKEN header. The CSRF header behavior added by this fix is not covered by any frontend unit test. This creates continued false confidence — the test passes in both old (no header) and new (with header) states. This was noted as non-blocking in the prior sso-auth-frontend review and remains unaddressed."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The CSRF token handling pattern (getCsrfToken reading XSRF-TOKEN cookie, sending X-XSRF-TOKEN header on mutations) is now implemented but still not documented in AGENTS.md. This pattern must be followed by any future frontend code making POST/PUT/DELETE requests in OAuth2 mode. The prior sso-auth-frontend review flagged this gap; it was not addressed by this fix.",
+      "evidence": "AGENTS.md has no mention of CSRF, X-XSRF-TOKEN, or CookieCsrfTokenRepository. The pattern is now in frontend/src/api/client.ts:10-16 and frontend/src/context/AuthContext.tsx:43-49."
+    },
+    {
+      "area": "skills",
+      "observation": "fullstack-worker SKILL.md step 6 requires agent-browser for end-to-end integration verification. The worker skipped this step again and reported skillFeedback.followedProcedure: true with deviations: []. For this fix in particular, agent-browser verification would have been valuable: the CSRF fix can only be validated by actually running the app in OAuth2 mode and testing a mutation (e.g., POST /api/categories). Without agent-browser verification, the fix's effectiveness depends entirely on code review and unit tests. The worker should have reported a deviation or the skill should note when agent-browser is impractical (e.g., needs real OAuth2 credentials).",
+      "evidence": "Transcript skeleton: no Skill{skill: 'agent-browser'} call found. Handoff verification.commandsRun has 4 entries (mvn test, npm test, npm run lint, tsc) with no interactiveChecks. SKILL.md step 6 requires agent-browser invocation."
+    },
+    {
+      "area": "conventions",
+      "observation": "AGENTS.md documents 'Fake auth (milestones 1-4): FakeAuthFilter injects a hardcoded user into SecurityContext' but does not document the OAuth2 mode patterns added in milestone 5: CookieCsrfTokenRepository with httpOnly=false, the oauth-test profile for enabling OAuth2 mode in tests, the OidcUserWithLocalUser/OAuth2UserWithLocalUser wrapper pattern for MockMvc authentication, or the isFakeAuthActive() env-var check. These are patterns that future workers doing OAuth-adjacent work need to know. This gap was also identified in the sso-auth-backend review and remains unaddressed.",
+      "evidence": "AGENTS.md does not mention CSRF, oauth-test profile, OidcUserWithLocalUser, or isFakeAuthActive(). SecurityConfig.java:68 isFakeAuthActive(), backend/src/test/resources/application-oauth-test.yml, backend config/OidcUserWithLocalUser.java all exist without AGENTS.md documentation."
+    }
+  ],
+  "addressesFailureFrom": [
+    "/Users/vfedoriv/workspace/expense-tracker/.factory/validation/sso-deployment/scrutiny/reviews/sso-auth-backend.json",
+    "/Users/vfedoriv/workspace/expense-tracker/.factory/validation/sso-deployment/scrutiny/reviews/sso-auth-frontend.json"
+  ],
+  "summary": "The fix passes. All three blocking issues from the original reviews are resolved: (1) frontend/src/api/client.ts now reads the XSRF-TOKEN cookie via getCsrfToken() and includes X-XSRF-TOKEN on all POST/PUT/DELETE requests; (2) POST /api/logout in AuthContext now includes the CSRF header, and setUser(null) is always called (so local state is cleared even on 403), with Layout.tsx handling the navigate('/login') call; (3) the logout test now properly verifies session invalidation (authenticate → capture session → POST logout → verify 401); and (4) nginx.conf uses $http_host in all 4 proxy_set_header Host directives. Four non-blocking issues remain: the 'service provisioning' tests still do not call loadUser() on either service (loadUser() could be tested with @MockitoBean mocking of the parent service); getCsrfToken() is slightly fragile for Base64 tokens with '='; the CSRF logout logic duplicates getMutationHeaders() instead of sharing a utility; and the frontend logout unit test still does not assert the CSRF header is sent."
+}
