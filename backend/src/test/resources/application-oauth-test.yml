@@ -1,0 +1,6 @@
+# Test profile for OAuth2 integration tests
+# Provides fake OAuth client IDs to activate OAuth mode in SecurityConfig
+GOOGLE_CLIENT_ID: test-google-client-id
+GOOGLE_CLIENT_SECRET: test-google-client-secret
+GITHUB_CLIENT_ID: test-github-client-id
+GITHUB_CLIENT_SECRET: test-github-client-secret
