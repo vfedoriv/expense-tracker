@@ -1,0 +1,33 @@
+{
+  "featureId": "transactions-frontend-ui",
+  "reviewedAt": "2026-03-23T10:56:13Z",
+  "commitId": "5b186474e5addc761923e441c8673fd98d966c38",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Transactions UI implementation is comprehensive (list/card views, CRUD modals, validation, loading/empty/error states, and tests), but date rendering uses timezone-sensitive parsing that can show the wrong calendar day for LocalDate API values.",
+    "issues": [
+      {
+        "file": "frontend/src/utils/formatters.ts",
+        "line": 15,
+        "severity": "blocking",
+        "description": "formatDate parses backend LocalDate strings with `new Date(dateString)`, which treats `YYYY-MM-DD` as UTC and can shift the displayed date by one day in non-UTC timezones. TransactionsPage relies on this formatter (frontend/src/pages/TransactionsPage.tsx:320,379), so 'Mar 15, 2026' can incorrectly render as the prior day for many users."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The frontend-worker skill does not document jsdom responsive-testing behavior (both mobile and desktop DOM branches render), which led to custom test patterns in this feature.",
+      "evidence": "Handoff skillFeedback suggests adding this note; transactions tests use helper `expectTextPresent` with `getAllByText` to handle duplicate responsive elements (frontend/src/__tests__/TransactionsPage.test.tsx)."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Shared library docs do not capture a safe frontend pattern for formatting backend LocalDate strings without timezone drift.",
+      "evidence": "Backend transaction date is LocalDate (backend/src/main/java/com/expensetracker/dto/response/TransactionResponse.java), while formatter uses `new Date(dateString)` (frontend/src/utils/formatters.ts:15)."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Feature is close to complete, but a blocking date-formatting bug can display incorrect transaction dates outside UTC; report marked fail until date rendering is made timezone-safe."
+}
