@@ -169,35 +169,33 @@ export function CategoriesPage() {
           {categories.map((category) => (
             <div
               key={category.id}
-              className="group rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+              className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500"
             >
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-base font-medium text-gray-900">
-                    {category.name}
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Created {formatDate(category.createdAt)}
-                  </p>
-                </div>
-                <div className="ml-4 flex shrink-0 gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditModal(category)}
-                    aria-label={`Edit ${category.name}`}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDeleteConfirmation(category)}
-                    aria-label={`Delete ${category.name}`}
-                  >
-                    Delete
-                  </Button>
-                </div>
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-medium text-gray-900">
+                  {category.name}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Created {formatDate(category.createdAt)}
+                </p>
+              </div>
+              <div className="mt-3 flex gap-1 border-t border-gray-100 pt-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEditModal(category)}
+                  aria-label={`Edit ${category.name}`}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openDeleteConfirmation(category)}
+                  aria-label={`Delete ${category.name}`}
+                >
+                  Delete
+                </Button>
               </div>
             </div>
           ))}

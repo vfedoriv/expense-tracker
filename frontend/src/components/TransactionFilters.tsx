@@ -129,7 +129,7 @@ function SearchInput({
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Search transactions..."
-        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+        className="block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
         aria-label="Search transactions"
       />
     </div>
@@ -251,7 +251,7 @@ export function TransactionFilters({
       {filtersExpanded && (
         <div
           id="filter-panel"
-          className="grid gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4"
         >
           {/* Category filter */}
           <div>
@@ -265,7 +265,7 @@ export function TransactionFilters({
               id="filter-category"
               value={filters.categoryId !== undefined ? String(filters.categoryId) : ''}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -288,7 +288,7 @@ export function TransactionFilters({
               id="filter-date-preset"
               value={datePreset}
               onChange={(e) => handleDatePresetChange(e.target.value as DatePreset)}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
             >
               <option value="all">All Time</option>
               <option value="this-month">This Month</option>
@@ -306,7 +306,7 @@ export function TransactionFilters({
                     type="date"
                     value={filters.dateFrom ?? ''}
                     onChange={(e) => handleCustomDateFrom(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                    className="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                     aria-label="From date"
                   />
                 </div>
@@ -319,7 +319,7 @@ export function TransactionFilters({
                     type="date"
                     value={filters.dateTo ?? ''}
                     onChange={(e) => handleCustomDateTo(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                    className="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm shadow-sm transition-colors hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                     aria-label="To date"
                   />
                 </div>
@@ -343,7 +343,7 @@ export function TransactionFilters({
                   placeholder="Min"
                   step="0.01"
                   min="0"
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                   aria-label="Minimum amount"
                 />
               </div>
@@ -359,7 +359,7 @@ export function TransactionFilters({
                   placeholder="Max"
                   step="0.01"
                   min="0"
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                   aria-label="Maximum amount"
                 />
               </div>

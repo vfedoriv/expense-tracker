@@ -121,7 +121,7 @@ export function DashboardPage() {
       <div className="mb-6 flex items-center gap-3">
         <button
           onClick={handlePrevMonth}
-          className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-label="Previous month"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,7 +133,7 @@ export function DashboardPage() {
         </span>
         <button
           onClick={handleNextMonth}
-          className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-gray-300 p-2 text-gray-600 transition-colors hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           aria-label="Next month"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -179,7 +179,7 @@ export function DashboardPage() {
                   </p>
                   <button
                     onClick={handleOpenBudgetModal}
-                    className="mt-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:underline"
+                    className="mt-1 rounded text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     Edit Budget
                   </button>
@@ -191,7 +191,7 @@ export function DashboardPage() {
                   </p>
                   <button
                     onClick={handleOpenBudgetModal}
-                    className="mt-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:underline"
+                    className="mt-1 rounded text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     Set Budget
                   </button>

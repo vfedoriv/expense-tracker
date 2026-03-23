@@ -5,7 +5,7 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3" role="alert">
+    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3" role="alert">
       <div className="flex items-center gap-3">
         <svg
           className="h-5 w-5 shrink-0 text-red-500"

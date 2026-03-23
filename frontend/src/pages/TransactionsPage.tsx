@@ -236,7 +236,7 @@ export function TransactionsPage() {
             <p className="text-sm font-medium">{toast.message}</p>
             <button
               onClick={() => setToast(null)}
-              className="ml-2 text-current opacity-70 hover:opacity-100"
+              className="ml-2 rounded text-current opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-current"
               aria-label="Close toast"
             >
               ×
@@ -305,7 +305,7 @@ export function TransactionsPage() {
       ) : (
         <>
           {/* Desktop table view */}
-          <div className="hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm sm:block">
+          <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:block">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -385,7 +385,7 @@ export function TransactionsPage() {
             {transactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
@@ -474,10 +474,10 @@ export function TransactionsPage() {
                     setAmount(e.target.value);
                     clearFieldError('amount');
                   }}
-                  className={`block w-full rounded-lg border py-2 pl-7 pr-3 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+                  className={`block w-full rounded-lg border py-2 pl-7 pr-3 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
                     formErrors.amount
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                      : 'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500'
                   }`}
                   placeholder="0.00"
                   step="0.01"
@@ -520,7 +520,7 @@ export function TransactionsPage() {
                 className={`block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
                   formErrors.categoryId
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                    : 'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-blue-500'
                 }`}
                 aria-invalid={formErrors.categoryId ? 'true' : 'false'}
                 aria-describedby={formErrors.categoryId ? 'category-error' : undefined}
@@ -550,7 +550,7 @@ export function TransactionsPage() {
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
                 placeholder="Optional notes"
                 rows={3}
               />
