@@ -1,0 +1,26 @@
+{
+  "featureId": "fix-dashboard-budget-validation",
+  "reviewedAt": "2026-03-23T12:34:24Z",
+  "commitId": "14fc04f",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix commit addresses the prior blocking failure and the related non-blocking overflow risk: year/month are now range-validated at the API boundary and service layer, invalid dashboard/budget month-year inputs map to 400 responses, and tests were added for invalid month/year paths without regressing existing budget/dashboard behavior.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "`backend-worker` still claims tests-first TDD, but this fix transcript shows implementation edits preceding new tests; `skillFeedback.followedProcedure` remains true with no deviations.",
+      "evidence": "worker-transcripts.jsonl (session 4637e247-84a7-4728-b48b-19d0a59caca4): lines 241-334 show code edits in BudgetRequest/Controllers/Services/GlobalExceptionHandler before tests begin at line 345; handoff file reports `skillFeedback.followedProcedure=true`."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Spring Boot 4.0/Spring Framework 7 controller parameter-validation behavior (`HandlerMethodValidationException` and its error extraction API) is not captured in shared library docs, and the worker spent effort discovering the correct API shape during implementation.",
+      "evidence": "Transcript skeleton for session 4637e247-84a7-4728-b48b-19d0a59caca4 discusses uncertainty around HandlerMethodValidationException API (e.g., lines around 216 and 472), while `.factory/library/architecture.md` has no note about handler-method validation exception handling."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/budget-dashboard/scrutiny/reviews/budget-backend-api.json",
+  "summary": "Fix review passed: prior 500-on-invalid-month failure is resolved with consistent 400 handling for invalid year/month inputs across budget/dashboard flows, overflow risk from unchecked year-to-short conversion is mitigated, and added controller/service tests cover the targeted edge cases (including invalid months 0 and 13)."
+}

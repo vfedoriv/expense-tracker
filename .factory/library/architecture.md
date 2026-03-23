@@ -19,6 +19,7 @@ Architectural decisions, patterns, and conventions discovered during the mission
 - **Jackson 3.x** in Spring Boot 4.0: ObjectMapper is `tools.jackson.databind.ObjectMapper` (NOT `com.fasterxml.jackson.databind.ObjectMapper`). Use `com.jayway.jsonpath.JsonPath` for test response parsing or Jackson 3.x imports.
 - **Hibernate 7 + PG18 TEXT columns:** TEXT columns mapped as bytea, causing LOWER() failures in JPQL. Use native SQL queries with `::text` cast for LOWER/LIKE on TEXT columns, or add `@JdbcTypeCode(SqlTypes.VARCHAR)` to entity fields.
 - **Integration test cleanup:** Use `@BeforeEach` cleanup in integration tests to avoid 409 conflicts on re-runs. Pattern: DELETE rows matching test data prefix before each test.
+- **Spring Framework 7 method parameter validation:** `@RequestParam`/`@PathVariable` constraint failures can raise `HandlerMethodValidationException` (not just `MethodArgumentNotValidException`), so `@ControllerAdvice` handlers should extract violations from `getParameterValidationResults()` to return clean 400 responses.
 
 ## Frontend Architecture
 - React 19 with TypeScript
