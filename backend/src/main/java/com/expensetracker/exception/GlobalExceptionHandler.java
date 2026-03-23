@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import java.time.DateTimeException;
 import java.util.Map;
 
 @ControllerAdvice
@@ -43,6 +45,23 @@ public class GlobalExceptionHandler {
             .orElse("Validation failed");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of("error", message));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, String>> handleMethodValidation(HandlerMethodValidationException ex) {
+        String message = ex.getParameterValidationResults().stream()
+            .flatMap(result -> result.getResolvableErrors().stream())
+            .map(error -> error.getDefaultMessage())
+            .findFirst()
+            .orElse("Validation failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("error", message));
+    }
+
+    @ExceptionHandler(DateTimeException.class)
+    public ResponseEntity<Map<String, String>> handleDateTimeException(DateTimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("error", "Invalid date parameters: " + ex.getMessage()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

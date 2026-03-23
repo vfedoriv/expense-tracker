@@ -181,6 +181,58 @@ class DashboardControllerTest {
             .andExpect(jsonPath("$.usagePercentage", closeTo(150.00, 0.01)));
     }
 
+    // === VALIDATION TESTS ===
+
+    @Test
+    void getDashboard_monthZero_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2026")
+                .param("month", "0"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getDashboard_month13_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2026")
+                .param("month", "13"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getDashboard_negativeMonth_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2026")
+                .param("month", "-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getDashboard_yearTooLow_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "1999")
+                .param("month", "6"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getDashboard_yearTooHigh_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2101")
+                .param("month", "6"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
     // === CROSS-USER ISOLATION ===
 
     @Test

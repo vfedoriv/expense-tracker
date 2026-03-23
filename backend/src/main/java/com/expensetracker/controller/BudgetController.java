@@ -5,6 +5,8 @@ import com.expensetracker.dto.request.BudgetRequest;
 import com.expensetracker.dto.response.BudgetResponse;
 import com.expensetracker.service.BudgetService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,8 +39,8 @@ public class BudgetController {
     @GetMapping
     public ResponseEntity<BudgetResponse> getBudget(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam int year,
-            @RequestParam int month) {
+            @RequestParam @Min(value = 2000, message = "Year must be between 2000 and 2100") @Max(value = 2100, message = "Year must be between 2000 and 2100") int year,
+            @RequestParam @Min(value = 1, message = "Month must be between 1 and 12") @Max(value = 12, message = "Month must be between 1 and 12") int month) {
         BudgetResponse response = budgetService.getBudget(principal.getUserId(), year, month);
         return ResponseEntity.ok(response);
     }

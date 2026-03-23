@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 
 public record BudgetRequest(
     @NotNull(message = "Year must not be null")
+    @Min(value = 2000, message = "Year must be between 2000 and 2100")
+    @Max(value = 2100, message = "Year must be between 2000 and 2100")
     Integer year,
 
     @NotNull(message = "Month must not be null")

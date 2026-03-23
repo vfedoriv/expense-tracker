@@ -127,6 +127,70 @@ class BudgetControllerTest {
             .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
+    // === GET BUDGET VALIDATION TESTS ===
+
+    @Test
+    void getBudget_monthZero_returns400() throws Exception {
+        mockMvc.perform(get("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2026")
+                .param("month", "0"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getBudget_month13_returns400() throws Exception {
+        mockMvc.perform(get("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2026")
+                .param("month", "13"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getBudget_yearTooLow_returns400() throws Exception {
+        mockMvc.perform(get("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "1999")
+                .param("month", "6"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void getBudget_yearTooHigh_returns400() throws Exception {
+        mockMvc.perform(get("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .param("year", "2101")
+                .param("month", "6"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    // === POST BUDGET YEAR VALIDATION TESTS ===
+
+    @Test
+    void createBudget_yearTooLow_returns400() throws Exception {
+        mockMvc.perform(post("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(budgetJson(1999, 6, "1000.00")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void createBudget_yearTooHigh_returns400() throws Exception {
+        mockMvc.perform(post("/api/budgets")
+                .header(USER_ID_HEADER, "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(budgetJson(2101, 6, "1000.00")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
     // === GET BUDGET TESTS ===
 
     @Test

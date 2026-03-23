@@ -32,6 +32,8 @@ public class BudgetService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        validateYearAndMonth(request.year(), request.month());
+
         Short year = request.year().shortValue();
         Short month = request.month().shortValue();
 
@@ -55,11 +57,22 @@ public class BudgetService {
 
     @Transactional(readOnly = true)
     public BudgetResponse getBudget(Long userId, int year, int month) {
+        validateYearAndMonth(year, month);
+
         MonthlyBudget budget = monthlyBudgetRepository
             .findByUserIdAndYearAndMonth(userId, (short) year, (short) month)
             .orElseThrow(() -> new ResourceNotFoundException("Budget not found for " + year + "-" + month));
 
         return toResponse(budget);
+    }
+
+    private void validateYearAndMonth(int year, int month) {
+        if (year < 2000 || year > 2100) {
+            throw new IllegalArgumentException("Year must be between 2000 and 2100");
+        }
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("Month must be between 1 and 12");
+        }
     }
 
     private BudgetResponse toResponse(MonthlyBudget budget) {

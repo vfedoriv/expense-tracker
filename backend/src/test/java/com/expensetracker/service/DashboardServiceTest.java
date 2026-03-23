@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -141,6 +142,34 @@ class DashboardServiceTest {
         assertThat(response.budgetAmount()).isNull();
         assertThat(response.remaining()).isNull();
         assertThat(response.usagePercentage()).isNull();
+    }
+
+    @Test
+    void getDashboard_monthZero_throwsIllegalArgument() {
+        assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2026, 0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Month must be between 1 and 12");
+    }
+
+    @Test
+    void getDashboard_month13_throwsIllegalArgument() {
+        assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2026, 13))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Month must be between 1 and 12");
+    }
+
+    @Test
+    void getDashboard_yearTooLow_throwsIllegalArgument() {
+        assertThatThrownBy(() -> dashboardService.getDashboard(1L, 1999, 6))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Year must be between 2000 and 2100");
+    }
+
+    @Test
+    void getDashboard_yearTooHigh_throwsIllegalArgument() {
+        assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2101, 6))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Year must be between 2000 and 2100");
     }
 
     @Test

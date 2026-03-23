@@ -114,6 +114,54 @@ class BudgetServiceTest {
     }
 
     @Test
+    void getBudget_invalidMonth_throwsIllegalArgument() {
+        assertThatThrownBy(() -> budgetService.getBudget(1L, 2026, 0))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Month must be between 1 and 12");
+    }
+
+    @Test
+    void getBudget_invalidMonth13_throwsIllegalArgument() {
+        assertThatThrownBy(() -> budgetService.getBudget(1L, 2026, 13))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Month must be between 1 and 12");
+    }
+
+    @Test
+    void getBudget_yearTooLow_throwsIllegalArgument() {
+        assertThatThrownBy(() -> budgetService.getBudget(1L, 1999, 6))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Year must be between 2000 and 2100");
+    }
+
+    @Test
+    void getBudget_yearTooHigh_throwsIllegalArgument() {
+        assertThatThrownBy(() -> budgetService.getBudget(1L, 2101, 6))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Year must be between 2000 and 2100");
+    }
+
+    @Test
+    void createBudget_invalidMonth_throwsIllegalArgument() {
+        BudgetRequest request = new BudgetRequest(2026, 0, new BigDecimal("1000.00"));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThatThrownBy(() -> budgetService.createOrUpdateBudget(1L, request))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Month must be between 1 and 12");
+    }
+
+    @Test
+    void createBudget_invalidYear_throwsIllegalArgument() {
+        BudgetRequest request = new BudgetRequest(1999, 6, new BigDecimal("1000.00"));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThatThrownBy(() -> budgetService.createOrUpdateBudget(1L, request))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Year must be between 2000 and 2100");
+    }
+
+    @Test
     void getBudget_notFound_throwsNotFound() {
         when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 3))
             .thenReturn(Optional.empty());
