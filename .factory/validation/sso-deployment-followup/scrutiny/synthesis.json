@@ -1,0 +1,35 @@
+{
+  "milestone": "sso-deployment-followup",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test-backend": { "passed": true, "command": "cd backend && mvn test", "exitCode": 0, "summary": "174 tests run, 0 failures, 0 errors, 0 skipped" },
+    "test-frontend": { "passed": true, "command": "cd frontend && npm test", "exitCode": 0, "summary": "136 tests passed across 11 test files" },
+    "lint": { "passed": true, "command": "cd frontend && npm run lint", "exitCode": 0, "summary": "No lint errors" },
+    "typecheck": { "passed": true, "command": "cd frontend && npx tsc --noEmit", "exitCode": 0, "summary": "No TypeScript errors" }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Committed .factory/library/wiremock-oauth2.md to git. The file documents WireMock Spring Boot integration patterns for OAuth2 testing: dependency, usage pattern, key architecture note (OAuth2ClientConfig builds ClientRegistration programmatically), stub patterns for Google OIDC and GitHub OAuth2, and state parameter handling approach.",
+      "sourceFeature": "wiremock-oauth2-tests"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add guidance on the '@Bean(distinct-name) + @Primary' pattern for test bean overrides. When a test needs to override a production Spring bean (e.g., ClientRegistrationRepository), use @TestConfiguration with @Bean(\"distinct-name\") @Primary rather than matching the production bean method name. Example: WireMockOAuth2TestConfig overrides clientRegistrationRepository with @Bean(\"wireMockClientRegistrationRepository\") @Primary to redirect all OAuth URLs to WireMock.",
+      "evidence": "Feature wiremock-oauth2-tests used this pattern in WireMockOAuth2TestConfig.java:23-24. The pattern is non-obvious and undiscoverable from existing code without context.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}

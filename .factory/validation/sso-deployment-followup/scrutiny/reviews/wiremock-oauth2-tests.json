@@ -1,0 +1,45 @@
+{
+  "featureId": "wiremock-oauth2-tests",
+  "reviewedAt": "2026-03-23T18:10:00.000Z",
+  "commitId": "0b0ba7dea57e1e42c4df51f3cecc618aaf712a46",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation correctly satisfies all four required test cases and follows the specified design. WireMock stubs cover the full OAuth2/OIDC callback flow for both GitHub and Google, including RSA key pair generation for OIDC JWT signing, nonce capture from the authorization redirect, state parameter handling, user provisioning verification in the DB, and session-authenticated /api/users/me verification. Only test-scoped files were added; no production code was modified. All 174 tests pass (170 existing + 4 new). Three minor non-blocking issues noted.",
+    "issues": [
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2WireMockFlowTest.java",
+        "line": 267,
+        "severity": "non_blocking",
+        "description": "executeOAuth2FlowInternal() has a nonceConsumer parameter that is never invoked with a non-null value. executeGoogleOidcFlow() bypasses this method entirely and implements its own nonce-capture logic inline. The nonceConsumer code path is dead code. Consider removing it to reduce confusion, though this does not affect correctness."
+      },
+      {
+        "file": "backend/pom.xml",
+        "line": 96,
+        "severity": "non_blocking",
+        "description": "nimbus-jose-jwt is used directly in OAuth2WireMockFlowTest (com.nimbusds.jose.*, com.nimbusds.jwt.*) but not declared as an explicit test dependency. It is available transitively via spring-security-oauth2-jose, which is pulled in by spring-boot-starter-security-oauth2-client. The tests pass, but relying on a transitive dependency for direct API usage is fragile if Spring Security's dependencies change in a future version. The feature specification explicitly called out adding it if not present. Low practical risk given tests pass."
+      },
+      {
+        "file": "backend/src/test/java/com/expensetracker/config/OAuth2WireMockFlowTest.java",
+        "line": 314,
+        "severity": "non_blocking",
+        "description": "assertUserMeEndpoint() and getUserMe() verify /api/users/me response using String.contains() checks on raw JSON strings. The existing OAuth2AuthenticationTest uses MockMvc with jsonPath() for structured JSON assertion (per architecture.md Jackson 3.x guidance). The String.contains() approach is simpler and works, but is slightly fragile (e.g., field ordering, nested objects). Non-blocking since tests pass and the fields being checked are flat top-level strings."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "The worker created .factory/library/wiremock-oauth2.md documenting the WireMock Spring Boot integration pattern, OAuth2 stub patterns, nonce/state handling approach, and the key architecture note about OAuth2ClientConfig building ClientRegistration programmatically. However, this file was NOT included in the commit (git status shows it as untracked: ?? .factory/library/wiremock-oauth2.md). The knowledge file exists locally but is not persisted to git, so it may not be visible to other agents starting fresh sessions from the committed state.",
+      "evidence": "git show 0b0ba7d --name-only shows only 3 files changed: backend/pom.xml, OAuth2WireMockFlowTest.java, WireMockOAuth2TestConfig.java. git status shows: ?? .factory/library/wiremock-oauth2.md"
+    },
+    {
+      "area": "conventions",
+      "observation": "The WireMockOAuth2TestConfig uses @Bean(\"wireMockClientRegistrationRepository\") with @Primary to override the production bean. This naming pattern (using a distinct name + @Primary rather than matching the production bean name) is specific to this WireMock override use case. If future workers need to override beans in test configurations, they may not know this pattern. AGENTS.md's testing section could document this 'distinct bean name + @Primary' approach for test overrides.",
+      "evidence": "WireMockOAuth2TestConfig.java:23-24 — @Bean(\"wireMockClientRegistrationRepository\") @Primary. Compare to production OAuth2ClientConfig.java:27 — @Bean (method name defaults to clientRegistrationRepository)"
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The implementation fully satisfies all feature requirements: wiremock-spring-boot 4.2.1 added as test dependency, WireMockOAuth2TestConfig overrides ClientRegistrationRepository to point all OAuth URLs at WireMock, and OAuth2WireMockFlowTest implements all four required test cases (GitHub full flow, Google OIDC full flow with signed JWT, login-reuse, and separate-accounts-per-provider). The Google OIDC nonce handling is particularly well-implemented — nonce is captured from the authorization redirect before the token stub is created. No production code was modified. Three non-blocking issues identified: dead nonceConsumer code path, implicit nimbus-jose-jwt transitive dependency, and String.contains() JSON assertions. The wiremock-oauth2.md knowledge file was created but not committed to git."
+}
