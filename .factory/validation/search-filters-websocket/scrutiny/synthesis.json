@@ -1,7 +1,7 @@
 {
   "milestone": "search-filters-websocket",
-  "round": 2,
-  "status": "fail",
+  "round": 3,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
@@ -21,28 +21,26 @@
   },
   "reviewsSummary": {
     "total": 1,
-    "passed": 0,
-    "failed": 1,
-    "failedFeatures": [
-      "fix-websocket-auth-rejection"
-    ]
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "fix-websocket-auth-rejection",
-      "severity": "blocking",
-      "description": "WebSocketAuthInterceptor now hard-requires X-User-Id at SockJS/HTTP handshake time, but frontend sends X-User-Id only in STOMP connectHeaders; connectHeaders do not satisfy handshake auth, causing WebSocket connection regression."
-    }
-  ],
+  "blockingIssues": [],
   "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
       "target": "AGENTS.md",
-      "suggestion": "Add explicit fake-auth WebSocket guidance: if handshake auth is required, frontend/backends must align on HTTP handshake header propagation (SockJS handshake) rather than STOMP CONNECT headers.",
-      "evidence": "Original websocket-backend failure came from permissive handshake fallback; fix-websocket-auth-rejection then regressed connectivity by enforcing handshake headers while frontend still only populated STOMP connectHeaders.",
+      "suggestion": "Add explicit convention for fake-auth WebSocket flows that handshake identity must be supplied at SockJS/HTTP handshake time and cannot rely on STOMP CONNECT headers.",
+      "evidence": "Review fix-websocket-auth-alignment found architecture.md documents this but AGENTS.md conventions do not, which allowed a prior backend-only auth change to regress browser connectivity.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills/fullstack-worker",
+      "suggestion": "Clarify enforcement for required agent-browser verification and interactiveChecks reporting so handoffs cannot claim followedProcedure=true without browser evidence when the skill mandates it.",
+      "evidence": "Review fix-websocket-auth-alignment observed fullstack-worker SKILL.md requires agent-browser validation, but the feature handoff/transcript contained only command checks and no interactiveChecks.",
       "isSystemic": true
     }
   ],
   "rejectedObservations": [],
-  "previousRound": ".factory/validation/search-filters-websocket/scrutiny/synthesis.round1.json"
+  "previousRound": ".factory/validation/search-filters-websocket/scrutiny/synthesis.round2.json"
 }

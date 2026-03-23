@@ -1,0 +1,26 @@
+{
+  "featureId": "fix-websocket-auth-alignment",
+  "reviewedAt": "2026-03-23T14:05:43Z",
+  "commitId": "64021ae93cfd182437ecdc85472329e5b8eb66d5",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix adequately addresses the prior blocking regression. Compared to the failed feature commit (e9dd499), this fix aligns frontend and backend handshake auth by sending userId on the SockJS URL and parsing it server-side (with header fallback), restoring authenticated browser connectivity while still rejecting missing/invalid/non-existent user IDs.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Handshake-vs-STOMP auth propagation is documented in .factory/library/architecture.md but not in mission AGENTS.md coding conventions, which can still lead to backend-only auth changes that break browser SockJS handshakes.",
+      "evidence": "AGENTS.md:63 only states '/ws using STOMP protocol'; architecture.md:16 explicitly documents that handshake identity is established during SockJS/HTTP handshake and connectHeaders do not affect it."
+    },
+    {
+      "area": "skills",
+      "observation": "fullstack-worker procedure requires agent-browser integration verification and interactiveChecks entries, but this run reported followedProcedure=true without any agent-browser usage or interactiveChecks evidence.",
+      "evidence": ".factory/skills/fullstack-worker/SKILL.md:16,38-42 require agent-browser + interactiveChecks; handoff 2026-03-23T14-01-41-487Z...json has verification.commandsRun only and no interactiveChecks; transcript skeleton contains('agent-browser') = false."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/search-filters-websocket/scrutiny/reviews/fix-websocket-auth-rejection.json",
+  "summary": "PASS: The alignment fix resolves the prior failure by making handshake-time user propagation consistent across frontend SockJS and backend interceptor parsing; both original and fix diffs were reviewed, and no blocking code issues were found."
+}

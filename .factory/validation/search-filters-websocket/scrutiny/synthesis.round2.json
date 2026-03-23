@@ -1,0 +1,48 @@
+{
+  "milestone": "search-filters-websocket",
+  "round": 2,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd /Users/vfedoriv/workspace/expense-tracker/backend && mvn test && cd /Users/vfedoriv/workspace/expense-tracker/frontend && npm test",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd /Users/vfedoriv/workspace/expense-tracker/frontend && npx tsc --noEmit",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd /Users/vfedoriv/workspace/expense-tracker/frontend && npm run lint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "failedFeatures": [
+      "fix-websocket-auth-rejection"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "fix-websocket-auth-rejection",
+      "severity": "blocking",
+      "description": "WebSocketAuthInterceptor now hard-requires X-User-Id at SockJS/HTTP handshake time, but frontend sends X-User-Id only in STOMP connectHeaders; connectHeaders do not satisfy handshake auth, causing WebSocket connection regression."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add explicit fake-auth WebSocket guidance: if handshake auth is required, frontend/backends must align on HTTP handshake header propagation (SockJS handshake) rather than STOMP CONNECT headers.",
+      "evidence": "Original websocket-backend failure came from permissive handshake fallback; fix-websocket-auth-rejection then regressed connectivity by enforcing handshake headers while frontend still only populated STOMP connectHeaders.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": ".factory/validation/search-filters-websocket/scrutiny/synthesis.round1.json"
+}
