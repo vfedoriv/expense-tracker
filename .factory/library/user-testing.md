@@ -17,6 +17,8 @@ Testing surface, required testing skills/tools, and resource cost classification
 - **agent-browser**: For all UI validation (navigate pages, fill forms, click buttons, take screenshots, verify visual states)
 - **curl**: For direct API testing (authorization checks, validation errors, cross-user isolation)
 
+Practical note: `agent-browser` network output may omit HTTP status codes; use `curl` (or explicit in-page request logging) when status-code evidence is required by assertions.
+
 ## Setup for Validation
 
 1. Ensure PostgreSQL is running: `docker compose up -d postgres`
@@ -39,3 +41,19 @@ To test multi-user isolation, the fake auth should support switching users via a
 - **Available headroom:** ~3 GB * 0.7 = ~2.1 GB
 - **Max concurrent validators:** 2-3
 - **Rationale:** With moderate existing memory pressure and services running, 2-3 concurrent agent-browser validators is safe. More may cause swapping.
+
+## Flow Validator Guidance: Web Browser
+
+- Use only the assigned app URL and credentials/isolation context provided by the parent validator.
+- Stay within project ports only: `5173` (frontend), `8080` (backend), `5432` (postgres).
+- Do not alter global machine state or unrelated services/processes.
+- Keep evidence scoped to your assigned group directory under mission evidence.
+- For this project surface, avoid changing seed data outside the assigned fake user context unless explicitly instructed.
+
+## Flow Validator Guidance: API
+
+- Use only `http://localhost:8080/api/*` with explicit `X-User-Id` headers for isolation checks.
+- Do not use destructive cleanup against global tables; create scoped test data with unique prefixes per flow.
+- Keep all requests within project ports (`8080` only for API checks) and never call external services.
+- Record exact request/response status codes and payload snippets for each assertion under test.
+- Save command transcripts and JSON responses only under the assigned mission evidence directory.

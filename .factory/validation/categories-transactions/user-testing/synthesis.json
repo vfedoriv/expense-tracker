@@ -1,0 +1,62 @@
+{
+  "milestone": "categories-transactions",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 26,
+    "passed": 24,
+    "failed": 1,
+    "blocked": 1
+  },
+  "passedAssertions": [
+    "VAL-AUTH-001",
+    "VAL-CAT-001",
+    "VAL-CAT-002",
+    "VAL-CAT-003",
+    "VAL-CAT-004",
+    "VAL-CAT-005",
+    "VAL-CAT-006",
+    "VAL-CAT-007",
+    "VAL-CAT-008",
+    "VAL-CAT-009",
+    "VAL-CROSS-003",
+    "VAL-TXN-001",
+    "VAL-TXN-002",
+    "VAL-TXN-003",
+    "VAL-TXN-004",
+    "VAL-TXN-005",
+    "VAL-TXN-006",
+    "VAL-TXN-007",
+    "VAL-TXN-008",
+    "VAL-TXN-009",
+    "VAL-TXN-010",
+    "VAL-TXN-011",
+    "VAL-TXN-013",
+    "VAL-TXN-014"
+  ],
+  "failedAssertions": [
+    {
+      "id": "VAL-TXN-012",
+      "reason": "List rows showed '$' amounts, but the create form did not show any explicit currency label/value (USD) near amount input."
+    }
+  ],
+  "blockedAssertions": [
+    {
+      "id": "VAL-CROSS-007",
+      "blockedBy": "Could verify categories and transactions isolation, but budget/dashboard API surface required by this cross-area assertion is blocked by persistent 500 responses for both users."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added Flow Validator Guidance: API section for curl-based isolation assertions and evidence expectations.",
+      "source": "setup"
+    },
+    {
+      "target": "user-testing.md",
+      "description": "Documented agent-browser network status-code limitation and fallback to curl/in-page logging for status evidence.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null
+}

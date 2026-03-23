@@ -1,0 +1,211 @@
+{
+  "groupId": "transactions-crud-ui",
+  "testedAt": "2026-03-23T11:33:21Z",
+  "isolation": {
+    "surface": "web-browser",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "fakeAuthUser": "default",
+    "xUserId": "1",
+    "dataPrefix": "ut-tc-",
+    "browserSession": "de02f6423e3d"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-TXN-008",
+      "title": "Empty state when no transactions",
+      "status": "pass",
+      "reason": "Transactions page showed a clear empty state before any transaction was created.",
+      "steps": [
+        {
+          "action": "Navigate to Dashboard then back to Transactions",
+          "expected": "Transactions fetch runs and empty state is shown when no transactions exist",
+          "observed": "Page displayed 'No transactions yet' and prompt to add first transaction"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-008-empty-state.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> 200 (captured via browser fetch log)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-003",
+      "title": "Transaction requires category selection",
+      "status": "pass",
+      "reason": "Category dropdown was populated with user categories and submission without category was blocked client-side.",
+      "steps": [
+        {
+          "action": "Open Add Transaction form",
+          "expected": "Category selector contains user's categories",
+          "observed": "Dropdown options included ut-tc-cat-a and ut-tc-cat-b"
+        },
+        {
+          "action": "Fill title/amount/date/notes but leave category unselected and submit",
+          "expected": "Submission blocked",
+          "observed": "Inline error 'Category is required' displayed and no POST request fired"
+        },
+        {
+          "action": "Select category and submit valid transaction",
+          "expected": "Payload includes categoryId",
+          "observed": "POST /api/transactions -> 201; subsequent GET /api/transactions response contained categoryId"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-CROSS-003-category-selector.png",
+          "categories-transactions/transactions-crud-ui/VAL-CROSS-003-submit-without-category-blocked.png"
+        ],
+        "consoleErrors": "none",
+        "network": "Invalid submit: no POST (browser fetch log []). Valid submit: POST /api/transactions -> 201; GET /api/transactions includes categoryId"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-001",
+      "title": "Create transaction with all fields",
+      "status": "pass",
+      "reason": "Transaction was created from UI and appeared in list with title, amount, date, category, notes, and USD currency value.",
+      "steps": [
+        {
+          "action": "Open Add Transaction and provide title, amount, date, category, notes",
+          "expected": "Form submits successfully",
+          "observed": "Success toast shown and transaction row rendered"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-001-created-transaction.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/transactions -> 201; GET /api/transactions -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-004",
+      "title": "Transaction list displays all user's transactions",
+      "status": "pass",
+      "reason": "After creating two scoped transactions, both appeared with required fields in the Transactions list.",
+      "steps": [
+        {
+          "action": "Create two transactions with prefix ut-tc-",
+          "expected": "Both transactions are shown in the list with title, amount, currency, date, category",
+          "observed": "List rendered ut-tc-txn-2 and ut-tc-cross-no-category with all required columns/details"
+        },
+        {
+          "action": "Fetch transactions via API",
+          "expected": "Count matches UI",
+          "observed": "GET /api/transactions returned 2 records matching the two visible transactions"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-004-transaction-list.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> 200 (browser + curl); curl response count=2 matched UI"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-002",
+      "title": "Edit a transaction (any field)",
+      "status": "pass",
+      "reason": "Edited transaction fields (title, amount, date, category, notes) were saved and reflected in the list.",
+      "steps": [
+        {
+          "action": "Open Edit on existing transaction and change multiple fields",
+          "expected": "Updated values persist after save",
+          "observed": "Row updated to ut-tc-txn-1-edited, $15.75, Mar 21 2026, ut-tc-cat-b, updated notes"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-002-edited-transaction.png"
+        ],
+        "consoleErrors": "none",
+        "network": "PUT /api/transactions/412 -> 200; GET /api/transactions -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-003",
+      "title": "Delete a transaction",
+      "status": "pass",
+      "reason": "Delete action required confirmation and removed the selected transaction from the list.",
+      "steps": [
+        {
+          "action": "Click Delete on ut-tc-txn-2",
+          "expected": "Confirmation dialog appears",
+          "observed": "Modal asked for confirmation before deletion"
+        },
+        {
+          "action": "Confirm deletion",
+          "expected": "Transaction removed from list",
+          "observed": "Success toast shown and ut-tc-txn-2 no longer displayed"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-003-delete-confirmation.png",
+          "categories-transactions/transactions-crud-ui/VAL-TXN-003-after-delete.png"
+        ],
+        "consoleErrors": "none",
+        "network": "DELETE /api/transactions/413 -> 204; GET /api/transactions -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-012",
+      "title": "Currency displayed explicitly as USD",
+      "status": "fail",
+      "reason": "List rows showed '$' amounts, but the create form did not show any explicit currency label/value (USD) near amount input.",
+      "steps": [
+        {
+          "action": "Review Transactions list",
+          "expected": "Currency is explicit for each transaction",
+          "observed": "List displayed dollar-formatted amounts (e.g., $10.00)"
+        },
+        {
+          "action": "Open Add Transaction form",
+          "expected": "Form explicitly indicates USD currency",
+          "observed": "Form fields were Title, Amount, Date, Category, Notes; no visible USD/currency indicator"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-crud-ui/VAL-TXN-012-currency-in-list-and-form.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> 200; payload currency field is 'USD' but form UI lacks explicit currency display"
+      },
+      "issues": "Create form does not explicitly display currency as USD, so requirement 'in both list and form' is not met."
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser network request log did not include response status codes by default.",
+      "resolved": true,
+      "resolution": "Used temporary fetch-wrapper logging in the browser session plus curl verification for exact status codes/payload fields.",
+      "affectedAssertions": [
+        "VAL-TXN-001",
+        "VAL-TXN-002",
+        "VAL-TXN-003",
+        "VAL-TXN-004",
+        "VAL-TXN-008",
+        "VAL-CROSS-003",
+        "VAL-TXN-012"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 7 assigned assertions: 6 passed, 1 failed (VAL-TXN-012)."
+}

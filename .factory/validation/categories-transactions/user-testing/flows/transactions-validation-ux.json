@@ -1,0 +1,200 @@
+{
+  "groupId": "transactions-validation-ux",
+  "testedAt": "2026-03-23T11:40:03Z",
+  "isolation": {
+    "surface": "Web Browser",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "fakeAuthUser": "default user",
+    "xUserId": 1,
+    "session": "de02f6423e3d",
+    "dataPrefix": "ut-tv-"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-TXN-005",
+      "title": "Validation - amount must be > 0 (client + server)",
+      "status": "pass",
+      "reason": "Client blocked amount=0 with inline error, and direct API request with amount=0 returned HTTP 400.",
+      "steps": [
+        {
+          "action": "Open Add Transaction modal and submit with amount=0 (valid title/date/category).",
+          "expected": "Client-side amount validation error is shown.",
+          "observed": "Inline message 'Amount must be greater than 0' displayed."
+        },
+        {
+          "action": "Send direct POST /api/transactions with amount=0 via curl and X-User-Id: 1.",
+          "expected": "Server rejects invalid amount with 400.",
+          "observed": "HTTP 400 with body {\"error\":\"amount: Amount must be greater than 0\"}."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-005-client-error.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/transactions (amount=0) -> 400 (curl transcript in categories-transactions/transactions-validation-ux/VAL-TXN-005-006-api-validation.txt)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-006",
+      "title": "Validation - title must be non-empty (client + server)",
+      "status": "pass",
+      "reason": "Client blocked whitespace-only title with inline error, and direct API request with blank title returned HTTP 400.",
+      "steps": [
+        {
+          "action": "Submit Add Transaction form with whitespace title and valid amount/date/category.",
+          "expected": "Client-side title validation error is shown.",
+          "observed": "Inline message 'Title is required' displayed."
+        },
+        {
+          "action": "Send direct POST /api/transactions with whitespace title via curl and X-User-Id: 1.",
+          "expected": "Server rejects blank title with 400.",
+          "observed": "HTTP 400 with body {\"error\":\"title: Title must not be blank\"}."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-006-client-error.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/transactions (blank title) -> 400 (curl transcript in categories-transactions/transactions-validation-ux/VAL-TXN-005-006-api-validation.txt)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-007",
+      "title": "Validation - date must be valid",
+      "status": "pass",
+      "reason": "Submitting without a date produced inline date validation feedback.",
+      "steps": [
+        {
+          "action": "Submit Add Transaction form with date left empty and other fields valid.",
+          "expected": "Date validation error is shown.",
+          "observed": "Inline message 'Date is required' displayed."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-007-date-validation-error.png"
+        ],
+        "consoleErrors": "none",
+        "network": "No server call required for this assertion; validation confirmed in UI."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-009",
+      "title": "Loading state while fetching transactions",
+      "status": "pass",
+      "reason": "During in-flight transactions fetch, UI displayed explicit loading indicator.",
+      "steps": [
+        {
+          "action": "Patch fetch in-page to delay /api/transactions responses and navigate Dashboard -> Transactions.",
+          "expected": "Visible loading indicator while GET /api/transactions is in flight.",
+          "observed": "Text 'Loading transactions...' visible before data rendered."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-009-loading-state.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions intentionally delayed in browser runtime; loading state captured during request."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-010",
+      "title": "Client-side validation feedback on forms",
+      "status": "pass",
+      "reason": "Form showed multiple inline errors simultaneously and all cleared after valid corrections.",
+      "steps": [
+        {
+          "action": "Submit Add Transaction form with invalid title, amount=0, empty date, and no category.",
+          "expected": "All relevant validation errors appear together.",
+          "observed": "Title, amount, date, and category inline errors shown simultaneously."
+        },
+        {
+          "action": "Correct all fields to valid values without closing form.",
+          "expected": "Inline errors clear on correction.",
+          "observed": "Validation messages no longer visible after corrections."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-010-multiple-errors.png",
+          "categories-transactions/transactions-validation-ux/VAL-TXN-010-errors-cleared.png"
+        ],
+        "consoleErrors": "none",
+        "network": "UI-only validation behavior verified in form states."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-011",
+      "title": "Responsive behavior on narrow screens",
+      "status": "pass",
+      "reason": "At 375px viewport, transactions UI remained usable and add form was operable.",
+      "steps": [
+        {
+          "action": "Set viewport to 375x812 and inspect Transactions page layout.",
+          "expected": "Narrow-screen adaptation keeps transaction UI usable.",
+          "observed": "Mobile layout rendered with working controls."
+        },
+        {
+          "action": "Open Add Transaction form at 375px viewport.",
+          "expected": "Form remains usable on narrow screens.",
+          "observed": "Modal form fields/buttons were accessible and interactable."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-011-responsive-list-mobile.png",
+          "categories-transactions/transactions-validation-ux/VAL-TXN-011-responsive-form-mobile.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> 200 during normal page load."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-014",
+      "title": "Error handling visible in UI",
+      "status": "pass",
+      "reason": "When transactions fetch failed, UI showed clear user-facing error with retry action.",
+      "steps": [
+        {
+          "action": "Abort /api/transactions requests using agent-browser network route and load Transactions page.",
+          "expected": "User-friendly error message is shown (not blank screen/raw exception).",
+          "observed": "UI displayed 'Failed to load transactions' with a 'Retry' button."
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/transactions-validation-ux/VAL-TXN-014-fetch-error-ui.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/transactions -> aborted (simulated failure via route), error state rendered in UI."
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Loading indicator was too brief to capture on normal-speed local responses.",
+      "resolved": true,
+      "resolution": "Temporarily delayed /api/transactions fetch in browser runtime to capture in-flight loading state evidence.",
+      "affectedAssertions": [
+        "VAL-TXN-009"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 7 assertions: 7 passed, 0 failed, 0 blocked."
+}

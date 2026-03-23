@@ -1,0 +1,151 @@
+{
+  "groupId": "isolation-api",
+  "testedAt": "2026-03-23T11:45:47.959307+00:00",
+  "isolation": {
+    "surface": "API",
+    "apiUrl": "http://localhost:8080/api",
+    "userHeader": "X-User-Id",
+    "users": {
+      "userA": "1",
+      "userB": "2"
+    },
+    "dataPrefix": "ut-iso-20260323134429-35112"
+  },
+  "toolsUsed": [
+    "curl",
+    "python3"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-CAT-008",
+      "title": "User cannot see another user's categories",
+      "status": "pass",
+      "reason": "User-scoped category listing enforced for both users via X-User-Id.",
+      "steps": [
+        {
+          "action": "POST /api/categories as User A and User B with unique names",
+          "expected": "Both creates return 201 and create separate category IDs.",
+          "observed": "User A status 201 (id 946), User B status 201 (id 947)."
+        },
+        {
+          "action": "GET /api/categories as User A",
+          "expected": "Contains User A category and excludes User B category.",
+          "observed": "Status 200; own visible=True, other hidden=True."
+        },
+        {
+          "action": "GET /api/categories as User B",
+          "expected": "Contains User B category and excludes User A category.",
+          "observed": "Status 200; own visible=True, other hidden=True."
+        }
+      ],
+      "evidence": {
+        "network": [
+          "categories-transactions/isolation-api/01-create-category-userA.status.txt",
+          "categories-transactions/isolation-api/01-create-category-userA.body.json",
+          "categories-transactions/isolation-api/02-create-category-userB.status.txt",
+          "categories-transactions/isolation-api/02-create-category-userB.body.json",
+          "categories-transactions/isolation-api/03-list-categories-userA.status.txt",
+          "categories-transactions/isolation-api/03-list-categories-userA.body.json",
+          "categories-transactions/isolation-api/04-list-categories-userB.status.txt",
+          "categories-transactions/isolation-api/04-list-categories-userB.body.json"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-TXN-013",
+      "title": "User cannot see another user's transactions",
+      "status": "pass",
+      "reason": "Transaction lists are user-scoped and direct cross-user transaction-id update attempt is denied with 404.",
+      "steps": [
+        {
+          "action": "POST /api/transactions as User A and User B using each user's own category",
+          "expected": "Both creates return 201 with separate transaction IDs.",
+          "observed": "User A status 201 (id 414), User B status 201 (id 415)."
+        },
+        {
+          "action": "GET /api/transactions as User A and User B",
+          "expected": "Each user sees only own transaction(s).",
+          "observed": "User A status 200 own visible=True other hidden=True; User B status 200 own visible=True other hidden=True."
+        },
+        {
+          "action": "PUT /api/transactions/414 as User B (direct ID access attempt)",
+          "expected": "Request denied with 403/404.",
+          "observed": "Status 404 with body Transaction not found."
+        }
+      ],
+      "evidence": {
+        "network": [
+          "categories-transactions/isolation-api/05-create-transaction-userA.status.txt",
+          "categories-transactions/isolation-api/05-create-transaction-userA.body.json",
+          "categories-transactions/isolation-api/06-create-transaction-userB.status.txt",
+          "categories-transactions/isolation-api/06-create-transaction-userB.body.json",
+          "categories-transactions/isolation-api/07-list-transactions-userA.status.txt",
+          "categories-transactions/isolation-api/07-list-transactions-userA.body.json",
+          "categories-transactions/isolation-api/08-list-transactions-userB.status.txt",
+          "categories-transactions/isolation-api/08-list-transactions-userB.body.json",
+          "categories-transactions/isolation-api/09-update-userA-transaction-as-userB.status.txt",
+          "categories-transactions/isolation-api/09-update-userA-transaction-as-userB.body.json"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-007",
+      "title": "Data isolation across all areas",
+      "status": "blocked",
+      "reason": "Could verify categories and transactions isolation, but budget/dashboard API surface required by this cross-area assertion is blocked by persistent 500 responses for both users.",
+      "steps": [
+        {
+          "action": "GET /api/categories and GET /api/transactions for User A and User B",
+          "expected": "All list endpoints return only each user's own data.",
+          "observed": "Categories and transactions isolation checks passed for both users."
+        },
+        {
+          "action": "GET /api/budgets?year=2026&month=3 for User A and User B",
+          "expected": "Endpoint returns user-scoped budget data or empty state response.",
+          "observed": "User A status 500, User B status 500, body: {\"error\":\"An unexpected error occurred\"}."
+        },
+        {
+          "action": "GET /api/dashboard?year=2026&month=3 for User A and User B",
+          "expected": "Endpoint returns user-scoped dashboard aggregate data.",
+          "observed": "User A status 500, User B status 500, body: {\"error\":\"An unexpected error occurred\"}."
+        },
+        {
+          "action": "Retry budget/dashboard requests 3 times per endpoint per user",
+          "expected": "Transient failure clears and endpoints become testable.",
+          "observed": "All retries remained 500 for both users and both endpoints."
+        }
+      ],
+      "evidence": {
+        "network": [
+          "categories-transactions/isolation-api/03-list-categories-userA.body.json",
+          "categories-transactions/isolation-api/04-list-categories-userB.body.json",
+          "categories-transactions/isolation-api/07-list-transactions-userA.body.json",
+          "categories-transactions/isolation-api/08-list-transactions-userB.body.json",
+          "categories-transactions/isolation-api/10-get-budgets-userA.status.txt",
+          "categories-transactions/isolation-api/10-get-budgets-userA.body.json",
+          "categories-transactions/isolation-api/11-get-budgets-userB.status.txt",
+          "categories-transactions/isolation-api/11-get-budgets-userB.body.json",
+          "categories-transactions/isolation-api/12-get-dashboard-userA.status.txt",
+          "categories-transactions/isolation-api/12-get-dashboard-userA.body.json",
+          "categories-transactions/isolation-api/13-get-dashboard-userB.status.txt",
+          "categories-transactions/isolation-api/13-get-dashboard-userB.body.json",
+          "categories-transactions/isolation-api/14-budget-dashboard-retries.txt"
+        ]
+      },
+      "issues": "Budget/dashboard endpoints return 500 for both users, preventing full cross-area data isolation verification."
+    }
+  ],
+  "frictions": [],
+  "blockers": [
+    {
+      "description": "Cross-area budget endpoints are not testable due to persistent 500 responses on /api/budgets and /api/dashboard for both users.",
+      "affectedAssertions": [
+        "VAL-CROSS-007"
+      ],
+      "quickFixAttempted": "Retried each endpoint 3 times for User A and User B; all responses remained HTTP 500 with {\"error\":\"An unexpected error occurred\"}."
+    }
+  ],
+  "summary": "Tested 3 assertions: 2 passed (VAL-CAT-008, VAL-TXN-013), 0 failed, 1 blocked (VAL-CROSS-007 due budget/dashboard 500 responses)."
+}

@@ -1,0 +1,267 @@
+{
+  "groupId": "auth-categories-ui",
+  "testedAt": "2026-03-23T11:25:58Z",
+  "isolation": {
+    "surface": "Web Browser",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:8080/api",
+    "fakeAuthUser": "default user",
+    "xUserId": "1",
+    "browserSession": "de02f6423e3d"
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-AUTH-001",
+      "title": "Fake auth auto-login (milestones 1-4)",
+      "status": "pass",
+      "reason": "Opening the app root redirected directly to /dashboard with no login form shown.",
+      "steps": [
+        {
+          "action": "Open http://localhost:5173",
+          "expected": "Auto-authenticated user is taken directly to dashboard",
+          "observed": "URL became http://localhost:5173/dashboard"
+        },
+        {
+          "action": "Inspect rendered page",
+          "expected": "No login form is displayed",
+          "observed": "Dashboard placeholder content rendered with nav links only; no login form"
+        },
+        {
+          "action": "Check auth network activity",
+          "expected": "Authenticated request succeeds",
+          "observed": "Browser captured GET /api/users/me; curl GET /api/users/me returned 200 with X-User-Id: 1"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-AUTH-001-autologin-dashboard.png"
+        ],
+        "consoleErrors": "none",
+        "network": "Browser: GET /api/users/me observed during load; curl GET http://localhost:8080/api/users/me -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-001",
+      "title": "Create a category",
+      "status": "pass",
+      "reason": "Creating a unique category succeeded and it remained visible after refresh.",
+      "steps": [
+        {
+          "action": "Create category named ut-ac-a-1774265",
+          "expected": "Category is created and shown in list",
+          "observed": "Category appeared with Edit/Delete actions"
+        },
+        {
+          "action": "Refresh categories page",
+          "expected": "Created category persists",
+          "observed": "ut-ac-a-1774265 still visible after reload"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-001-created.png",
+          "categories-transactions/auth-categories-ui/VAL-CAT-001-after-refresh.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/categories -> 201; subsequent GET /api/categories -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-002",
+      "title": "Duplicate category name rejected",
+      "status": "pass",
+      "reason": "Submitting an existing category name showed a clear duplicate error and did not create a second row.",
+      "steps": [
+        {
+          "action": "Open Create Category modal and submit existing name ut-ac-a-1774265",
+          "expected": "Duplicate name is rejected",
+          "observed": "Error shown: Category with name 'ut-ac-a-1774265' already exists"
+        },
+        {
+          "action": "Verify category list",
+          "expected": "No duplicate row appears",
+          "observed": "Only one category entry with that name existed"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-002-duplicate-error.png"
+        ],
+        "consoleErrors": "none",
+        "network": "POST /api/categories -> 409"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-003",
+      "title": "Rename a category",
+      "status": "pass",
+      "reason": "Renaming succeeded and the new name appeared in the transaction form category dropdown.",
+      "steps": [
+        {
+          "action": "Rename ut-ac-a-1774265 to ut-ac-b-1774265",
+          "expected": "Updated name appears in categories list",
+          "observed": "List showed ut-ac-b-1774265"
+        },
+        {
+          "action": "Open Add Transaction form",
+          "expected": "Renamed category is present in category selector",
+          "observed": "Category option ut-ac-b-1774265 present in dropdown"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-003-renamed-list.png",
+          "categories-transactions/auth-categories-ui/VAL-CAT-003-transaction-dropdown.png"
+        ],
+        "consoleErrors": "none",
+        "network": "PUT /api/categories/942 -> 200; follow-up GET /api/categories -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-004",
+      "title": "Delete category with no transactions",
+      "status": "pass",
+      "reason": "Deleting a category without linked transactions succeeded and removed it from the list.",
+      "steps": [
+        {
+          "action": "Delete category ut-ac-c-1774265 and confirm",
+          "expected": "Deletion succeeds",
+          "observed": "Category removed from list"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-004-delete-success.png"
+        ],
+        "consoleErrors": "none",
+        "network": "DELETE /api/categories/943 -> 204; follow-up GET /api/categories -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-005",
+      "title": "Delete category blocked when transactions exist",
+      "status": "pass",
+      "reason": "Deleting a category that had transactions returned a conflict and kept the category.",
+      "steps": [
+        {
+          "action": "Attempt to delete AuthTest E2E Food and confirm",
+          "expected": "Deletion is blocked with clear message",
+          "observed": "Modal displayed 'Cannot delete category with existing transactions' and category remained"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-005-delete-blocked.png"
+        ],
+        "consoleErrors": "none",
+        "network": "DELETE /api/categories/939 -> 409"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-006",
+      "title": "Empty state when no categories",
+      "status": "pass",
+      "reason": "After clearing transactions and categories for user 1, the categories page displayed a clear empty-state message.",
+      "steps": [
+        {
+          "action": "Remove remaining user transactions, then delete all categories",
+          "expected": "User reaches zero categories",
+          "observed": "Final category deletion succeeded"
+        },
+        {
+          "action": "View categories page",
+          "expected": "Clear empty state message shown",
+          "observed": "Page showed 'No categories yet' and 'Create one to get started.'"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-006-empty-state.png"
+        ],
+        "consoleErrors": "none",
+        "network": "Final cleanup request: DELETE /api/categories/942 -> 204; follow-up GET /api/categories -> 200"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-007",
+      "title": "Category name validation - empty rejected",
+      "status": "pass",
+      "reason": "Whitespace-only category name was blocked client-side with a validation error and no API call.",
+      "steps": [
+        {
+          "action": "Open Create Category modal and submit whitespace name",
+          "expected": "Client-side validation error and no network request",
+          "observed": "Error 'Name is required' shown; request log had no POST /api/categories"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-007-empty-validation.png"
+        ],
+        "consoleErrors": "none",
+        "network": "No category API request sent (POST /api/categories absent)"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CAT-009",
+      "title": "Rename category to duplicate name rejected",
+      "status": "pass",
+      "reason": "Renaming a category to another existing name returned a duplicate conflict and displayed a clear error message.",
+      "steps": [
+        {
+          "action": "Create ut-ac-c-1774265, then edit ut-ac-b-1774265 to ut-ac-c-1774265",
+          "expected": "Rename is rejected as duplicate",
+          "observed": "Edit modal showed duplicate-name error and rename was not applied"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "categories-transactions/auth-categories-ui/VAL-CAT-009-rename-duplicate-error.png"
+        ],
+        "consoleErrors": "none",
+        "network": "PUT /api/categories/942 -> 409"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "The agent-browser `network requests` output did not include HTTP status codes by default.",
+      "resolved": true,
+      "resolution": "Captured statuses via temporary in-page fetch logging and used curl for /api/users/me status confirmation.",
+      "affectedAssertions": [
+        "VAL-AUTH-001",
+        "VAL-CAT-001",
+        "VAL-CAT-002",
+        "VAL-CAT-003",
+        "VAL-CAT-004",
+        "VAL-CAT-005",
+        "VAL-CAT-006",
+        "VAL-CAT-007",
+        "VAL-CAT-009"
+      ]
+    },
+    {
+      "description": "Assigned user data was pre-populated with categories and transactions, so CAT-006 required cleanup before empty-state could be observed.",
+      "resolved": true,
+      "resolution": "Deleted existing transactions and categories within X-User-Id: 1 scope, then verified empty-state UI.",
+      "affectedAssertions": [
+        "VAL-CAT-006"
+      ]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 9 assertions: 9 passed, 0 failed, 0 blocked. Auth auto-login and all assigned categories UI behaviors matched expectations for the fake-auth default user context."
+}
