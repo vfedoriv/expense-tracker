@@ -21,7 +21,7 @@ function buildToastMessage(threshold: number): string {
 }
 
 export function useWebSocket() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [alerts, setAlerts] = useState<BudgetAlertToast[]>([]);
   const clientRef = useRef<Client | null>(null);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -57,14 +57,14 @@ export function useWebSocket() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
       return;
     }
 
-    // In SSO mode, the session cookie is sent automatically.
-    // The /ws endpoint uses the authenticated session for user identification.
+    // The backend WebSocketAuthInterceptor requires userId as a query parameter
+    // on the handshake URL to authenticate the WebSocket connection.
     const client = new Client({
-      webSocketFactory: () => new SockJS('/ws'),
+      webSocketFactory: () => new SockJS(`/ws?userId=${user.id}`),
       reconnectDelay: RECONNECT_DELAY_MS,
       onConnect: () => {
         client.subscribe('/user/topic/budget-alerts', (message) => {
@@ -95,7 +95,7 @@ export function useWebSocket() {
       currentTimers.forEach((timer) => clearTimeout(timer));
       currentTimers.clear();
     };
-  }, [isAuthenticated, addAlert]);
+  }, [isAuthenticated, user?.id, addAlert]);
 
   return { alerts, dismissAlert };
 }
