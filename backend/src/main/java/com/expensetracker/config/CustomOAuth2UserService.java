@@ -65,7 +65,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
         if ("github".equals(registrationId)) {
             String login = oAuth2User.getAttribute("login");
-            if (login != null) return login;
+            if (login != null) {
+                return login;
+            }
         }
         return "Unknown User";
     }
