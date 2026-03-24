@@ -233,6 +233,7 @@ public class BudgetAlertService {
             case 50 -> state.setThreshold50Fired(true);
             case 80 -> state.setThreshold80Fired(true);
             case 100 -> state.setThreshold100Fired(true);
+            default -> {}
         }
     }
 }
