@@ -2,6 +2,7 @@ package com.expensetracker.config;
 
 import com.expensetracker.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +21,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -31,10 +30,11 @@ public class SecurityConfig {
     private final CustomOAuth2UserService oauthUserService;
     private final CustomOidcUserService oidcUserService;
 
-    public SecurityConfig(UserRepository userRepository,
-                          Environment environment,
-                          CustomOAuth2UserService oauthUserSvc,
-                          CustomOidcUserService oidcUserSvc) {
+    public SecurityConfig(
+            UserRepository userRepository,
+            Environment environment,
+            CustomOAuth2UserService oauthUserSvc,
+            CustomOidcUserService oidcUserSvc) {
         this.userRepository = userRepository;
         this.environment = environment;
         this.oauthUserService = oauthUserSvc;
@@ -43,66 +43,78 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         if (isFakeAuthActive()) {
             // Dev mode with fake auth: stateless, no CSRF, FakeAuthFilter
-            http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll()
-                )
-                .addFilterBefore(new FakeAuthFilter(userRepository), UsernamePasswordAuthenticationFilter.class);
+            http.csrf(csrf -> csrf.disable())
+                    .sessionManagement(
+                            session ->
+                                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .addFilterBefore(
+                            new FakeAuthFilter(userRepository),
+                            UsernamePasswordAuthenticationFilter.class);
         } else {
             // OAuth2 mode: session-based, CSRF with cookie, OAuth2 login
-            CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+            CsrfTokenRequestAttributeHandler requestHandler =
+                    new CsrfTokenRequestAttributeHandler();
             requestHandler.setCsrfRequestAttributeName(null);
 
-            http
-                .csrf(csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                    .csrfTokenRequestHandler(requestHandler)
-                )
-                .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                )
-                .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/health", "/oauth2/**", "/login/**", "/error").permitAll()
-                    .anyRequest().authenticated()
-                )
-                .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                )
-                .oauth2Login(oauth2 -> oauth2
-                    .userInfoEndpoint(userInfo -> userInfo
-                        .userService(oauthUserService)
-                        .oidcUserService(oidcUserService)
-                    )
-                    .successHandler(oAuth2AuthenticationSuccessHandler())
-                )
-                .logout(logout -> logout
-                    .logoutUrl("/api/logout")
-                    .logoutSuccessHandler((request, response, authentication) -> {
-                        response.setStatus(HttpServletResponse.SC_OK);
-                    })
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-                )
-                .addFilterAfter(new OAuth2UserPrincipalFilter(),
-                    org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.class);
+            http.csrf(
+                            csrf ->
+                                    csrf.csrfTokenRepository(
+                                                    CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                            .csrfTokenRequestHandler(requestHandler))
+                    .sessionManagement(
+                            session ->
+                                    session.sessionCreationPolicy(
+                                            SessionCreationPolicy.IF_REQUIRED))
+                    .authorizeHttpRequests(
+                            auth ->
+                                    auth.requestMatchers(
+                                                    "/api/health",
+                                                    "/oauth2/**",
+                                                    "/login/**",
+                                                    "/error")
+                                            .permitAll()
+                                            .anyRequest()
+                                            .authenticated())
+                    .exceptionHandling(
+                            exception ->
+                                    exception.authenticationEntryPoint(
+                                            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                    .oauth2Login(
+                            oauth2 ->
+                                    oauth2.userInfoEndpoint(
+                                                    userInfo ->
+                                                            userInfo.userService(oauthUserService)
+                                                                    .oidcUserService(
+                                                                            oidcUserService))
+                                            .successHandler(oAuth2AuthenticationSuccessHandler()))
+                    .logout(
+                            logout ->
+                                    logout.logoutUrl("/api/logout")
+                                            .logoutSuccessHandler(
+                                                    (request, response, authentication) -> {
+                                                        response.setStatus(
+                                                                HttpServletResponse.SC_OK);
+                                                    })
+                                            .invalidateHttpSession(true)
+                                            .deleteCookies("JSESSIONID"))
+                    .addFilterAfter(
+                            new OAuth2UserPrincipalFilter(),
+                            org.springframework.security.oauth2.client.web
+                                    .OAuth2AuthorizationRequestRedirectFilter.class);
         }
 
         return http.build();
     }
 
     /**
-     * Determines if fake auth should be active.
-     * Active when no OAuth client IDs are configured (env vars not set).
-     * In dev profile without OAuth env vars: fake auth.
-     * In default/test profile without OAuth config: fake auth.
-     * When OAuth client IDs are present: OAuth2 mode.
+     * Determines if fake auth should be active. Active when no OAuth client IDs are configured (env
+     * vars not set). In dev profile without OAuth env vars: fake auth. In default/test profile
+     * without OAuth config: fake auth. When OAuth client IDs are present: OAuth2 mode.
      */
     private boolean isFakeAuthActive() {
         String googleClientId = environment.getProperty("GOOGLE_CLIENT_ID", "");
@@ -113,12 +125,13 @@ public class SecurityConfig {
     }
 
     /**
-     * Prevent FakeAuthFilter from being auto-registered as a servlet filter.
-     * It should only run when explicitly added to the SecurityFilterChain.
+     * Prevent FakeAuthFilter from being auto-registered as a servlet filter. It should only run
+     * when explicitly added to the SecurityFilterChain.
      */
     @Bean
     public FilterRegistrationBean<FakeAuthFilter> fakeAuthFilterRegistration() {
-        FilterRegistrationBean<FakeAuthFilter> registration = new FilterRegistrationBean<>(new FakeAuthFilter(userRepository));
+        FilterRegistrationBean<FakeAuthFilter> registration =
+                new FilterRegistrationBean<>(new FakeAuthFilter(userRepository));
         registration.setEnabled(false);
         return registration;
     }

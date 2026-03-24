@@ -15,9 +15,9 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "budget_alert_states", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "year", "month"})
-})
+@Table(
+        name = "budget_alert_states",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "year", "month"})})
 public class BudgetAlertState {
 
     @Id
@@ -60,8 +60,7 @@ public class BudgetAlertState {
         updatedAt = OffsetDateTime.now();
     }
 
-    public BudgetAlertState() {
-    }
+    public BudgetAlertState() {}
 
     public Long getId() {
         return id;

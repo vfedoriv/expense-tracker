@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  useCallback,
-  type ReactNode,
-} from 'react';
+import { useEffect, useState, useCallback, type ReactNode } from 'react';
 import type { User } from '../types';
 import { AuthContext } from './authContextDef';
 import { getCsrfToken } from '../api/client';

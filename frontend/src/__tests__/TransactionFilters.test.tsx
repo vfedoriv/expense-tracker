@@ -62,13 +62,12 @@ const mockTransactions: Transaction[] = [
 /**
  * Track fetch calls so we can verify that correct query params are sent to the API.
  */
-function setupMockFetch(
-  transactions: Transaction[] = mockTransactions,
-) {
+function setupMockFetch(transactions: Transaction[] = mockTransactions) {
   const fetchCalls: { url: string; method: string }[] = [];
 
-  const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(
-    (input: RequestInfo | URL, init?: RequestInit) => {
+  const spy = vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
       const method = init?.method ?? 'GET';
       fetchCalls.push({ url, method });
@@ -99,8 +98,7 @@ function setupMockFetch(
         status: 404,
         json: () => Promise.resolve({ message: 'Not found' }),
       } as Response);
-    },
-  );
+    });
 
   return { spy, fetchCalls };
 }
@@ -414,9 +412,7 @@ describe('Transaction Search & Filters', () => {
       });
 
       // Should have a "Try adjusting" description
-      expect(
-        screen.getByText(/try adjusting your search or filters/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/try adjusting your search or filters/i)).toBeInTheDocument();
     });
 
     it('shows "No transactions yet" when no filters are active and list is empty', async () => {

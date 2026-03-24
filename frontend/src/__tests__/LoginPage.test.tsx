@@ -39,7 +39,7 @@ function renderLoginPage(authenticated = false) {
           <Route path="/dashboard" element={<div>Dashboard Page</div>} />
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -114,7 +114,7 @@ describe('LoginPage', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValue(
       new Promise(() => {
         /* never resolves */
-      })
+      }),
     );
 
     render(
@@ -124,7 +124,7 @@ describe('LoginPage', () => {
             <Route path="/login" element={<LoginPage />} />
           </Routes>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();

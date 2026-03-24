@@ -18,9 +18,7 @@ export function useDashboard(year: number, month: number): UseDashboardResult {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiClient.get<DashboardData>(
-        `/dashboard?year=${y}&month=${m}`
-      );
+      const data = await apiClient.get<DashboardData>(`/dashboard?year=${y}&month=${m}`);
       setDashboard(data);
     } catch (err: unknown) {
       const apiError = err as ApiError;

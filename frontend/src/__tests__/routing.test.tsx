@@ -51,7 +51,7 @@ function renderWithAuth(initialPath: string, authenticated = true) {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -104,7 +104,7 @@ describe('Routing', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValue(
       new Promise(() => {
         /* never resolves */
-      })
+      }),
     );
 
     render(
@@ -123,7 +123,7 @@ describe('Routing', () => {
             </Route>
           </Routes>
         </AuthProvider>
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     expect(screen.getByText('Authenticating...')).toBeInTheDocument();

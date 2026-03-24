@@ -16,9 +16,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "monthly_budgets", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "year", "month"})
-})
+@Table(
+        name = "monthly_budgets",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "year", "month"})})
 public class MonthlyBudget {
 
     @Id
@@ -55,8 +55,7 @@ public class MonthlyBudget {
         updatedAt = OffsetDateTime.now();
     }
 
-    public MonthlyBudget() {
-    }
+    public MonthlyBudget() {}
 
     public Long getId() {
         return id;

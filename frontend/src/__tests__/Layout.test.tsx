@@ -41,7 +41,7 @@ function renderLayout(initialPath = '/dashboard', user: User = mockUser) {
           </Route>
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -139,7 +139,10 @@ describe('Layout', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('user-avatar')).toBeInTheDocument();
-      expect(screen.getByTestId('user-avatar')).toHaveAttribute('src', 'https://example.com/avatar.jpg');
+      expect(screen.getByTestId('user-avatar')).toHaveAttribute(
+        'src',
+        'https://example.com/avatar.jpg',
+      );
     });
   });
 });

@@ -2,26 +2,23 @@ package com.expensetracker.config;
 
 import com.expensetracker.entity.User;
 import com.expensetracker.repository.UserRepository;
+import java.net.URI;
+import java.util.Map;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import java.net.URI;
-import java.util.Map;
-
 /**
- * Intercepts WebSocket handshake to authenticate the user.
- * Extracts the user ID from the query parameter {@code userId} (primary)
- * or the {@code X-User-Id} HTTP header (fallback) and stores the
- * UserPrincipal in the WebSocket session attributes.
- * Rejects the handshake if the user ID is missing, invalid, or
- * references a non-existent user.
+ * Intercepts WebSocket handshake to authenticate the user. Extracts the user ID from the query
+ * parameter {@code userId} (primary) or the {@code X-User-Id} HTTP header (fallback) and stores the
+ * UserPrincipal in the WebSocket session attributes. Rejects the handshake if the user ID is
+ * missing, invalid, or references a non-existent user.
  *
- * <p>SockJS clients cannot set custom HTTP headers on the handshake
- * request, so the recommended approach is to pass the user ID as a
- * query parameter on the connection URL (e.g., {@code /ws?userId=1}).
+ * <p>SockJS clients cannot set custom HTTP headers on the handshake request, so the recommended
+ * approach is to pass the user ID as a query parameter on the connection URL (e.g., {@code
+ * /ws?userId=1}).
  */
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
@@ -35,12 +32,16 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     }
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
+    public boolean beforeHandshake(
+            ServerHttpRequest request,
+            ServerHttpResponse response,
+            WebSocketHandler wsHandler,
+            Map<String, Object> attributes) {
         // Try query parameter first (works with SockJS), then fall back to header
         String userIdValue = extractUserIdFromQuery(request.getURI());
 
-        if ((userIdValue == null || userIdValue.isBlank()) && request instanceof ServletServerHttpRequest servletRequest) {
+        if ((userIdValue == null || userIdValue.isBlank())
+                && request instanceof ServletServerHttpRequest servletRequest) {
             userIdValue = servletRequest.getServletRequest().getHeader(USER_ID_HEADER);
         }
 
@@ -60,24 +61,22 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             return false; // Reject: non-existent user
         }
 
-        UserPrincipal principal = new UserPrincipal(
-            user.getId(),
-            user.getEmail(),
-            user.getDisplayName()
-        );
+        UserPrincipal principal =
+                new UserPrincipal(user.getId(), user.getEmail(), user.getDisplayName());
         attributes.put("user", principal);
         return true;
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                                WebSocketHandler wsHandler, Exception exception) {
+    public void afterHandshake(
+            ServerHttpRequest request,
+            ServerHttpResponse response,
+            WebSocketHandler wsHandler,
+            Exception exception) {
         // No-op
     }
 
-    /**
-     * Extracts the {@code userId} parameter from the URI query string.
-     */
+    /** Extracts the {@code userId} parameter from the URI query string. */
     private String extractUserIdFromQuery(URI uri) {
         String query = uri.getQuery();
         if (query == null || query.isBlank()) {

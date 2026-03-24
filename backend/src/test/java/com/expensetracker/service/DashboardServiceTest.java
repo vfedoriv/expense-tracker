@@ -1,35 +1,31 @@
 package com.expensetracker.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import com.expensetracker.dto.response.DashboardResponse;
 import com.expensetracker.entity.MonthlyBudget;
 import com.expensetracker.repository.MonthlyBudgetRepository;
 import com.expensetracker.repository.TransactionRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
 
-    @Mock
-    private TransactionRepository transactionRepository;
+    @Mock private TransactionRepository transactionRepository;
 
-    @Mock
-    private MonthlyBudgetRepository monthlyBudgetRepository;
+    @Mock private MonthlyBudgetRepository monthlyBudgetRepository;
 
-    @InjectMocks
-    private DashboardService dashboardService;
+    @InjectMocks private DashboardService dashboardService;
 
     @Test
     void getDashboard_withBudgetAndTransactions_returnsCorrectCalculations() {
@@ -40,11 +36,12 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 3, 31);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(new BigDecimal("750.00"));
+                .thenReturn(new BigDecimal("750.00"));
 
         MonthlyBudget budget = createBudget(new BigDecimal("1000.00"));
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.of(budget));
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.of(budget));
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 
@@ -63,11 +60,12 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 3, 31);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(BigDecimal.ZERO);
+                .thenReturn(BigDecimal.ZERO);
 
         MonthlyBudget budget = createBudget(new BigDecimal("500.00"));
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.of(budget));
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.of(budget));
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 
@@ -86,10 +84,11 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 3, 31);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(new BigDecimal("200.00"));
+                .thenReturn(new BigDecimal("200.00"));
 
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.empty());
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.empty());
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 
@@ -108,11 +107,12 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 3, 31);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(new BigDecimal("1200.00"));
+                .thenReturn(new BigDecimal("1200.00"));
 
         MonthlyBudget budget = createBudget(new BigDecimal("1000.00"));
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.of(budget));
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.of(budget));
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 
@@ -131,10 +131,11 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 6, 30);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(BigDecimal.ZERO);
+                .thenReturn(BigDecimal.ZERO);
 
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.empty());
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.empty());
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 
@@ -147,29 +148,29 @@ class DashboardServiceTest {
     @Test
     void getDashboard_monthZero_throwsIllegalArgument() {
         assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2026, 0))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Month must be between 1 and 12");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Month must be between 1 and 12");
     }
 
     @Test
     void getDashboard_month13_throwsIllegalArgument() {
         assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2026, 13))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Month must be between 1 and 12");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Month must be between 1 and 12");
     }
 
     @Test
     void getDashboard_yearTooLow_throwsIllegalArgument() {
         assertThatThrownBy(() -> dashboardService.getDashboard(1L, 1999, 6))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Year must be between 2000 and 2100");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Year must be between 2000 and 2100");
     }
 
     @Test
     void getDashboard_yearTooHigh_throwsIllegalArgument() {
         assertThatThrownBy(() -> dashboardService.getDashboard(1L, 2101, 6))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Year must be between 2000 and 2100");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Year must be between 2000 and 2100");
     }
 
     @Test
@@ -181,10 +182,11 @@ class DashboardServiceTest {
         LocalDate endDate = LocalDate.of(2026, 2, 28);
 
         when(transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate))
-            .thenReturn(new BigDecimal("100.00"));
+                .thenReturn(new BigDecimal("100.00"));
 
-        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, (short) year, (short) month))
-            .thenReturn(Optional.empty());
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(
+                        userId, (short) year, (short) month))
+                .thenReturn(Optional.empty());
 
         DashboardResponse response = dashboardService.getDashboard(userId, year, month);
 

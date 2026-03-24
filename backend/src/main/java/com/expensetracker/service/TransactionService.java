@@ -9,11 +9,11 @@ import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.TransactionRepository;
 import com.expensetracker.repository.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TransactionService {
@@ -23,10 +23,11 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final BudgetAlertService budgetAlertService;
 
-    public TransactionService(TransactionRepository transactionRepository,
-                              CategoryRepository categoryRepository,
-                              UserRepository userRepository,
-                              BudgetAlertService budgetAlertService) {
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            CategoryRepository categoryRepository,
+            UserRepository userRepository,
+            BudgetAlertService budgetAlertService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
@@ -35,11 +36,15 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponse createTransaction(Long userId, TransactionRequest request) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Category category = categoryRepository.findByIdAndUserId(request.categoryId(), userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findByIdAndUserId(request.categoryId(), userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -57,23 +62,34 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> listTransactions(Long userId, String search, Long categoryId,
-                                                       LocalDate dateFrom, LocalDate dateTo,
-                                                       BigDecimal amountMin, BigDecimal amountMax) {
-        return transactionRepository.findAllByUserIdWithFilters(
-                userId, search, categoryId, dateFrom, dateTo, amountMin, amountMax)
-            .stream()
-            .map(this::toResponse)
-            .toList();
+    public List<TransactionResponse> listTransactions(
+            Long userId,
+            String search,
+            Long categoryId,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            BigDecimal amountMin,
+            BigDecimal amountMax) {
+        return transactionRepository
+                .findAllByUserIdWithFilters(
+                        userId, search, categoryId, dateFrom, dateTo, amountMin, amountMax)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
-    public TransactionResponse updateTransaction(Long userId, Long transactionId, TransactionRequest request) {
-        Transaction transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+    public TransactionResponse updateTransaction(
+            Long userId, Long transactionId, TransactionRequest request) {
+        Transaction transaction =
+                transactionRepository
+                        .findByIdAndUserId(transactionId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
-        Category category = categoryRepository.findByIdAndUserId(request.categoryId(), userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findByIdAndUserId(request.categoryId(), userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         transaction.setTitle(request.title());
         transaction.setAmount(request.amount());
@@ -90,8 +106,10 @@ public class TransactionService {
 
     @Transactional
     public void deleteTransaction(Long userId, Long transactionId) {
-        Transaction transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        Transaction transaction =
+                transactionRepository
+                        .findByIdAndUserId(transactionId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
         // Capture transaction date before deletion for alert evaluation
         LocalDate transactionDate = transaction.getTransactionDate();
@@ -103,15 +121,14 @@ public class TransactionService {
 
     private TransactionResponse toResponse(Transaction transaction) {
         return new TransactionResponse(
-            transaction.getId(),
-            transaction.getTitle(),
-            transaction.getAmount(),
-            transaction.getCurrency(),
-            transaction.getTransactionDate(),
-            transaction.getCategory().getId(),
-            transaction.getCategory().getName(),
-            transaction.getNotes(),
-            transaction.getCreatedAt()
-        );
+                transaction.getId(),
+                transaction.getTitle(),
+                transaction.getAmount(),
+                transaction.getCurrency(),
+                transaction.getTransactionDate(),
+                transaction.getCategory().getId(),
+                transaction.getCategory().getName(),
+                transaction.getNotes(),
+                transaction.getCreatedAt());
     }
 }

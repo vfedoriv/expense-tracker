@@ -8,9 +8,7 @@ const BASE_URL = '/api';
  * so the frontend can read it and send it back as the X-XSRF-TOKEN header.
  */
 export function getCsrfToken(): string | null {
-  const match = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('XSRF-TOKEN='));
+  const match = document.cookie.split('; ').find((row) => row.startsWith('XSRF-TOKEN='));
   if (!match) return null;
   return decodeURIComponent(match.split('=')[1]);
 }

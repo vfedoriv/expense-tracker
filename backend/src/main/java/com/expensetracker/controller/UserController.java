@@ -22,17 +22,20 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
-        User user = userRepository.findById(principal.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public ResponseEntity<UserResponse> getCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        User user =
+                userRepository
+                        .findById(principal.getUserId())
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        UserResponse response = new UserResponse(
-            user.getId(),
-            user.getProvider(),
-            user.getEmail(),
-            user.getDisplayName(),
-            user.getAvatarUrl()
-        );
+        UserResponse response =
+                new UserResponse(
+                        user.getId(),
+                        user.getProvider(),
+                        user.getEmail(),
+                        user.getDisplayName(),
+                        user.getAvatarUrl());
 
         return ResponseEntity.ok(response);
     }

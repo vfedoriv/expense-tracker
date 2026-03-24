@@ -44,9 +44,11 @@ function formatLocalDate(date: Date): string {
 function detectPreset(filters: TransactionFiltersType): DatePreset {
   if (!filters.dateFrom && !filters.dateTo) return 'all';
   const thisMonth = getThisMonthRange();
-  if (filters.dateFrom === thisMonth.dateFrom && filters.dateTo === thisMonth.dateTo) return 'this-month';
+  if (filters.dateFrom === thisMonth.dateFrom && filters.dateTo === thisMonth.dateTo)
+    return 'this-month';
   const lastMonth = getLastMonthRange();
-  if (filters.dateFrom === lastMonth.dateFrom && filters.dateTo === lastMonth.dateTo) return 'last-month';
+  if (filters.dateFrom === lastMonth.dateFrom && filters.dateTo === lastMonth.dateTo)
+    return 'last-month';
   if (filters.dateFrom || filters.dateTo) return 'custom';
   return 'all';
 }

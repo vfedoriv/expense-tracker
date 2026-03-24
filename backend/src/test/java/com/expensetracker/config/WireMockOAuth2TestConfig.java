@@ -11,8 +11,8 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 /**
- * Test configuration that overrides the production ClientRegistrationRepository
- * to point all OAuth2 URLs at the WireMock server.
+ * Test configuration that overrides the production ClientRegistrationRepository to point all OAuth2
+ * URLs at the WireMock server.
  */
 @TestConfiguration
 public class WireMockOAuth2TestConfig {
@@ -24,41 +24,39 @@ public class WireMockOAuth2TestConfig {
     @Primary
     public ClientRegistrationRepository clientRegistrationRepository() {
         return new InMemoryClientRegistrationRepository(
-            googleClientRegistration(),
-            githubClientRegistration()
-        );
+                googleClientRegistration(), githubClientRegistration());
     }
 
     private ClientRegistration googleClientRegistration() {
         return ClientRegistration.withRegistrationId("google")
-            .clientId("test-google-client-id")
-            .clientSecret("test-google-client-secret")
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-            .scope("openid", "profile", "email")
-            .authorizationUri(wireMockUrl + "/o/oauth2/v2/auth")
-            .tokenUri(wireMockUrl + "/oauth2/v4/token")
-            .userInfoUri(wireMockUrl + "/oauth2/v3/userinfo")
-            .userNameAttributeName("sub")
-            .jwkSetUri(wireMockUrl + "/oauth2/v3/certs")
-            .clientName("Google")
-            .build();
+                .clientId("test-google-client-id")
+                .clientSecret("test-google-client-secret")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                .scope("openid", "profile", "email")
+                .authorizationUri(wireMockUrl + "/o/oauth2/v2/auth")
+                .tokenUri(wireMockUrl + "/oauth2/v4/token")
+                .userInfoUri(wireMockUrl + "/oauth2/v3/userinfo")
+                .userNameAttributeName("sub")
+                .jwkSetUri(wireMockUrl + "/oauth2/v3/certs")
+                .clientName("Google")
+                .build();
     }
 
     private ClientRegistration githubClientRegistration() {
         return ClientRegistration.withRegistrationId("github")
-            .clientId("test-github-client-id")
-            .clientSecret("test-github-client-secret")
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-            .scope("read:user", "user:email")
-            .authorizationUri(wireMockUrl + "/login/oauth/authorize")
-            .tokenUri(wireMockUrl + "/login/oauth/access_token")
-            .userInfoUri(wireMockUrl + "/api/user")
-            .userNameAttributeName("id")
-            .clientName("GitHub")
-            .build();
+                .clientId("test-github-client-id")
+                .clientSecret("test-github-client-secret")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                .scope("read:user", "user:email")
+                .authorizationUri(wireMockUrl + "/login/oauth/authorize")
+                .tokenUri(wireMockUrl + "/login/oauth/access_token")
+                .userInfoUri(wireMockUrl + "/api/user")
+                .userNameAttributeName("id")
+                .clientName("GitHub")
+                .build();
     }
 }

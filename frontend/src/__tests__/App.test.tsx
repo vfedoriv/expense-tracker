@@ -38,7 +38,7 @@ describe('App', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValue(
       new Promise(() => {
         /* never resolves */
-      })
+      }),
     );
 
     render(<App />);

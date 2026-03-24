@@ -1,5 +1,12 @@
 package com.expensetracker.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.expensetracker.dto.request.CategoryRequest;
 import com.expensetracker.dto.response.CategoryResponse;
 import com.expensetracker.entity.Category;
@@ -9,6 +16,9 @@ import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.TransactionRepository;
 import com.expensetracker.repository.UserRepository;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,32 +26,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
 
-    @Mock
-    private CategoryRepository categoryRepository;
+    @Mock private CategoryRepository categoryRepository;
 
-    @Mock
-    private TransactionRepository transactionRepository;
+    @Mock private TransactionRepository transactionRepository;
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
 
-    @InjectMocks
-    private CategoryService categoryService;
+    @InjectMocks private CategoryService categoryService;
 
     private User testUser;
 
@@ -78,8 +72,8 @@ class CategoryServiceTest {
         when(categoryRepository.existsByUserIdAndName(1L, "Food")).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.createCategory(1L, request))
-            .isInstanceOf(DuplicateResourceException.class)
-            .hasMessageContaining("already exists");
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("already exists");
 
         verify(categoryRepository, never()).save(any());
     }
@@ -112,8 +106,8 @@ class CategoryServiceTest {
         when(categoryRepository.existsByUserIdAndName(1L, "Transport")).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.renameCategory(1L, 1L, request))
-            .isInstanceOf(DuplicateResourceException.class)
-            .hasMessageContaining("already exists");
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining("already exists");
     }
 
     @Test
@@ -122,8 +116,8 @@ class CategoryServiceTest {
         when(categoryRepository.findByIdAndUserId(99L, 1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> categoryService.renameCategory(1L, 99L, request))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Category not found");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Category not found");
     }
 
     @Test
@@ -148,8 +142,8 @@ class CategoryServiceTest {
         when(transactionRepository.existsByCategoryId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> categoryService.deleteCategory(1L, 1L))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Cannot delete category with existing transactions");
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Cannot delete category with existing transactions");
 
         verify(categoryRepository, never()).delete(any());
     }
@@ -159,8 +153,8 @@ class CategoryServiceTest {
         when(categoryRepository.findByIdAndUserId(99L, 1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> categoryService.deleteCategory(1L, 99L))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Category not found");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Category not found");
     }
 
     @Test
