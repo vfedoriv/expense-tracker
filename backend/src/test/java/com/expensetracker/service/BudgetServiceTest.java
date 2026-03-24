@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,9 @@ class BudgetServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private BudgetAlertService budgetAlertService;
 
     @InjectMocks
     private BudgetService budgetService;
@@ -169,6 +173,43 @@ class BudgetServiceTest {
         assertThatThrownBy(() -> budgetService.getBudget(1L, 2026, 3))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessageContaining("Budget not found");
+    }
+
+    @Test
+    void createBudget_triggersAlertEvaluation() {
+        BudgetRequest request = new BudgetRequest(2026, 3, new BigDecimal("1000.00"));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 3))
+            .thenReturn(Optional.empty());
+
+        MonthlyBudget saved = createBudgetEntity(1L, (short) 2026, (short) 3, new BigDecimal("1000.00"));
+        when(monthlyBudgetRepository.save(any(MonthlyBudget.class))).thenReturn(saved);
+
+        budgetService.createOrUpdateBudget(1L, request);
+
+        verify(budgetAlertService).evaluateAlerts(eq(1L), eq(java.time.LocalDate.of(2026, 3, 1)));
+    }
+
+    @Test
+    void updateBudget_resetsAlertStateAndTriggersEvaluation() {
+        BudgetRequest request = new BudgetRequest(2026, 3, new BigDecimal("500.00"));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        MonthlyBudget existing = createBudgetEntity(1L, (short) 2026, (short) 3, new BigDecimal("1000.00"));
+        existing.setUser(testUser);
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 3))
+            .thenReturn(Optional.of(existing));
+
+        MonthlyBudget updated = createBudgetEntity(1L, (short) 2026, (short) 3, new BigDecimal("500.00"));
+        when(monthlyBudgetRepository.save(any(MonthlyBudget.class))).thenReturn(updated);
+
+        budgetService.createOrUpdateBudget(1L, request);
+
+        // Verify alert state is reset first, then alerts are evaluated
+        verify(budgetAlertService).resetAlertState(1L, (short) 2026, (short) 3);
+        verify(budgetAlertService).evaluateAlerts(eq(1L), eq(java.time.LocalDate.of(2026, 3, 1)));
     }
 
     private MonthlyBudget createBudgetEntity(Long id, Short year, Short month, BigDecimal amount) {
