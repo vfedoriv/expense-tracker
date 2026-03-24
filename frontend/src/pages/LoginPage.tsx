@@ -39,12 +39,8 @@ export function LoginPage() {
             </svg>
           </div>
         </div>
-        <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">
-          Expense Tracker
-        </h1>
-        <p className="mb-8 text-center text-sm text-gray-500">
-          Sign in to manage your expenses
-        </p>
+        <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Expense Tracker</h1>
+        <p className="mb-8 text-center text-sm text-gray-500">Sign in to manage your expenses</p>
 
         <div className="space-y-3">
           {/* Continue with Google button */}

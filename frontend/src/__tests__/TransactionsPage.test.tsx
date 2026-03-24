@@ -59,35 +59,37 @@ const mockTransactions: Transaction[] = [
 ];
 
 function mockFetch(responses: Record<string, { ok: boolean; status: number; body: unknown }>) {
-  return vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-    const url = typeof input === 'string' ? input : input.toString();
-    const method = init?.method ?? 'GET';
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      const method = init?.method ?? 'GET';
 
-    for (const [pattern, response] of Object.entries(responses)) {
-      // Support method-specific patterns like "POST /api/transactions"
-      if (pattern.includes(' ')) {
-        const [patMethod, patUrl] = pattern.split(' ');
-        if (method === patMethod && url.includes(patUrl)) {
+      for (const [pattern, response] of Object.entries(responses)) {
+        // Support method-specific patterns like "POST /api/transactions"
+        if (pattern.includes(' ')) {
+          const [patMethod, patUrl] = pattern.split(' ');
+          if (method === patMethod && url.includes(patUrl)) {
+            return Promise.resolve({
+              ok: response.ok,
+              status: response.status,
+              json: () => Promise.resolve(response.body),
+            } as Response);
+          }
+        } else if (url.includes(pattern)) {
           return Promise.resolve({
             ok: response.ok,
             status: response.status,
             json: () => Promise.resolve(response.body),
           } as Response);
         }
-      } else if (url.includes(pattern)) {
-        return Promise.resolve({
-          ok: response.ok,
-          status: response.status,
-          json: () => Promise.resolve(response.body),
-        } as Response);
       }
-    }
-    return Promise.resolve({
-      ok: false,
-      status: 404,
-      json: () => Promise.resolve({ message: 'Not found' }),
-    } as Response);
-  });
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ message: 'Not found' }),
+      } as Response);
+    });
 }
 
 function renderTransactionsPage() {
@@ -98,7 +100,7 @@ function renderTransactionsPage() {
           <Route path="/transactions" element={<TransactionsPage />} />
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -263,38 +265,59 @@ describe('TransactionsPage', () => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/users/me')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockUser),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockCategories),
           } as Response);
         }
         if (url.includes('/transactions') && init?.method === 'POST') {
           return Promise.resolve({
-            ok: true, status: 201,
-            json: () => Promise.resolve({
-              id: 4, title: 'Coffee', amount: 5.5, currency: 'USD',
-              transactionDate: '2026-03-20', categoryId: 1, categoryName: 'Food',
-              notes: null, createdAt: '2026-03-20T12:00:00Z',
-            }),
+            ok: true,
+            status: 201,
+            json: () =>
+              Promise.resolve({
+                id: 4,
+                title: 'Coffee',
+                amount: 5.5,
+                currency: 'USD',
+                transactionDate: '2026-03-20',
+                categoryId: 1,
+                categoryName: 'Food',
+                notes: null,
+                createdAt: '2026-03-20T12:00:00Z',
+              }),
           } as Response);
         }
         if (url.includes('/transactions')) {
           return Promise.resolve({
-            ok: true, status: 200,
-            json: () => Promise.resolve([{
-              id: 4, title: 'Coffee', amount: 5.5, currency: 'USD',
-              transactionDate: '2026-03-20', categoryId: 1, categoryName: 'Food',
-              notes: null, createdAt: '2026-03-20T12:00:00Z',
-            }]),
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve([
+                {
+                  id: 4,
+                  title: 'Coffee',
+                  amount: 5.5,
+                  currency: 'USD',
+                  transactionDate: '2026-03-20',
+                  categoryId: 1,
+                  categoryName: 'Food',
+                  notes: null,
+                  createdAt: '2026-03-20T12:00:00Z',
+                },
+              ]),
           } as Response);
         }
         return Promise.resolve({
-          ok: false, status: 404,
+          ok: false,
+          status: 404,
           json: () => Promise.resolve({ message: 'Not found' }),
         } as Response);
       });
@@ -467,30 +490,35 @@ describe('TransactionsPage', () => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/users/me')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockUser),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockCategories),
           } as Response);
         }
         if (url.includes('/transactions/1') && init?.method === 'PUT') {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(updatedTransaction),
           } as Response);
         }
         if (url.includes('/transactions')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve([updatedTransaction, ...mockTransactions.slice(1)]),
           } as Response);
         }
         return Promise.resolve({
-          ok: false, status: 404,
+          ok: false,
+          status: 404,
           json: () => Promise.resolve({ message: 'Not found' }),
         } as Response);
       });
@@ -530,30 +558,35 @@ describe('TransactionsPage', () => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/users/me')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockUser),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockCategories),
           } as Response);
         }
         if (url.includes('/transactions/1') && init?.method === 'DELETE') {
           return Promise.resolve({
-            ok: true, status: 204,
+            ok: true,
+            status: 204,
             json: () => Promise.resolve(undefined),
           } as Response);
         }
         if (url.includes('/transactions')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockTransactions.slice(1)),
           } as Response);
         }
         return Promise.resolve({
-          ok: false, status: 404,
+          ok: false,
+          status: 404,
           json: () => Promise.resolve({ message: 'Not found' }),
         } as Response);
       });
@@ -683,24 +716,28 @@ describe('TransactionsPage', () => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/users/me')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockUser),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockCategories),
           } as Response);
         }
         if (url.includes('/transactions')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockTransactions),
           } as Response);
         }
         return Promise.resolve({
-          ok: false, status: 404,
+          ok: false,
+          status: 404,
           json: () => Promise.resolve({ message: 'Not found' }),
         } as Response);
       });
@@ -740,30 +777,35 @@ describe('TransactionsPage', () => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/users/me')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockUser),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve(mockCategories),
           } as Response);
         }
         if (url.includes('/transactions') && init?.method === 'POST') {
           return Promise.resolve({
-            ok: false, status: 500,
+            ok: false,
+            status: 500,
             json: () => Promise.resolve({ message: 'Server error' }),
           } as Response);
         }
         if (url.includes('/transactions')) {
           return Promise.resolve({
-            ok: true, status: 200,
+            ok: true,
+            status: 200,
             json: () => Promise.resolve([]),
           } as Response);
         }
         return Promise.resolve({
-          ok: false, status: 404,
+          ok: false,
+          status: 404,
           json: () => Promise.resolve({ message: 'Not found' }),
         } as Response);
       });

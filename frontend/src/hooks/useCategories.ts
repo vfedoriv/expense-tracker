@@ -35,22 +35,31 @@ export function useCategories(): UseCategoriesResult {
     void fetchCategories();
   }, [fetchCategories]);
 
-  const createCategory = useCallback(async (request: CategoryRequest): Promise<Category> => {
-    const created = await apiClient.post<Category>('/categories', request);
-    await fetchCategories();
-    return created;
-  }, [fetchCategories]);
+  const createCategory = useCallback(
+    async (request: CategoryRequest): Promise<Category> => {
+      const created = await apiClient.post<Category>('/categories', request);
+      await fetchCategories();
+      return created;
+    },
+    [fetchCategories],
+  );
 
-  const updateCategory = useCallback(async (id: number, request: CategoryRequest): Promise<Category> => {
-    const updated = await apiClient.put<Category>(`/categories/${id}`, request);
-    await fetchCategories();
-    return updated;
-  }, [fetchCategories]);
+  const updateCategory = useCallback(
+    async (id: number, request: CategoryRequest): Promise<Category> => {
+      const updated = await apiClient.put<Category>(`/categories/${id}`, request);
+      await fetchCategories();
+      return updated;
+    },
+    [fetchCategories],
+  );
 
-  const deleteCategory = useCallback(async (id: number): Promise<void> => {
-    await apiClient.delete(`/categories/${id}`);
-    await fetchCategories();
-  }, [fetchCategories]);
+  const deleteCategory = useCallback(
+    async (id: number): Promise<void> => {
+      await apiClient.delete(`/categories/${id}`);
+      await fetchCategories();
+    },
+    [fetchCategories],
+  );
 
   return {
     categories,

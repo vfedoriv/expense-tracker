@@ -1,8 +1,19 @@
 package com.expensetracker.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.expensetracker.entity.User;
 import com.expensetracker.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,30 +26,15 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WebSocketAuthInterceptor")
 class WebSocketAuthInterceptorTest {
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private UserRepository userRepository;
 
-    @Mock
-    private ServerHttpResponse response;
+    @Mock private ServerHttpResponse response;
 
-    @Mock
-    private WebSocketHandler wsHandler;
+    @Mock private WebSocketHandler wsHandler;
 
     private WebSocketAuthInterceptor interceptor;
     private Map<String, Object> attributes;
@@ -50,8 +46,8 @@ class WebSocketAuthInterceptorTest {
     }
 
     /**
-     * Creates a servlet request with X-User-Id header and no query params.
-     * Uses a mocked ServletServerHttpRequest to control getURI() and getServletRequest().
+     * Creates a servlet request with X-User-Id header and no query params. Uses a mocked
+     * ServletServerHttpRequest to control getURI() and getServletRequest().
      */
     private ServletServerHttpRequest createServletRequestWithHeader(String userIdHeader) {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
@@ -65,14 +61,18 @@ class WebSocketAuthInterceptorTest {
     }
 
     /**
-     * Creates a servlet request with userId query parameter and no X-User-Id header.
-     * Uses lenient stubbing for getServletRequest() since it may not be accessed
-     * when the query parameter is found first.
+     * Creates a servlet request with userId query parameter and no X-User-Id header. Uses lenient
+     * stubbing for getServletRequest() since it may not be accessed when the query parameter is
+     * found first.
      */
     private ServletServerHttpRequest createServletRequestWithQueryParam(String queryString) {
         HttpServletRequest servletRequest = mock(HttpServletRequest.class);
         ServletServerHttpRequest request = mock(ServletServerHttpRequest.class);
-        when(request.getURI()).thenReturn(URI.create("http://localhost:8080/ws" + (queryString != null ? "?" + queryString : "")));
+        when(request.getURI())
+                .thenReturn(
+                        URI.create(
+                                "http://localhost:8080/ws"
+                                        + (queryString != null ? "?" + queryString : "")));
         lenient().when(request.getServletRequest()).thenReturn(servletRequest);
         return request;
     }
@@ -260,7 +260,8 @@ class WebSocketAuthInterceptorTest {
         @DisplayName("Accepts handshake when userId among multiple query parameters")
         void acceptsHandshake_whenUserIdAmongMultipleParams() {
             User user = createUser(3L, "user3@test.com", "User 3");
-            ServletServerHttpRequest request = createServletRequestWithQueryParam("foo=bar&userId=3&baz=qux");
+            ServletServerHttpRequest request =
+                    createServletRequestWithQueryParam("foo=bar&userId=3&baz=qux");
             when(userRepository.findById(3L)).thenReturn(Optional.of(user));
 
             boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);

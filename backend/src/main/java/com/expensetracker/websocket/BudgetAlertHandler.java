@@ -7,9 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 /**
- * Listens for STOMP SUBSCRIBE events. When a client subscribes to
- * /user/topic/budget-alerts, sends initial alerts for any thresholds
- * already crossed in the current month.
+ * Listens for STOMP SUBSCRIBE events. When a client subscribes to /user/topic/budget-alerts, sends
+ * initial alerts for any thresholds already crossed in the current month.
  */
 @Component
 public class BudgetAlertHandler {
@@ -24,8 +23,9 @@ public class BudgetAlertHandler {
 
     @EventListener
     public void handleSubscribe(SessionSubscribeEvent event) {
-        var accessor = org.springframework.messaging.simp.stomp.StompHeaderAccessor
-            .wrap(event.getMessage());
+        var accessor =
+                org.springframework.messaging.simp.stomp.StompHeaderAccessor.wrap(
+                        event.getMessage());
 
         String destination = accessor.getDestination();
         if (destination == null || !destination.equals(BUDGET_ALERTS_DESTINATION)) {

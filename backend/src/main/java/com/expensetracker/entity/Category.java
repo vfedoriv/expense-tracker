@@ -15,9 +15,9 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "categories", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "name"})
-})
+@Table(
+        name = "categories",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "name"})})
 public class Category {
 
     @Id
@@ -48,8 +48,7 @@ public class Category {
         updatedAt = OffsetDateTime.now();
     }
 
-    public Category() {
-    }
+    public Category() {}
 
     public Long getId() {
         return id;

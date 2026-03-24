@@ -9,10 +9,6 @@ import com.expensetracker.repository.BudgetAlertStateRepository;
 import com.expensetracker.repository.MonthlyBudgetRepository;
 import com.expensetracker.repository.TransactionRepository;
 import com.expensetracker.repository.UserRepository;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -20,6 +16,10 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BudgetAlertService {
@@ -33,12 +33,13 @@ public class BudgetAlertService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
 
-    public BudgetAlertService(BudgetAlertStateRepository budgetAlertStateRepository,
-                               MonthlyBudgetRepository monthlyBudgetRepository,
-                               TransactionRepository transactionRepository,
-                               UserRepository userRepository,
-                               SimpMessagingTemplate messagingTemplate,
-                               ApplicationEventPublisher eventPublisher) {
+    public BudgetAlertService(
+            BudgetAlertStateRepository budgetAlertStateRepository,
+            MonthlyBudgetRepository monthlyBudgetRepository,
+            TransactionRepository transactionRepository,
+            UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate,
+            ApplicationEventPublisher eventPublisher) {
         this.budgetAlertStateRepository = budgetAlertStateRepository;
         this.monthlyBudgetRepository = monthlyBudgetRepository;
         this.transactionRepository = transactionRepository;
@@ -48,10 +49,9 @@ public class BudgetAlertService {
     }
 
     /**
-     * Evaluates budget alerts for a user for the month of the given transaction date.
-     * Called after any transaction create/update/delete.
-     * Publishes a BudgetAlertEvent so that WebSocket messages are sent only
-     * AFTER the database transaction commits (via @TransactionalEventListener).
+     * Evaluates budget alerts for a user for the month of the given transaction date. Called after
+     * any transaction create/update/delete. Publishes a BudgetAlertEvent so that WebSocket messages
+     * are sent only AFTER the database transaction commits (via @TransactionalEventListener).
      */
     @Transactional
     public void evaluateAlerts(Long userId, LocalDate transactionDate) {
@@ -63,9 +63,9 @@ public class BudgetAlertService {
     }
 
     /**
-     * Checks if any thresholds are already crossed for ALL months with active budgets
-     * and sends those alerts immediately. Called when a client subscribes via WebSocket.
-     * Uses a read-only path that does NOT check or modify fired flags.
+     * Checks if any thresholds are already crossed for ALL months with active budgets and sends
+     * those alerts immediately. Called when a client subscribes via WebSocket. Uses a read-only
+     * path that does NOT check or modify fired flags.
      */
     @Transactional(readOnly = true)
     public void sendInitialAlerts(Long userId) {
@@ -79,9 +79,9 @@ public class BudgetAlertService {
     }
 
     /**
-     * Generates alert messages for ALL currently crossed thresholds WITHOUT checking
-     * or modifying BudgetAlertState fired flags. Used for WebSocket reconnection
-     * to re-send previously fired alerts.
+     * Generates alert messages for ALL currently crossed thresholds WITHOUT checking or modifying
+     * BudgetAlertState fired flags. Used for WebSocket reconnection to re-send previously fired
+     * alerts.
      */
     @Transactional(readOnly = true)
     public List<BudgetAlertMessage> getCurrentlyCrossedAlerts(Long userId, YearMonth yearMonth) {
@@ -90,7 +90,8 @@ public class BudgetAlertService {
         Short year = (short) yearMonth.getYear();
         Short month = (short) yearMonth.getMonthValue();
 
-        Optional<MonthlyBudget> budgetOpt = monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, year, month);
+        Optional<MonthlyBudget> budgetOpt =
+                monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, year, month);
         if (budgetOpt.isEmpty()) {
             return alerts;
         }
@@ -100,20 +101,24 @@ public class BudgetAlertService {
 
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
-        BigDecimal totalSpent = transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate);
+        BigDecimal totalSpent =
+                transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate);
 
         BigDecimal percentage = BigDecimal.ZERO;
         if (budgetAmount.compareTo(BigDecimal.ZERO) > 0) {
-            percentage = totalSpent
-                .multiply(BigDecimal.valueOf(100))
-                .divide(budgetAmount, 2, RoundingMode.HALF_UP);
+            percentage =
+                    totalSpent
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(budgetAmount, 2, RoundingMode.HALF_UP);
         }
 
-        String yearMonthStr = String.format("%04d-%02d", yearMonth.getYear(), yearMonth.getMonthValue());
+        String yearMonthStr =
+                String.format("%04d-%02d", yearMonth.getYear(), yearMonth.getMonthValue());
 
         for (int threshold : THRESHOLDS) {
             if (percentage.compareTo(BigDecimal.valueOf(threshold)) >= 0) {
-                alerts.add(BudgetAlertMessage.of(threshold, totalSpent, budgetAmount, yearMonthStr));
+                alerts.add(
+                        BudgetAlertMessage.of(threshold, totalSpent, budgetAmount, yearMonthStr));
             }
         }
 
@@ -121,23 +126,25 @@ public class BudgetAlertService {
     }
 
     /**
-     * Resets the BudgetAlertState for a given user and month, clearing all fired flags.
-     * Called when a budget amount changes to allow re-evaluation from scratch.
+     * Resets the BudgetAlertState for a given user and month, clearing all fired flags. Called when
+     * a budget amount changes to allow re-evaluation from scratch.
      */
     @Transactional
     public void resetAlertState(Long userId, Short year, Short month) {
-        Optional<BudgetAlertState> stateOpt = budgetAlertStateRepository.findByUserIdAndYearAndMonth(userId, year, month);
-        stateOpt.ifPresent(state -> {
-            state.setThreshold50Fired(false);
-            state.setThreshold80Fired(false);
-            state.setThreshold100Fired(false);
-            budgetAlertStateRepository.save(state);
-        });
+        Optional<BudgetAlertState> stateOpt =
+                budgetAlertStateRepository.findByUserIdAndYearAndMonth(userId, year, month);
+        stateOpt.ifPresent(
+                state -> {
+                    state.setThreshold50Fired(false);
+                    state.setThreshold80Fired(false);
+                    state.setThreshold100Fired(false);
+                    budgetAlertStateRepository.save(state);
+                });
     }
 
     /**
-     * Core threshold logic: calculates spending percentage and fires alerts for
-     * any newly crossed thresholds. Returns the list of alert messages to send.
+     * Core threshold logic: calculates spending percentage and fires alerts for any newly crossed
+     * thresholds. Returns the list of alert messages to send.
      */
     @Transactional
     public List<BudgetAlertMessage> calculateAndFireAlerts(Long userId, YearMonth yearMonth) {
@@ -147,7 +154,8 @@ public class BudgetAlertService {
         Short month = (short) yearMonth.getMonthValue();
 
         // No budget means no alerts
-        Optional<MonthlyBudget> budgetOpt = monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, year, month);
+        Optional<MonthlyBudget> budgetOpt =
+                monthlyBudgetRepository.findByUserIdAndYearAndMonth(userId, year, month);
         if (budgetOpt.isEmpty()) {
             return alerts;
         }
@@ -158,35 +166,42 @@ public class BudgetAlertService {
         // Calculate total spending for the month
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
-        BigDecimal totalSpent = transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate);
+        BigDecimal totalSpent =
+                transactionRepository.sumAmountByUserIdAndDateRange(userId, startDate, endDate);
 
         // Calculate percentage
         BigDecimal percentage = BigDecimal.ZERO;
         if (budgetAmount.compareTo(BigDecimal.ZERO) > 0) {
-            percentage = totalSpent
-                .multiply(BigDecimal.valueOf(100))
-                .divide(budgetAmount, 2, RoundingMode.HALF_UP);
+            percentage =
+                    totalSpent
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(budgetAmount, 2, RoundingMode.HALF_UP);
         }
 
         // Get or create alert state
-        BudgetAlertState alertState = budgetAlertStateRepository
-            .findByUserIdAndYearAndMonth(userId, year, month)
-            .orElseGet(() -> {
-                User user = userRepository.findById(userId).orElseThrow();
-                BudgetAlertState newState = new BudgetAlertState();
-                newState.setUser(user);
-                newState.setYear(year);
-                newState.setMonth(month);
-                return budgetAlertStateRepository.save(newState);
-            });
+        BudgetAlertState alertState =
+                budgetAlertStateRepository
+                        .findByUserIdAndYearAndMonth(userId, year, month)
+                        .orElseGet(
+                                () -> {
+                                    User user = userRepository.findById(userId).orElseThrow();
+                                    BudgetAlertState newState = new BudgetAlertState();
+                                    newState.setUser(user);
+                                    newState.setYear(year);
+                                    newState.setMonth(month);
+                                    return budgetAlertStateRepository.save(newState);
+                                });
 
-        String yearMonthStr = String.format("%04d-%02d", yearMonth.getYear(), yearMonth.getMonthValue());
+        String yearMonthStr =
+                String.format("%04d-%02d", yearMonth.getYear(), yearMonth.getMonthValue());
 
         // Check each threshold
         for (int threshold : THRESHOLDS) {
-            if (percentage.compareTo(BigDecimal.valueOf(threshold)) >= 0 && !isThresholdFired(alertState, threshold)) {
+            if (percentage.compareTo(BigDecimal.valueOf(threshold)) >= 0
+                    && !isThresholdFired(alertState, threshold)) {
                 setThresholdFired(alertState, threshold);
-                alerts.add(BudgetAlertMessage.of(threshold, totalSpent, budgetAmount, yearMonthStr));
+                alerts.add(
+                        BudgetAlertMessage.of(threshold, totalSpent, budgetAmount, yearMonthStr));
             }
         }
 
@@ -200,10 +215,7 @@ public class BudgetAlertService {
     private void sendAlerts(Long userId, List<BudgetAlertMessage> alerts) {
         for (BudgetAlertMessage alert : alerts) {
             messagingTemplate.convertAndSendToUser(
-                String.valueOf(userId),
-                "/topic/budget-alerts",
-                alert
-            );
+                    String.valueOf(userId), "/topic/budget-alerts", alert);
         }
     }
 

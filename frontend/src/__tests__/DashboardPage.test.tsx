@@ -99,7 +99,7 @@ function renderDashboardPage() {
           <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -432,7 +432,7 @@ describe('DashboardPage', () => {
 
       // Should have fetched with new month params
       const calls = fetchSpy.mock.calls.map((c) =>
-        typeof c[0] === 'string' ? c[0] : c[0].toString()
+        typeof c[0] === 'string' ? c[0] : c[0].toString(),
       );
       expect(calls.some((url) => url.includes('month=2'))).toBe(true);
     });
@@ -632,58 +632,62 @@ describe('DashboardPage', () => {
     it('saves budget and refreshes dashboard', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       let fetchCount = 0;
-      vi.spyOn(globalThis, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-        const url = typeof input === 'string' ? input : input.toString();
-        if (url.includes('/users/me')) {
-          return Promise.resolve({
-            ok: true,
-            status: 200,
-            json: () => Promise.resolve(mockUser),
-          } as Response);
-        }
-        if (url.includes('/budgets') && init?.method === 'POST') {
-          return Promise.resolve({
-            ok: true,
-            status: 201,
-            json: () => Promise.resolve({
-              id: 1,
-              year: 2026,
-              month: 3,
-              amount: 2000,
-              createdAt: '2026-03-15T00:00:00Z',
-              updatedAt: '2026-03-15T00:00:00Z',
-            }),
-          } as Response);
-        }
-        if (url.includes('/dashboard')) {
-          fetchCount++;
-          if (fetchCount <= 1) {
+      vi.spyOn(globalThis, 'fetch').mockImplementation(
+        (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = typeof input === 'string' ? input : input.toString();
+          if (url.includes('/users/me')) {
             return Promise.resolve({
               ok: true,
               status: 200,
-              json: () => Promise.resolve(dashboardNoBudget),
+              json: () => Promise.resolve(mockUser),
             } as Response);
           }
-          // After saving budget, return dashboard with budget
+          if (url.includes('/budgets') && init?.method === 'POST') {
+            return Promise.resolve({
+              ok: true,
+              status: 201,
+              json: () =>
+                Promise.resolve({
+                  id: 1,
+                  year: 2026,
+                  month: 3,
+                  amount: 2000,
+                  createdAt: '2026-03-15T00:00:00Z',
+                  updatedAt: '2026-03-15T00:00:00Z',
+                }),
+            } as Response);
+          }
+          if (url.includes('/dashboard')) {
+            fetchCount++;
+            if (fetchCount <= 1) {
+              return Promise.resolve({
+                ok: true,
+                status: 200,
+                json: () => Promise.resolve(dashboardNoBudget),
+              } as Response);
+            }
+            // After saving budget, return dashboard with budget
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              json: () =>
+                Promise.resolve({
+                  totalSpent: 150.0,
+                  budgetAmount: 2000.0,
+                  remaining: 1850.0,
+                  usagePercentage: 7.5,
+                  year: 2026,
+                  month: 3,
+                }),
+            } as Response);
+          }
           return Promise.resolve({
-            ok: true,
-            status: 200,
-            json: () => Promise.resolve({
-              totalSpent: 150.0,
-              budgetAmount: 2000.0,
-              remaining: 1850.0,
-              usagePercentage: 7.5,
-              year: 2026,
-              month: 3,
-            }),
+            ok: false,
+            status: 404,
+            json: () => Promise.resolve({ message: 'Not found' }),
           } as Response);
-        }
-        return Promise.resolve({
-          ok: false,
-          status: 404,
-          json: () => Promise.resolve({ message: 'Not found' }),
-        } as Response);
-      });
+        },
+      );
 
       renderDashboardPage();
 

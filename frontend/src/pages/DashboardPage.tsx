@@ -10,8 +10,18 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ] as const;
 
 function getInitialMonth(): { year: number; month: number } {
@@ -35,7 +45,7 @@ export function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(getInitialMonth);
   const { dashboard, loading, error, fetchDashboard } = useDashboard(
     selectedDate.year,
-    selectedDate.month
+    selectedDate.month,
   );
 
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
@@ -125,7 +135,12 @@ export function DashboardPage() {
           aria-label="Previous month"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
         <span className="min-w-[180px] text-center text-lg font-semibold text-gray-900">
@@ -186,9 +201,7 @@ export function DashboardPage() {
                 </>
               ) : (
                 <>
-                  <p className="mt-2 text-lg font-medium text-gray-400">
-                    No budget set
-                  </p>
+                  <p className="mt-2 text-lg font-medium text-gray-400">No budget set</p>
                   <button
                     onClick={handleOpenBudgetModal}
                     className="mt-1 rounded text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -203,9 +216,11 @@ export function DashboardPage() {
             {hasBudget && (
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Remaining</p>
-                <p className={`mt-2 text-3xl font-bold ${
-                  (dashboard.remaining as number) < 0 ? 'text-red-600' : 'text-gray-900'
-                }`}>
+                <p
+                  className={`mt-2 text-3xl font-bold ${
+                    (dashboard.remaining as number) < 0 ? 'text-red-600' : 'text-gray-900'
+                  }`}
+                >
                   {formatCurrency(dashboard.remaining as number)}
                 </p>
                 {(dashboard.remaining as number) < 0 && (
@@ -220,11 +235,11 @@ export function DashboardPage() {
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-500">Budget Usage</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {usagePercentage.toFixed(1)}%
-                </p>
+                <p className="text-sm font-semibold text-gray-900">{usagePercentage.toFixed(1)}%</p>
               </div>
-              <div className={`mt-3 h-4 w-full overflow-hidden rounded-full ${getProgressBarBgColor(usagePercentage)}`}>
+              <div
+                className={`mt-3 h-4 w-full overflow-hidden rounded-full ${getProgressBarBgColor(usagePercentage)}`}
+              >
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${getProgressBarColor(usagePercentage)}`}
                   style={{ width: `${displayPercentage}%` }}
@@ -258,11 +273,7 @@ export function DashboardPage() {
                   />
                 </svg>
               }
-              action={
-                <Button onClick={handleOpenBudgetModal}>
-                  Set Budget
-                </Button>
-              }
+              action={<Button onClick={handleOpenBudgetModal}>Set Budget</Button>}
             />
           )}
         </div>
@@ -291,21 +302,12 @@ export function DashboardPage() {
             }}
             error={budgetValidationError}
           />
-          {budgetError && (
-            <ErrorMessage message={budgetError} />
-          )}
+          {budgetError && <ErrorMessage message={budgetError} />}
           <div className="flex justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={handleCloseBudgetModal}
-              disabled={saving}
-            >
+            <Button variant="secondary" onClick={handleCloseBudgetModal} disabled={saving}>
               Cancel
             </Button>
-            <Button
-              onClick={() => void handleSaveBudget()}
-              disabled={saving}
-            >
+            <Button onClick={() => void handleSaveBudget()} disabled={saving}>
               {saving ? 'Saving...' : 'Save'}
             </Button>
           </div>

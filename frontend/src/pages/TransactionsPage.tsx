@@ -298,9 +298,7 @@ export function TransactionsPage() {
               />
             </svg>
           }
-          action={
-            <Button onClick={openCreateModal}>Add Transaction</Button>
-          }
+          action={<Button onClick={openCreateModal}>Add Transaction</Button>}
         />
       ) : (
         <>
@@ -331,10 +329,7 @@ export function TransactionsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {transactions.map((transaction) => (
-                  <tr
-                    key={transaction.id}
-                    className="transition-colors hover:bg-gray-50"
-                  >
+                  <tr key={transaction.id} className="transition-colors hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                       {transaction.title}
                     </td>
@@ -456,10 +451,7 @@ export function TransactionsPage() {
             />
 
             <div className="w-full">
-              <label
-                htmlFor="amount"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="amount" className="mb-1 block text-sm font-medium text-gray-700">
                 Amount (USD)
               </label>
               <div className="relative">
@@ -504,10 +496,7 @@ export function TransactionsPage() {
             />
 
             <div className="w-full">
-              <label
-                htmlFor="category"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="category" className="mb-1 block text-sm font-medium text-gray-700">
                 Category
               </label>
               <select
@@ -540,10 +529,7 @@ export function TransactionsPage() {
             </div>
 
             <div className="w-full">
-              <label
-                htmlFor="notes"
-                className="mb-1 block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="notes" className="mb-1 block text-sm font-medium text-gray-700">
                 Notes
               </label>
               <textarea
@@ -568,11 +554,7 @@ export function TransactionsPage() {
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting
-                ? 'Saving...'
-                : modalMode === 'create'
-                  ? 'Create'
-                  : 'Save'}
+              {submitting ? 'Saving...' : modalMode === 'create' ? 'Create' : 'Save'}
             </Button>
           </div>
         </form>
@@ -588,9 +570,7 @@ export function TransactionsPage() {
           Are you sure you want to delete{' '}
           <span className="font-semibold">{deleteTarget?.title}</span>?
         </p>
-        <p className="mt-1 text-sm text-gray-500">
-          This cannot be undone.
-        </p>
+        <p className="mt-1 text-sm text-gray-500">This cannot be undone.</p>
         {deleteError && (
           <div className="mt-3">
             <ErrorMessage message={deleteError} />

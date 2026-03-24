@@ -1,6 +1,12 @@
 package com.expensetracker.controller;
 
-import com.jayway.jsonpath.JsonPath;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,22 +16,13 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class BudgetControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private javax.sql.DataSource dataSource;
+    @Autowired private javax.sql.DataSource dataSource;
 
     private static final String USER_ID_HEADER = "X-User-Id";
 
@@ -44,151 +41,165 @@ class BudgetControllerTest {
 
     @Test
     void createBudget_newBudget_returns201() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 1, "1000.00")))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.year", is(2099)))
-            .andExpect(jsonPath("$.month", is(1)))
-            .andExpect(jsonPath("$.amount", is(1000.00)))
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.createdAt", notNullValue()))
-            .andExpect(jsonPath("$.updatedAt", notNullValue()));
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 1, "1000.00")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.year", is(2099)))
+                .andExpect(jsonPath("$.month", is(1)))
+                .andExpect(jsonPath("$.amount", is(1000.00)))
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.createdAt", notNullValue()))
+                .andExpect(jsonPath("$.updatedAt", notNullValue()));
     }
 
     @Test
     void createBudget_existingBudget_updatesAndReturns200() throws Exception {
         // Create initial budget
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 2, "1000.00")))
-            .andExpect(status().isCreated());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 2, "1000.00")))
+                .andExpect(status().isCreated());
 
         // Update same year+month
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 2, "2000.00")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.amount", is(2000.00)))
-            .andExpect(jsonPath("$.year", is(2099)))
-            .andExpect(jsonPath("$.month", is(2)));
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 2, "2000.00")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount", is(2000.00)))
+                .andExpect(jsonPath("$.year", is(2099)))
+                .andExpect(jsonPath("$.month", is(2)));
     }
 
     @Test
     void createBudget_invalidMonth_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 13, "1000.00")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 13, "1000.00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void createBudget_zeroMonth_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 0, "1000.00")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 0, "1000.00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void createBudget_negativeAmount_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 3, "-500.00")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 3, "-500.00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void createBudget_zeroAmount_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 3, "0")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 3, "0")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void createBudget_missingAmount_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"year\": 2099, \"month\": 3}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"year\": 2099, \"month\": 3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     // === GET BUDGET VALIDATION TESTS ===
 
     @Test
     void getBudget_monthZero_returns400() throws Exception {
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2026")
-                .param("month", "0"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2026")
+                                .param("month", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void getBudget_month13_returns400() throws Exception {
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2026")
-                .param("month", "13"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2026")
+                                .param("month", "13"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void getBudget_yearTooLow_returns400() throws Exception {
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "1999")
-                .param("month", "6"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "1999")
+                                .param("month", "6"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void getBudget_yearTooHigh_returns400() throws Exception {
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2101")
-                .param("month", "6"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2101")
+                                .param("month", "6"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     // === POST BUDGET YEAR VALIDATION TESTS ===
 
     @Test
     void createBudget_yearTooLow_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(1999, 6, "1000.00")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(1999, 6, "1000.00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     @Test
     void createBudget_yearTooHigh_returns400() throws Exception {
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2101, 6, "1000.00")))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2101, 6, "1000.00")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     // === GET BUDGET TESTS ===
@@ -196,31 +207,34 @@ class BudgetControllerTest {
     @Test
     void getBudget_exists_returns200() throws Exception {
         // Create budget first
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 4, "1500.00")))
-            .andExpect(status().isCreated());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 4, "1500.00")))
+                .andExpect(status().isCreated());
 
         // Get it
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2099")
-                .param("month", "4"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.year", is(2099)))
-            .andExpect(jsonPath("$.month", is(4)))
-            .andExpect(jsonPath("$.amount", is(1500.00)));
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2099")
+                                .param("month", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.year", is(2099)))
+                .andExpect(jsonPath("$.month", is(4)))
+                .andExpect(jsonPath("$.amount", is(1500.00)));
     }
 
     @Test
     void getBudget_notExists_returns404() throws Exception {
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2099")
-                .param("month", "12"))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.error").isNotEmpty());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2099")
+                                .param("month", "12"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").isNotEmpty());
     }
 
     // === CROSS-USER ISOLATION ===
@@ -228,49 +242,55 @@ class BudgetControllerTest {
     @Test
     void getBudget_crossUser_returns404() throws Exception {
         // User 1 creates a budget
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 5, "1000.00")))
-            .andExpect(status().isCreated());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 5, "1000.00")))
+                .andExpect(status().isCreated());
 
         // User 2 cannot see user 1's budget
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "2")
-                .param("year", "2099")
-                .param("month", "5"))
-            .andExpect(status().isNotFound());
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "2")
+                                .param("year", "2099")
+                                .param("month", "5"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void createBudget_sameMonthDifferentUsers_bothSucceed() throws Exception {
         // User 1 creates budget for month 6
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 6, "1000.00")))
-            .andExpect(status().isCreated());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 6, "1000.00")))
+                .andExpect(status().isCreated());
 
         // User 2 creates budget for same month
-        mockMvc.perform(post("/api/budgets")
-                .header(USER_ID_HEADER, "2")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(budgetJson(2099, 6, "2000.00")))
-            .andExpect(status().isCreated());
+        mockMvc.perform(
+                        post("/api/budgets")
+                                .header(USER_ID_HEADER, "2")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(budgetJson(2099, 6, "2000.00")))
+                .andExpect(status().isCreated());
 
         // Verify each user sees their own budget
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "1")
-                .param("year", "2099")
-                .param("month", "6"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.amount", is(1000.00)));
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "1")
+                                .param("year", "2099")
+                                .param("month", "6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount", is(1000.00)));
 
-        mockMvc.perform(get("/api/budgets")
-                .header(USER_ID_HEADER, "2")
-                .param("year", "2099")
-                .param("month", "6"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.amount", is(2000.00)));
+        mockMvc.perform(
+                        get("/api/budgets")
+                                .header(USER_ID_HEADER, "2")
+                                .param("year", "2099")
+                                .param("month", "6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount", is(2000.00)));
     }
 }

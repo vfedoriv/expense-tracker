@@ -9,10 +9,10 @@ import com.expensetracker.exception.ResourceNotFoundException;
 import com.expensetracker.repository.CategoryRepository;
 import com.expensetracker.repository.TransactionRepository;
 import com.expensetracker.repository.UserRepository;
+import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 public class CategoryService {
@@ -21,9 +21,10 @@ public class CategoryService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
-    public CategoryService(CategoryRepository categoryRepository,
-                           TransactionRepository transactionRepository,
-                           UserRepository userRepository) {
+    public CategoryService(
+            CategoryRepository categoryRepository,
+            TransactionRepository transactionRepository,
+            UserRepository userRepository) {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
@@ -32,18 +33,21 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<CategoryResponse> listCategories(Long userId) {
         return categoryRepository.findAllByUserIdOrderByName(userId).stream()
-            .map(this::toResponse)
-            .toList();
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
     public CategoryResponse createCategory(Long userId, CategoryRequest request) {
         if (categoryRepository.existsByUserIdAndName(userId, request.name())) {
-            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
+            throw new DuplicateResourceException(
+                    "Category with name '" + request.name() + "' already exists");
         }
 
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Category category = new Category();
         category.setUser(user);
@@ -52,7 +56,8 @@ public class CategoryService {
         try {
             category = categoryRepository.save(category);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
+            throw new DuplicateResourceException(
+                    "Category with name '" + request.name() + "' already exists");
         }
 
         return toResponse(category);
@@ -60,12 +65,15 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse renameCategory(Long userId, Long categoryId, CategoryRequest request) {
-        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findByIdAndUserId(categoryId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         if (!category.getName().equals(request.name())
                 && categoryRepository.existsByUserIdAndName(userId, request.name())) {
-            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
+            throw new DuplicateResourceException(
+                    "Category with name '" + request.name() + "' already exists");
         }
 
         category.setName(request.name());
@@ -73,7 +81,8 @@ public class CategoryService {
         try {
             category = categoryRepository.save(category);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
+            throw new DuplicateResourceException(
+                    "Category with name '" + request.name() + "' already exists");
         }
 
         return toResponse(category);
@@ -81,8 +90,10 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long userId, Long categoryId) {
-        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category =
+                categoryRepository
+                        .findByIdAndUserId(categoryId, userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         if (transactionRepository.existsByCategoryId(category.getId())) {
             throw new IllegalStateException("Cannot delete category with existing transactions");
@@ -92,10 +103,6 @@ public class CategoryService {
     }
 
     private CategoryResponse toResponse(Category category) {
-        return new CategoryResponse(
-            category.getId(),
-            category.getName(),
-            category.getCreatedAt()
-        );
+        return new CategoryResponse(category.getId(), category.getName(), category.getCreatedAt());
     }
 }

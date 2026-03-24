@@ -1,5 +1,8 @@
 package com.expensetracker.websocket;
 
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import com.expensetracker.config.UserPrincipal;
 import com.expensetracker.service.BudgetAlertService;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,17 +17,12 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
 @ExtendWith(MockitoExtension.class)
 class BudgetAlertHandlerTest {
 
-    @Mock
-    private BudgetAlertService budgetAlertService;
+    @Mock private BudgetAlertService budgetAlertService;
 
-    @InjectMocks
-    private BudgetAlertHandler budgetAlertHandler;
+    @InjectMocks private BudgetAlertHandler budgetAlertHandler;
 
     private UserPrincipal testPrincipal;
 
@@ -39,7 +37,8 @@ class BudgetAlertHandlerTest {
         accessor.setDestination("/user/topic/budget-alerts");
         accessor.setUser(testPrincipal);
         accessor.setSessionId("session-1");
-        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<byte[]> message =
+                MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
         SessionSubscribeEvent event = new SessionSubscribeEvent(this, message, testPrincipal);
 
@@ -54,7 +53,8 @@ class BudgetAlertHandlerTest {
         accessor.setDestination("/topic/other");
         accessor.setUser(testPrincipal);
         accessor.setSessionId("session-1");
-        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<byte[]> message =
+                MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
         SessionSubscribeEvent event = new SessionSubscribeEvent(this, message, testPrincipal);
 
@@ -68,7 +68,8 @@ class BudgetAlertHandlerTest {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
         accessor.setSessionId("session-1");
         // No destination set
-        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<byte[]> message =
+                MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
         SessionSubscribeEvent event = new SessionSubscribeEvent(this, message);
 
@@ -83,7 +84,8 @@ class BudgetAlertHandlerTest {
         accessor.setDestination("/user/topic/budget-alerts");
         accessor.setSessionId("session-1");
         // No user set
-        Message<byte[]> message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        Message<byte[]> message =
+                MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
         SessionSubscribeEvent event = new SessionSubscribeEvent(this, message);
 

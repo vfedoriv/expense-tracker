@@ -17,9 +17,7 @@ export function LoadingSpinner({ size = 'md', message }: LoadingSpinnerProps) {
         role="status"
         aria-label="Loading"
       />
-      {message && (
-        <p className="text-sm text-gray-500">{message}</p>
-      )}
+      {message && <p className="text-sm text-gray-500">{message}</p>}
     </div>
   );
 }

@@ -25,9 +25,16 @@ public class DashboardController {
     @GetMapping
     public ResponseEntity<DashboardResponse> getDashboard(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam @Min(value = 2000, message = "Year must be between 2000 and 2100") @Max(value = 2100, message = "Year must be between 2000 and 2100") int year,
-            @RequestParam @Min(value = 1, message = "Month must be between 1 and 12") @Max(value = 12, message = "Month must be between 1 and 12") int month) {
-        DashboardResponse response = dashboardService.getDashboard(principal.getUserId(), year, month);
+            @RequestParam
+                    @Min(value = 2000, message = "Year must be between 2000 and 2100")
+                    @Max(value = 2100, message = "Year must be between 2000 and 2100")
+                    int year,
+            @RequestParam
+                    @Min(value = 1, message = "Month must be between 1 and 12")
+                    @Max(value = 12, message = "Month must be between 1 and 12")
+                    int month) {
+        DashboardResponse response =
+                dashboardService.getDashboard(principal.getUserId(), year, month);
         return ResponseEntity.ok(response);
     }
 }

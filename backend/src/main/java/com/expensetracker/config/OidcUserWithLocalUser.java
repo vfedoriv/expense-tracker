@@ -1,17 +1,14 @@
 package com.expensetracker.config;
 
 import com.expensetracker.entity.User;
+import java.util.Collection;
+import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
-import java.util.Collection;
-import java.util.Map;
-
-/**
- * Wraps an OidcUser (Google) with the local database User entity.
- */
+/** Wraps an OidcUser (Google) with the local database User entity. */
 public class OidcUserWithLocalUser implements OidcUser {
 
     private final OidcUser delegate;

@@ -55,22 +55,31 @@ export function useTransactions(): UseTransactionsResult {
     void fetchTransactions();
   }, [fetchTransactions, filters]);
 
-  const createTransaction = useCallback(async (request: TransactionRequest): Promise<Transaction> => {
-    const created = await apiClient.post<Transaction>('/transactions', request);
-    await fetchTransactions();
-    return created;
-  }, [fetchTransactions]);
+  const createTransaction = useCallback(
+    async (request: TransactionRequest): Promise<Transaction> => {
+      const created = await apiClient.post<Transaction>('/transactions', request);
+      await fetchTransactions();
+      return created;
+    },
+    [fetchTransactions],
+  );
 
-  const updateTransaction = useCallback(async (id: number, request: TransactionRequest): Promise<Transaction> => {
-    const updated = await apiClient.put<Transaction>(`/transactions/${id}`, request);
-    await fetchTransactions();
-    return updated;
-  }, [fetchTransactions]);
+  const updateTransaction = useCallback(
+    async (id: number, request: TransactionRequest): Promise<Transaction> => {
+      const updated = await apiClient.put<Transaction>(`/transactions/${id}`, request);
+      await fetchTransactions();
+      return updated;
+    },
+    [fetchTransactions],
+  );
 
-  const deleteTransaction = useCallback(async (id: number): Promise<void> => {
-    await apiClient.delete(`/transactions/${id}`);
-    await fetchTransactions();
-  }, [fetchTransactions]);
+  const deleteTransaction = useCallback(
+    async (id: number): Promise<void> => {
+      await apiClient.delete(`/transactions/${id}`);
+      await fetchTransactions();
+    },
+    [fetchTransactions],
+  );
 
   return {
     transactions,

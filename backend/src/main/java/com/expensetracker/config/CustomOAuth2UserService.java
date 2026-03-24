@@ -9,9 +9,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 /**
- * Custom OAuth2UserService that handles GitHub login.
- * Extracts provider + provider_user_id, checks if user exists in DB,
- * and creates a new user record if not.
+ * Custom OAuth2UserService that handles GitHub login. Extracts provider + provider_user_id, checks
+ * if user exists in DB, and creates a new user record if not.
  */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -32,16 +31,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = extractEmail(registrationId, oAuth2User);
         String avatarUrl = extractAvatarUrl(registrationId, oAuth2User);
 
-        User user = userRepository.findByProviderAndProviderUserId(registrationId, providerUserId)
-            .orElseGet(() -> {
-                User newUser = new User();
-                newUser.setProvider(registrationId);
-                newUser.setProviderUserId(providerUserId);
-                newUser.setDisplayName(displayName);
-                newUser.setEmail(email);
-                newUser.setAvatarUrl(avatarUrl);
-                return userRepository.save(newUser);
-            });
+        User user =
+                userRepository
+                        .findByProviderAndProviderUserId(registrationId, providerUserId)
+                        .orElseGet(
+                                () -> {
+                                    User newUser = new User();
+                                    newUser.setProvider(registrationId);
+                                    newUser.setProviderUserId(providerUserId);
+                                    newUser.setDisplayName(displayName);
+                                    newUser.setEmail(email);
+                                    newUser.setAvatarUrl(avatarUrl);
+                                    return userRepository.save(newUser);
+                                });
 
         return new OAuth2UserWithLocalUser(oAuth2User, user);
     }

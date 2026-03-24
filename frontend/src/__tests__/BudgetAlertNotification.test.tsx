@@ -19,9 +19,7 @@ function createAlert(overrides: Partial<BudgetAlertToast> = {}): BudgetAlertToas
 
 describe('BudgetAlertNotification', () => {
   it('renders nothing when there are no alerts', () => {
-    const { container } = render(
-      <BudgetAlertNotification alerts={[]} onDismiss={vi.fn()} />
-    );
+    const { container } = render(<BudgetAlertNotification alerts={[]} onDismiss={vi.fn()} />);
     expect(container.innerHTML).toBe('');
   });
 

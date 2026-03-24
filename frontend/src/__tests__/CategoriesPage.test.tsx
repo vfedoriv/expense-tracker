@@ -51,7 +51,7 @@ function renderCategoriesPage() {
           <Route path="/categories" element={<CategoriesPage />} />
         </Routes>
       </AuthProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -176,7 +176,8 @@ describe('CategoriesPage', () => {
           return Promise.resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([{ id: 1, name: 'Food', createdAt: '2026-01-01T00:00:00Z' }]),
+            json: () =>
+              Promise.resolve([{ id: 1, name: 'Food', createdAt: '2026-01-01T00:00:00Z' }]),
           } as Response);
         }
         return Promise.resolve({
@@ -340,27 +341,30 @@ describe('CategoriesPage', () => {
           return Promise.resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve({ id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' }),
+            json: () =>
+              Promise.resolve({ id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' }),
           } as Response);
         }
         if (url.includes('/categories') && !init?.method) {
           return Promise.resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([
-              { id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' },
-              ...mockCategories.slice(1),
-            ]),
+            json: () =>
+              Promise.resolve([
+                { id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' },
+                ...mockCategories.slice(1),
+              ]),
           } as Response);
         }
         if (url.includes('/categories')) {
           return Promise.resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([
-              { id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' },
-              ...mockCategories.slice(1),
-            ]),
+            json: () =>
+              Promise.resolve([
+                { id: 1, name: 'Groceries', createdAt: '2026-01-01T00:00:00Z' },
+                ...mockCategories.slice(1),
+              ]),
           } as Response);
         }
         return Promise.resolve({
@@ -519,7 +523,8 @@ describe('CategoriesPage', () => {
           return Promise.resolve({
             ok: false,
             status: 409,
-            json: () => Promise.resolve({ message: 'Cannot delete category with existing transactions' }),
+            json: () =>
+              Promise.resolve({ message: 'Cannot delete category with existing transactions' }),
           } as Response);
         }
         if (url.includes('/categories')) {
@@ -539,7 +544,9 @@ describe('CategoriesPage', () => {
       await user.click(screen.getByRole('button', { name: /confirm/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/cannot delete category with existing transactions/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/cannot delete category with existing transactions/i),
+        ).toBeInTheDocument();
       });
 
       // Category should still exist in the list

@@ -159,9 +159,7 @@ export function CategoriesPage() {
               />
             </svg>
           }
-          action={
-            <Button onClick={openCreateModal}>Create Category</Button>
-          }
+          action={<Button onClick={openCreateModal}>Create Category</Button>}
         />
       ) : (
         /* Category list */
@@ -172,9 +170,7 @@ export function CategoriesPage() {
               className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500"
             >
               <div className="min-w-0">
-                <h3 className="truncate text-base font-medium text-gray-900">
-                  {category.name}
-                </h3>
+                <h3 className="truncate text-base font-medium text-gray-900">{category.name}</h3>
                 <p className="mt-1 text-xs text-gray-500">
                   Created {formatDate(category.createdAt)}
                 </p>
@@ -236,11 +232,7 @@ export function CategoriesPage() {
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting
-                ? 'Saving...'
-                : modalMode === 'create'
-                  ? 'Create'
-                  : 'Save'}
+              {submitting ? 'Saving...' : modalMode === 'create' ? 'Create' : 'Save'}
             </Button>
           </div>
         </form>
@@ -256,9 +248,7 @@ export function CategoriesPage() {
           Are you sure you want to delete{' '}
           <span className="font-semibold">{deleteTarget?.name}</span>?
         </p>
-        <p className="mt-1 text-sm text-gray-500">
-          This cannot be undone.
-        </p>
+        <p className="mt-1 text-sm text-gray-500">This cannot be undone.</p>
         {deleteError && (
           <div className="mt-3">
             <ErrorMessage message={deleteError} />

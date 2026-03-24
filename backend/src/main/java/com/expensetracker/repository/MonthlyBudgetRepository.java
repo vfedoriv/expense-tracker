@@ -1,10 +1,10 @@
 package com.expensetracker.repository;
 
 import com.expensetracker.entity.MonthlyBudget;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MonthlyBudgetRepository extends JpaRepository<MonthlyBudget, Long> {

@@ -1,36 +1,5 @@
 package com.expensetracker.config;
 
-import com.expensetracker.entity.User;
-import com.expensetracker.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,13 +10,38 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.expensetracker.entity.User;
+import com.expensetracker.repository.UserRepository;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 /**
- * Integration tests for OAuth2 authentication flow.
- * Uses the 'oauth-test' profile which provides test OAuth client IDs,
- * enabling OAuth2 mode in SecurityConfig (not fake auth).
+ * Integration tests for OAuth2 authentication flow. Uses the 'oauth-test' profile which provides
+ * test OAuth client IDs, enabling OAuth2 mode in SecurityConfig (not fake auth).
  *
- * Tests the CustomOAuth2UserService and CustomOidcUserService user provisioning
- * logic, as well as logout session invalidation.
+ * <p>Tests the CustomOAuth2UserService and CustomOidcUserService user provisioning logic, as well
+ * as logout session invalidation.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -55,29 +49,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("OAuth2 Authentication")
 class OAuth2AuthenticationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
+    @Autowired private CustomOAuth2UserService customOAuth2UserService;
 
-    @Autowired
-    private CustomOidcUserService customOidcUserService;
+    @Autowired private CustomOidcUserService customOidcUserService;
 
     @BeforeEach
     void cleanup() {
         // Remove any OAuth test users created in previous test runs
-        userRepository.findByProviderAndProviderUserId("google", "google-sub-12345")
-            .ifPresent(userRepository::delete);
-        userRepository.findByProviderAndProviderUserId("google", "google-sub-99999")
-            .ifPresent(userRepository::delete);
-        userRepository.findByProviderAndProviderUserId("github", "github-id-67890")
-            .ifPresent(userRepository::delete);
-        userRepository.findByProviderAndProviderUserId("github", "github-id-no-email")
-            .ifPresent(userRepository::delete);
+        userRepository
+                .findByProviderAndProviderUserId("google", "google-sub-12345")
+                .ifPresent(userRepository::delete);
+        userRepository
+                .findByProviderAndProviderUserId("google", "google-sub-99999")
+                .ifPresent(userRepository::delete);
+        userRepository
+                .findByProviderAndProviderUserId("github", "github-id-67890")
+                .ifPresent(userRepository::delete);
+        userRepository
+                .findByProviderAndProviderUserId("github", "github-id-no-email")
+                .ifPresent(userRepository::delete);
     }
 
     @Nested
@@ -88,7 +82,10 @@ class OAuth2AuthenticationTest {
         @DisplayName("Creates new user on first Google login and returns OidcUserWithLocalUser")
         void firstGoogleLogin_createsNewUser() throws Exception {
             // No user in DB initially
-            assertTrue(userRepository.findByProviderAndProviderUserId("google", "google-sub-12345").isEmpty());
+            assertTrue(
+                    userRepository
+                            .findByProviderAndProviderUserId("google", "google-sub-12345")
+                            .isEmpty());
 
             // Simulate: create user as the service would, then verify via /api/users/me
             User googleUser = new User();
@@ -100,20 +97,19 @@ class OAuth2AuthenticationTest {
             googleUser = userRepository.save(googleUser);
 
             OidcUserWithLocalUser oidcUser = createOidcUserWithLocalUser(googleUser);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                oidcUser, oidcUser.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(oidcUser, oidcUser.getAuthorities(), "google");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.provider", is("google")))
-                .andExpect(jsonPath("$.email", is("testuser@gmail.com")))
-                .andExpect(jsonPath("$.displayName", is("Google Test User")))
-                .andExpect(jsonPath("$.avatarUrl", is("https://example.com/avatar.jpg")));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provider", is("google")))
+                    .andExpect(jsonPath("$.email", is("testuser@gmail.com")))
+                    .andExpect(jsonPath("$.displayName", is("Google Test User")))
+                    .andExpect(jsonPath("$.avatarUrl", is("https://example.com/avatar.jpg")));
 
             // Verify user persisted in DB
-            Optional<User> dbUser = userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
+            Optional<User> dbUser =
+                    userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
             assertTrue(dbUser.isPresent());
             assertEquals("Google Test User", dbUser.get().getDisplayName());
             assertEquals("testuser@gmail.com", dbUser.get().getEmail());
@@ -133,29 +129,30 @@ class OAuth2AuthenticationTest {
             Long originalId = existingUser.getId();
 
             OidcUserWithLocalUser oidcUser = createOidcUserWithLocalUser(existingUser);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                oidcUser, oidcUser.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(oidcUser, oidcUser.getAuthorities(), "google");
 
             // First login
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(originalId.intValue())))
-                .andExpect(jsonPath("$.provider", is("google")))
-                .andExpect(jsonPath("$.displayName", is("Existing Google User")));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", is(originalId.intValue())))
+                    .andExpect(jsonPath("$.provider", is("google")))
+                    .andExpect(jsonPath("$.displayName", is("Existing Google User")));
 
             // Second login — same user, same ID
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(originalId.intValue())));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id", is(originalId.intValue())));
 
             // Verify no duplicate was created
-            long count = userRepository.findAll().stream()
-                .filter(u -> "google".equals(u.getProvider())
-                    && "google-sub-99999".equals(u.getProviderUserId()))
-                .count();
+            long count =
+                    userRepository.findAll().stream()
+                            .filter(
+                                    u ->
+                                            "google".equals(u.getProvider())
+                                                    && "google-sub-99999"
+                                                            .equals(u.getProviderUserId()))
+                            .count();
             assertEquals(1, count);
         }
 
@@ -179,7 +176,8 @@ class OAuth2AuthenticationTest {
             user = userRepository.save(user);
 
             // Verify lookup
-            Optional<User> found = userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
+            Optional<User> found =
+                    userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
             assertTrue(found.isPresent());
             assertEquals(user.getId(), found.get().getId());
             assertEquals("OIDC Test", found.get().getDisplayName());
@@ -202,19 +200,22 @@ class OAuth2AuthenticationTest {
             githubUser = userRepository.save(githubUser);
 
             OAuth2UserWithLocalUser ghPrincipal = buildGithubPrincipal(githubUser);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                ghPrincipal, ghPrincipal.getAuthorities(), "github"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(
+                            ghPrincipal, ghPrincipal.getAuthorities(), "github");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.provider", is("github")))
-                .andExpect(jsonPath("$.email", is("githubuser@example.com")))
-                .andExpect(jsonPath("$.displayName", is("GitHub Test User")))
-                .andExpect(jsonPath("$.avatarUrl", is("https://avatars.githubusercontent.com/u/67890")));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provider", is("github")))
+                    .andExpect(jsonPath("$.email", is("githubuser@example.com")))
+                    .andExpect(jsonPath("$.displayName", is("GitHub Test User")))
+                    .andExpect(
+                            jsonPath(
+                                    "$.avatarUrl",
+                                    is("https://avatars.githubusercontent.com/u/67890")));
 
-            Optional<User> dbUser = userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
+            Optional<User> dbUser =
+                    userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
             assertTrue(dbUser.isPresent());
             assertEquals("GitHub Test User", dbUser.get().getDisplayName());
         }
@@ -231,18 +232,18 @@ class OAuth2AuthenticationTest {
             githubUser = userRepository.save(githubUser);
 
             OAuth2UserWithLocalUser ghPrincipal = buildGithubPrincipal(githubUser);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                ghPrincipal, ghPrincipal.getAuthorities(), "github"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(
+                            ghPrincipal, ghPrincipal.getAuthorities(), "github");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.provider", is("github")))
-                .andExpect(jsonPath("$.email").value(nullValue()))
-                .andExpect(jsonPath("$.displayName", is("PrivateGHUser")));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provider", is("github")))
+                    .andExpect(jsonPath("$.email").value(nullValue()))
+                    .andExpect(jsonPath("$.displayName", is("PrivateGHUser")));
 
-            Optional<User> dbUser = userRepository.findByProviderAndProviderUserId("github", "github-id-no-email");
+            Optional<User> dbUser =
+                    userRepository.findByProviderAndProviderUserId("github", "github-id-no-email");
             assertTrue(dbUser.isPresent());
             assertNull(dbUser.get().getEmail());
         }
@@ -259,7 +260,8 @@ class OAuth2AuthenticationTest {
             user.setDisplayName("Wired Test");
             user = userRepository.save(user);
 
-            Optional<User> found = userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
+            Optional<User> found =
+                    userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
             assertTrue(found.isPresent());
             assertEquals(user.getId(), found.get().getId());
         }
@@ -281,25 +283,22 @@ class OAuth2AuthenticationTest {
             user = userRepository.save(user);
 
             OidcUserWithLocalUser oidcUser = createOidcUserWithLocalUser(user);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                oidcUser, oidcUser.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(oidcUser, oidcUser.getAuthorities(), "google");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.provider", is("google")))
-                .andExpect(jsonPath("$.email", is("me@gmail.com")))
-                .andExpect(jsonPath("$.displayName", is("My Name")))
-                .andExpect(jsonPath("$.avatarUrl", is("https://example.com/pic.jpg")));
+            mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").isNumber())
+                    .andExpect(jsonPath("$.provider", is("google")))
+                    .andExpect(jsonPath("$.email", is("me@gmail.com")))
+                    .andExpect(jsonPath("$.displayName", is("My Name")))
+                    .andExpect(jsonPath("$.avatarUrl", is("https://example.com/pic.jpg")));
         }
 
         @Test
         @DisplayName("GET /api/users/me without authentication returns 401 (OAuth mode)")
         void getUserMe_unauthenticated_returns401() throws Exception {
-            mockMvc.perform(get("/api/users/me"))
-                .andExpect(status().isUnauthorized());
+            mockMvc.perform(get("/api/users/me")).andExpect(status().isUnauthorized());
         }
     }
 
@@ -308,7 +307,8 @@ class OAuth2AuthenticationTest {
     class LogoutTests {
 
         @Test
-        @DisplayName("POST /api/logout invalidates session and subsequent request with same session returns 401")
+        @DisplayName(
+                "POST /api/logout invalidates session and subsequent request with same session returns 401")
         void logout_invalidatesSession_subsequentRequestReturns401() throws Exception {
             // Create user for authentication
             User user = new User();
@@ -319,30 +319,29 @@ class OAuth2AuthenticationTest {
             user = userRepository.save(user);
 
             OidcUserWithLocalUser oidcUser = createOidcUserWithLocalUser(user);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                oidcUser, oidcUser.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(oidcUser, oidcUser.getAuthorities(), "google");
 
             // Step 1: Authenticate and capture session
-            MvcResult authResult = mockMvc.perform(get("/api/users/me")
-                    .with(authentication(authToken)))
-                .andExpect(status().isOk())
-                .andReturn();
+            MvcResult authResult =
+                    mockMvc.perform(get("/api/users/me").with(authentication(authToken)))
+                            .andExpect(status().isOk())
+                            .andReturn();
 
             MockHttpSession session = (MockHttpSession) authResult.getRequest().getSession(false);
             assertNotNull(session, "Session should have been created");
 
             // Step 2: POST /api/logout with the captured session (include CSRF token)
-            mockMvc.perform(post("/api/logout")
-                    .session(session)
-                    .with(authentication(authToken))
-                    .with(csrf()))
-                .andExpect(status().isOk());
+            mockMvc.perform(
+                            post("/api/logout")
+                                    .session(session)
+                                    .with(authentication(authToken))
+                                    .with(csrf()))
+                    .andExpect(status().isOk());
 
             // Step 3: Verify original session is now invalid — request without auth returns 401
-            mockMvc.perform(get("/api/users/me")
-                    .session(session))
-                .andExpect(status().isUnauthorized());
+            mockMvc.perform(get("/api/users/me").session(session))
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -356,14 +355,11 @@ class OAuth2AuthenticationTest {
             user = userRepository.save(user);
 
             OidcUserWithLocalUser oidcUser = createOidcUserWithLocalUser(user);
-            OAuth2AuthenticationToken authToken = new OAuth2AuthenticationToken(
-                oidcUser, oidcUser.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken authToken =
+                    new OAuth2AuthenticationToken(oidcUser, oidcUser.getAuthorities(), "google");
 
-            mockMvc.perform(post("/api/logout")
-                    .with(authentication(authToken))
-                    .with(csrf()))
-                .andExpect(status().isOk());
+            mockMvc.perform(post("/api/logout").with(authentication(authToken)).with(csrf()))
+                    .andExpect(status().isOk());
         }
     }
 
@@ -391,38 +387,40 @@ class OAuth2AuthenticationTest {
             githubUser = userRepository.save(githubUser);
 
             // Verify they are separate records
-            Optional<User> foundGoogle = userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
-            Optional<User> foundGithub = userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
+            Optional<User> foundGoogle =
+                    userRepository.findByProviderAndProviderUserId("google", "google-sub-12345");
+            Optional<User> foundGithub =
+                    userRepository.findByProviderAndProviderUserId("github", "github-id-67890");
 
             assertTrue(foundGoogle.isPresent());
             assertTrue(foundGithub.isPresent());
             assertNotNull(foundGoogle.get().getId());
             assertNotNull(foundGithub.get().getId());
-            assertNotEquals(foundGoogle.get().getId(), foundGithub.get().getId(),
-                "Google and GitHub users should have different IDs");
+            assertNotEquals(
+                    foundGoogle.get().getId(),
+                    foundGithub.get().getId(),
+                    "Google and GitHub users should have different IDs");
 
             // Verify each user sees their own data via /api/users/me
             OidcUserWithLocalUser googleOidc = createOidcUserWithLocalUser(foundGoogle.get());
-            OAuth2AuthenticationToken googleAuth = new OAuth2AuthenticationToken(
-                googleOidc, googleOidc.getAuthorities(), "google"
-            );
+            OAuth2AuthenticationToken googleAuth =
+                    new OAuth2AuthenticationToken(
+                            googleOidc, googleOidc.getAuthorities(), "google");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(googleAuth)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.provider", is("google")))
-                .andExpect(jsonPath("$.displayName", is("Google User")));
+            mockMvc.perform(get("/api/users/me").with(authentication(googleAuth)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provider", is("google")))
+                    .andExpect(jsonPath("$.displayName", is("Google User")));
 
             OAuth2UserWithLocalUser ghOauthPrincipal = buildGithubPrincipal(foundGithub.get());
-            OAuth2AuthenticationToken githubAuth = new OAuth2AuthenticationToken(
-                ghOauthPrincipal, ghOauthPrincipal.getAuthorities(), "github"
-            );
+            OAuth2AuthenticationToken githubAuth =
+                    new OAuth2AuthenticationToken(
+                            ghOauthPrincipal, ghOauthPrincipal.getAuthorities(), "github");
 
-            mockMvc.perform(get("/api/users/me")
-                    .with(authentication(githubAuth)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.provider", is("github")))
-                .andExpect(jsonPath("$.displayName", is("GitHub User")));
+            mockMvc.perform(get("/api/users/me").with(authentication(githubAuth)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provider", is("github")))
+                    .andExpect(jsonPath("$.displayName", is("GitHub User")));
         }
     }
 
@@ -434,14 +432,14 @@ class OAuth2AuthenticationTest {
         @DisplayName("OAuth2 authorization endpoint redirects to Google")
         void oauth2Authorization_google_redirects() throws Exception {
             mockMvc.perform(get("/oauth2/authorization/google"))
-                .andExpect(status().is3xxRedirection());
+                    .andExpect(status().is3xxRedirection());
         }
 
         @Test
         @DisplayName("OAuth2 authorization endpoint redirects to GitHub")
         void oauth2Authorization_github_redirects() throws Exception {
             mockMvc.perform(get("/oauth2/authorization/github"))
-                .andExpect(status().is3xxRedirection());
+                    .andExpect(status().is3xxRedirection());
         }
     }
 
@@ -454,17 +452,12 @@ class OAuth2AuthenticationTest {
         claims.put("email", localUser.getEmail());
         claims.put("picture", localUser.getAvatarUrl());
 
-        OidcIdToken idToken = new OidcIdToken(
-            "mock-id-token",
-            Instant.now(),
-            Instant.now().plusSeconds(3600),
-            claims
-        );
+        OidcIdToken idToken =
+                new OidcIdToken(
+                        "mock-id-token", Instant.now(), Instant.now().plusSeconds(3600), claims);
 
-        OidcUser oidcUser = new DefaultOidcUser(
-            List.of(new SimpleGrantedAuthority("SCOPE_openid")),
-            idToken
-        );
+        OidcUser oidcUser =
+                new DefaultOidcUser(List.of(new SimpleGrantedAuthority("SCOPE_openid")), idToken);
 
         return new OidcUserWithLocalUser(oidcUser, localUser);
     }
@@ -477,11 +470,9 @@ class OAuth2AuthenticationTest {
         attributes.put("email", localUser.getEmail());
         attributes.put("avatar_url", localUser.getAvatarUrl());
 
-        OAuth2User oauth2User = new DefaultOAuth2User(
-            List.of(new SimpleGrantedAuthority("SCOPE_read:user")),
-            attributes,
-            "id"
-        );
+        OAuth2User oauth2User =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("SCOPE_read:user")), attributes, "id");
 
         return new OAuth2UserWithLocalUser(oauth2User, localUser);
     }

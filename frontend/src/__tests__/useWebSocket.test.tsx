@@ -68,7 +68,7 @@ function renderWithAuth() {
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 }
 
@@ -128,10 +128,7 @@ describe('useWebSocket', () => {
       if (mockOnConnect) mockOnConnect();
     });
 
-    expect(mockSubscribe).toHaveBeenCalledWith(
-      '/user/topic/budget-alerts',
-      expect.any(Function)
-    );
+    expect(mockSubscribe).toHaveBeenCalledWith('/user/topic/budget-alerts', expect.any(Function));
   });
 
   it('displays alert toast when message is received (after show delay)', async () => {

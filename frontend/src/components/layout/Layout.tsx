@@ -73,9 +73,7 @@ export function Layout() {
                       {user.displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm text-gray-700">
-                    {user.displayName}
-                  </span>
+                  <span className="text-sm text-gray-700">{user.displayName}</span>
                 </div>
               )}
 
@@ -97,9 +95,19 @@ export function Layout() {
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   {mobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
                   )}
                 </svg>
               </button>
@@ -109,7 +117,10 @@ export function Layout() {
 
         {/* Mobile navigation */}
         {mobileMenuOpen && (
-          <nav className="border-t border-gray-200 px-4 py-2 md:hidden" aria-label="Mobile navigation">
+          <nav
+            className="border-t border-gray-200 px-4 py-2 md:hidden"
+            aria-label="Mobile navigation"
+          >
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
