@@ -1,0 +1,51 @@
+{
+  "groupId": "auth-foundation",
+  "testedAt": "2026-03-23T09:58:30Z",
+  "isolation": {
+    "surface": "Web browser UI (agent-browser) with browser network/console evidence",
+    "frontendUrl": "http://localhost:5173",
+    "backendUrl": "http://localhost:8080",
+    "fakeAuthModeExpected": true,
+    "allowedPorts": [5173, 8080, 5432]
+  },
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-AUTH-001",
+      "title": "Fake auth auto-login (milestones 1-4)",
+      "status": "fail",
+      "steps": [
+        {
+          "action": "Navigate to http://localhost:5173/",
+          "expected": "User is auto-authenticated in fake-auth mode and lands on dashboard without login form",
+          "observed": "App redirected to /login and displayed SSO buttons: 'Continue with Google' and 'Continue with GitHub'"
+        },
+        {
+          "action": "Check UI evidence on current page",
+          "expected": "Dashboard UI is visible",
+          "observed": "Login page is visible; dashboard is not displayed"
+        },
+        {
+          "action": "Inspect auth-related network activity",
+          "expected": "GET /api/dashboard returns 200",
+          "observed": "Browser captured GET /api/users/me requests and no GET /api/dashboard request. Direct API checks returned 500 for GET /api/users/me and GET /api/dashboard"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "foundation/auth-foundation/VAL-AUTH-001-login-page.png",
+          "foundation/auth-foundation/VAL-AUTH-001-dashboard.png"
+        ],
+        "consoleErrors": "none (foundation/auth-foundation/VAL-AUTH-001-console-errors.json has errors: [])",
+        "network": "foundation/auth-foundation/VAL-AUTH-001-network.json; browser requests include GET /api/users/me while current URL is /login; curl: GET http://localhost:8080/api/users/me -> 500, GET http://localhost:8080/api/dashboard -> 500"
+      },
+      "issues": "Fake-auth auto-login is not functioning for this run. User is not auto-authenticated and dashboard does not load; backend auth-related endpoints returned 500 instead of allowing dashboard retrieval."
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 1 assertion (VAL-AUTH-001): 0 passed, 1 failed. Observed login page instead of automatic dashboard access, and auth-related API checks returned HTTP 500."
+}

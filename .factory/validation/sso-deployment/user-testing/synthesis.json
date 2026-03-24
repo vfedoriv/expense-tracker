@@ -65,32 +65,61 @@
     "groups": [
       {
         "id": "group-a-ui-fake-auth",
-        "assertions": ["VAL-CROSS-002", "VAL-CROSS-004", "VAL-CROSS-008", "VAL-CROSS-010"],
+        "assertions": [
+          "VAL-CROSS-002",
+          "VAL-CROSS-004",
+          "VAL-CROSS-008",
+          "VAL-CROSS-010"
+        ],
         "tool": "agent-browser",
         "mode": "fake-auth dev mode",
         "result": "all passed"
       },
       {
         "id": "group-b-tests-docs",
-        "assertions": ["VAL-TEST-001", "VAL-DOCS-001"],
+        "assertions": [
+          "VAL-TEST-001",
+          "VAL-DOCS-001"
+        ],
         "tool": "mvn, npm",
         "mode": "CLI commands",
         "result": "all passed"
       },
       {
         "id": "group-c-oauth-mode",
-        "assertions": ["VAL-AUTH-002", "VAL-AUTH-009"],
+        "assertions": [
+          "VAL-AUTH-002",
+          "VAL-AUTH-009"
+        ],
         "tool": "agent-browser",
         "mode": "OAuth2 mode with fake credentials (to activate SSO UI)",
         "result": "all passed"
       },
       {
         "id": "group-d-docker-compose",
-        "assertions": ["VAL-DEPLOY-001", "VAL-CROSS-009"],
+        "assertions": [
+          "VAL-DEPLOY-001",
+          "VAL-CROSS-009"
+        ],
         "tool": "agent-browser + docker compose",
         "mode": "Full Docker Compose stack",
         "result": "all passed"
       }
     ]
+  },
+  "orchestratorOverride": {
+    "reason": "User explicitly stated they will test OAuth SSO manually. 9 assertions deferred: VAL-AUTH-003/004/005/006/007/008/010/011, VAL-CROSS-001. SSO code tested via backend integration tests (170 tests pass). Login page, redirect, auth protection verified in browser.",
+    "deferredAssertions": [
+      "VAL-AUTH-003",
+      "VAL-AUTH-004",
+      "VAL-AUTH-005",
+      "VAL-AUTH-006",
+      "VAL-AUTH-007",
+      "VAL-AUTH-008",
+      "VAL-AUTH-010",
+      "VAL-AUTH-011",
+      "VAL-CROSS-001"
+    ],
+    "deferredTo": "manual user testing"
   }
 }

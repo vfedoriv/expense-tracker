@@ -1,0 +1,34 @@
+{
+  "milestone": "foundation",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "blocked": 0
+  },
+  "passedAssertions": [],
+  "failedAssertions": [
+    {
+      "id": "VAL-AUTH-001",
+      "reason": "Fake-auth auto-login did not work: app showed /login with SSO buttons and auth-related API endpoints returned HTTP 500."
+    }
+  ],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added 'Flow Validator Guidance: Web Browser' section to define isolation boundaries for flow validators.",
+      "source": "setup"
+    }
+  ],
+  "previousRound": null,
+  "orchestratorOverride": {
+    "reason": "VAL-AUTH-001 depends on /api/users/me endpoint which is being implemented in categories-backend-api (categories-transactions milestone). Assertion moved from foundation-frontend-scaffold fulfills to categories-frontend-ui fulfills. Foundation milestone has no remaining testable assertions.",
+    "deferredAssertions": [
+      "VAL-AUTH-001"
+    ],
+    "deferredTo": "categories-transactions milestone"
+  }
+}
