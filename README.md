@@ -395,7 +395,11 @@ To enable Google SSO authentication, follow these steps:
    - `http://localhost:5173` (frontend dev server)
    - `http://localhost:8080` (backend, for Docker mode)
 6. Add **Authorized redirect URIs:**
-   - `http://localhost:8080/login/oauth2/code/google`
+   - `http://localhost:5173/login/oauth2/code/google` (for local development with Vite dev server)
+   - `http://localhost:8080/login/oauth2/code/google` (for Docker/production mode)
+
+   > **Note:** The `localhost:5173` URI is needed for local development because the Vite dev server proxies OAuth requests to the backend, causing Spring's `{baseUrl}` to resolve to `http://localhost:5173`.
+
 7. Click **Create**
 8. Copy the **Client ID** and **Client Secret**
 
@@ -430,8 +434,10 @@ To enable GitHub SSO authentication, follow these steps:
 3. Fill in the registration form:
    - **Application name:** Expense Tracker
    - **Homepage URL:** `http://localhost:5173`
-   - **Authorization callback URL:** `http://localhost:8080/login/oauth2/code/github`
+   - **Authorization callback URL:** `http://localhost:5173/login/oauth2/code/github` (for local development with Vite dev server)
 4. Click **Register application**
+
+> **Note:** GitHub only allows **one** callback URL per OAuth app. The `localhost:5173` URL is correct for local development because the Vite dev server proxies OAuth requests to the backend. For Docker mode, change the callback URL to `http://localhost:8080/login/oauth2/code/github`, or register two separate GitHub OAuth apps (one for dev, one for Docker).
 
 ### 2. Generate a Client Secret
 
