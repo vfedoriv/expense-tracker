@@ -134,7 +134,7 @@ describe('useWebSocket', () => {
     );
   });
 
-  it('displays alert toast when message is received', async () => {
+  it('displays alert toast when message is received (after show delay)', async () => {
     renderWithAuth();
 
     await waitFor(() => {
@@ -159,6 +159,14 @@ describe('useWebSocket', () => {
     // Simulate receiving a message
     act(() => {
       subscribeCallback({ body: JSON.stringify(alertMsg) });
+    });
+
+    // Alert is delayed by 500ms to avoid overlap with success toasts
+    expect(screen.queryByText('You have spent 50% of your monthly budget')).not.toBeInTheDocument();
+
+    // Advance past the 500ms show delay
+    act(() => {
+      vi.advanceTimersByTime(500);
     });
 
     expect(screen.getByText('You have spent 50% of your monthly budget')).toBeInTheDocument();
@@ -189,6 +197,11 @@ describe('useWebSocket', () => {
       subscribeCallback({ body: JSON.stringify(alertMsg) });
     });
 
+    // Advance past the 500ms show delay
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(screen.getByText('You have spent 80% of your monthly budget')).toBeInTheDocument();
     expect(screen.getByTestId('budget-alert-warning')).toBeInTheDocument();
   });
@@ -217,11 +230,16 @@ describe('useWebSocket', () => {
       subscribeCallback({ body: JSON.stringify(alertMsg) });
     });
 
+    // Advance past the 500ms show delay
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(screen.getByText('You have spent 100% of your monthly budget')).toBeInTheDocument();
     expect(screen.getByTestId('budget-alert-danger')).toBeInTheDocument();
   });
 
-  it('auto-dismisses alert after 8 seconds', async () => {
+  it('auto-dismisses alert after 15 seconds (plus 500ms show delay)', async () => {
     renderWithAuth();
 
     await waitFor(() => {
@@ -245,11 +263,16 @@ describe('useWebSocket', () => {
       subscribeCallback({ body: JSON.stringify(alertMsg) });
     });
 
+    // Advance past the 500ms show delay
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(screen.getByText('You have spent 50% of your monthly budget')).toBeInTheDocument();
 
-    // Advance time by 8 seconds
+    // Advance time by 15 seconds (auto-dismiss)
     act(() => {
-      vi.advanceTimersByTime(8000);
+      vi.advanceTimersByTime(15000);
     });
 
     expect(screen.queryByText('You have spent 50% of your monthly budget')).not.toBeInTheDocument();
@@ -278,6 +301,11 @@ describe('useWebSocket', () => {
 
     act(() => {
       subscribeCallback({ body: JSON.stringify(alertMsg) });
+    });
+
+    // Advance past the 500ms show delay
+    act(() => {
+      vi.advanceTimersByTime(500);
     });
 
     expect(screen.getByText('You have spent 50% of your monthly budget')).toBeInTheDocument();
@@ -323,6 +351,11 @@ describe('useWebSocket', () => {
           yearMonth: '2026-03',
         }),
       });
+    });
+
+    // Advance past the 500ms show delay for both alerts
+    act(() => {
+      vi.advanceTimersByTime(500);
     });
 
     expect(screen.getByTestId('budget-alert-info')).toBeInTheDocument();

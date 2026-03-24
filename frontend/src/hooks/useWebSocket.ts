@@ -4,7 +4,8 @@ import SockJS from 'sockjs-client';
 import { useAuth } from './useAuth';
 import type { BudgetAlertMessage, BudgetAlertToast } from '../types';
 
-const TOAST_DISMISS_MS = 8000;
+const TOAST_DISMISS_MS = 15000;
+const TOAST_SHOW_DELAY_MS = 500;
 const RECONNECT_DELAY_MS = 5000;
 
 function getSeverity(threshold: number): 'info' | 'warning' | 'danger' {
@@ -47,13 +48,19 @@ export function useWebSocket() {
       message: buildToastMessage(msg.threshold),
     };
 
-    setAlerts((prev) => [...prev, toast]);
+    // Delay showing the alert so it appears after any success toasts,
+    // preventing it from being hidden behind simultaneous notifications
+    const showTimer = setTimeout(() => {
+      setAlerts((prev) => [...prev, toast]);
+      timersRef.current.delete(`show-${id}`);
 
-    const timer = setTimeout(() => {
-      setAlerts((prev) => prev.filter((a) => a.id !== id));
-      timersRef.current.delete(id);
-    }, TOAST_DISMISS_MS);
-    timersRef.current.set(id, timer);
+      const dismissTimer = setTimeout(() => {
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
+        timersRef.current.delete(id);
+      }, TOAST_DISMISS_MS);
+      timersRef.current.set(id, dismissTimer);
+    }, TOAST_SHOW_DELAY_MS);
+    timersRef.current.set(`show-${id}`, showTimer);
   }, []);
 
   useEffect(() => {

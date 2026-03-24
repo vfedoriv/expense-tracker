@@ -4,10 +4,12 @@ import com.expensetracker.dto.response.BudgetAlertMessage;
 import com.expensetracker.entity.BudgetAlertState;
 import com.expensetracker.entity.MonthlyBudget;
 import com.expensetracker.entity.User;
+import com.expensetracker.event.BudgetAlertEvent;
 import com.expensetracker.repository.BudgetAlertStateRepository;
 import com.expensetracker.repository.MonthlyBudgetRepository;
 import com.expensetracker.repository.TransactionRepository;
 import com.expensetracker.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,29 +31,35 @@ public class BudgetAlertService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public BudgetAlertService(BudgetAlertStateRepository budgetAlertStateRepository,
                                MonthlyBudgetRepository monthlyBudgetRepository,
                                TransactionRepository transactionRepository,
                                UserRepository userRepository,
-                               SimpMessagingTemplate messagingTemplate) {
+                               SimpMessagingTemplate messagingTemplate,
+                               ApplicationEventPublisher eventPublisher) {
         this.budgetAlertStateRepository = budgetAlertStateRepository;
         this.monthlyBudgetRepository = monthlyBudgetRepository;
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
      * Evaluates budget alerts for a user for the month of the given transaction date.
      * Called after any transaction create/update/delete.
-     * Sends alerts for newly crossed thresholds and updates fired flags.
+     * Publishes a BudgetAlertEvent so that WebSocket messages are sent only
+     * AFTER the database transaction commits (via @TransactionalEventListener).
      */
     @Transactional
     public void evaluateAlerts(Long userId, LocalDate transactionDate) {
         YearMonth month = YearMonth.from(transactionDate);
         List<BudgetAlertMessage> alerts = calculateAndFireAlerts(userId, month);
-        sendAlerts(userId, alerts);
+        if (!alerts.isEmpty()) {
+            eventPublisher.publishEvent(new BudgetAlertEvent(userId, alerts));
+        }
     }
 
     /**

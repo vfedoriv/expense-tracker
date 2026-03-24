@@ -4,6 +4,7 @@ import com.expensetracker.dto.response.BudgetAlertMessage;
 import com.expensetracker.entity.BudgetAlertState;
 import com.expensetracker.entity.MonthlyBudget;
 import com.expensetracker.entity.User;
+import com.expensetracker.event.BudgetAlertEvent;
 import com.expensetracker.repository.BudgetAlertStateRepository;
 import com.expensetracker.repository.MonthlyBudgetRepository;
 import com.expensetracker.repository.TransactionRepository;
@@ -16,6 +17,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.math.BigDecimal;
@@ -50,11 +52,17 @@ class BudgetAlertServiceTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private BudgetAlertService budgetAlertService;
 
     @Captor
     private ArgumentCaptor<BudgetAlertMessage> alertCaptor;
+
+    @Captor
+    private ArgumentCaptor<BudgetAlertEvent> eventCaptor;
 
     private User testUser;
     private YearMonth testYearMonth;
@@ -203,7 +211,7 @@ class BudgetAlertServiceTest {
     }
 
     @Test
-    void evaluateAlerts_sendsAlertViaMessagingTemplate() {
+    void evaluateAlerts_publishesEventInsteadOfSendingDirectly() {
         MonthlyBudget budget = createBudget(new BigDecimal("1000.00"));
         BudgetAlertState alertState = createAlertState(false, false, false);
 
@@ -216,15 +224,18 @@ class BudgetAlertServiceTest {
 
         budgetAlertService.evaluateAlerts(1L, LocalDate.of(2026, 3, 15));
 
-        verify(messagingTemplate).convertAndSendToUser(
-            eq("1"),
-            eq("/topic/budget-alerts"),
-            alertCaptor.capture()
-        );
+        // evaluateAlerts now publishes an event instead of sending directly via messagingTemplate
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        BudgetAlertEvent event = eventCaptor.getValue();
+        assertThat(event.userId()).isEqualTo(1L);
+        assertThat(event.alerts()).hasSize(1);
 
-        BudgetAlertMessage alert = alertCaptor.getValue();
+        BudgetAlertMessage alert = event.alerts().get(0);
         assertThat(alert.type()).isEqualTo("BUDGET_ALERT");
         assertThat(alert.threshold()).isEqualTo(50);
+
+        // Verify messagingTemplate is NOT called directly from evaluateAlerts
+        verify(messagingTemplate, never()).convertAndSendToUser(any(), any(), any());
     }
 
     @Test
@@ -332,13 +343,13 @@ class BudgetAlertServiceTest {
         // Pass a January transaction date (current month might be March or any other month)
         budgetAlertService.evaluateAlerts(1L, LocalDate.of(2026, 1, 15));
 
-        verify(messagingTemplate).convertAndSendToUser(
-            eq("1"),
-            eq("/topic/budget-alerts"),
-            alertCaptor.capture()
-        );
+        // evaluateAlerts publishes event (sent after commit by listener)
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        BudgetAlertEvent event = eventCaptor.getValue();
+        assertThat(event.userId()).isEqualTo(1L);
+        assertThat(event.alerts()).hasSize(1);
 
-        BudgetAlertMessage alert = alertCaptor.getValue();
+        BudgetAlertMessage alert = event.alerts().get(0);
         assertThat(alert.threshold()).isEqualTo(50);
         assertThat(alert.yearMonth()).isEqualTo("2026-01");
         assertThat(janState.getThreshold50Fired()).isTrue();
@@ -580,7 +591,8 @@ class BudgetAlertServiceTest {
 
         // No new alerts since all thresholds already fired and spending is below 80/100 now
         // but the fired flags stay (once-per-threshold-per-month rule)
-        verify(messagingTemplate, never()).convertAndSendToUser(any(), any(), any());
+        // No event published because no new alerts
+        verify(eventPublisher, never()).publishEvent(any());
         assertThat(alertState.getThreshold50Fired()).isTrue();
         assertThat(alertState.getThreshold80Fired()).isTrue();
         assertThat(alertState.getThreshold100Fired()).isTrue();
@@ -687,6 +699,118 @@ class BudgetAlertServiceTest {
 
         assertThat(alerts).hasSize(3);
         assertThat(alerts).extracting(BudgetAlertMessage::threshold).containsExactly(50, 80, 100);
+    }
+
+    // ==================== CROSS-MONTH SEQUENTIAL TEST ====================
+
+    /**
+     * Comprehensive cross-month sequential test matching the exact user scenario:
+     * - Create budgets for Feb, Mar, Apr (each $1000)
+     * - Add expense to Feb crossing 50% -> verify 50% alert fires for Feb
+     * - Then add expense to Mar crossing 50% -> verify SEPARATE 50% alert fires for Mar
+     * - Then add expense to Apr crossing 80% -> verify 80% alert fires for Apr
+     * - Verify all three are independent alert sends (events published)
+     */
+    @Test
+    void crossMonthSequential_independentAlertsForEachMonth() {
+        // Create budgets for Feb, Mar, Apr
+        MonthlyBudget febBudget = createBudgetForMonth(new BigDecimal("1000.00"), (short) 2026, (short) 2);
+        MonthlyBudget marBudget = createBudgetForMonth(new BigDecimal("1000.00"), (short) 2026, (short) 3);
+        MonthlyBudget aprBudget = createBudgetForMonth(new BigDecimal("1000.00"), (short) 2026, (short) 4);
+
+        // Create independent alert states for each month (all fresh/unfired)
+        BudgetAlertState febState = createAlertStateForMonth(false, false, false, (short) 2026, (short) 2);
+        BudgetAlertState marState = createAlertStateForMonth(false, false, false, (short) 2026, (short) 3);
+        BudgetAlertState aprState = createAlertStateForMonth(false, false, false, (short) 2026, (short) 4);
+
+        // Setup mocks for February
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 2))
+            .thenReturn(Optional.of(febBudget));
+        when(budgetAlertStateRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 2))
+            .thenReturn(Optional.of(febState));
+        when(transactionRepository.sumAmountByUserIdAndDateRange(1L,
+            LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28)))
+            .thenReturn(new BigDecimal("550.00")); // 55% -> crosses 50%
+
+        // Setup mocks for March
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 3))
+            .thenReturn(Optional.of(marBudget));
+        when(budgetAlertStateRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 3))
+            .thenReturn(Optional.of(marState));
+        when(transactionRepository.sumAmountByUserIdAndDateRange(1L,
+            LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31)))
+            .thenReturn(new BigDecimal("600.00")); // 60% -> crosses 50%
+
+        // Setup mocks for April
+        when(monthlyBudgetRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 4))
+            .thenReturn(Optional.of(aprBudget));
+        when(budgetAlertStateRepository.findByUserIdAndYearAndMonth(1L, (short) 2026, (short) 4))
+            .thenReturn(Optional.of(aprState));
+        when(transactionRepository.sumAmountByUserIdAndDateRange(1L,
+            LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 30)))
+            .thenReturn(new BigDecimal("850.00")); // 85% -> crosses 50% and 80%
+
+        // Step 1: Add expense to February crossing 50%
+        budgetAlertService.evaluateAlerts(1L, LocalDate.of(2026, 2, 15));
+
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+        BudgetAlertEvent febEvent = eventCaptor.getValue();
+        assertThat(febEvent.userId()).isEqualTo(1L);
+        assertThat(febEvent.alerts()).hasSize(1);
+        assertThat(febEvent.alerts().get(0).threshold()).isEqualTo(50);
+        assertThat(febEvent.alerts().get(0).yearMonth()).isEqualTo("2026-02");
+        assertThat(febState.getThreshold50Fired()).isTrue();
+        assertThat(febState.getThreshold80Fired()).isFalse();
+
+        // Step 2: Add expense to March crossing 50% -> SEPARATE alert for March
+        budgetAlertService.evaluateAlerts(1L, LocalDate.of(2026, 3, 10));
+
+        verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
+        BudgetAlertEvent marEvent = eventCaptor.getValue();
+        assertThat(marEvent.userId()).isEqualTo(1L);
+        assertThat(marEvent.alerts()).hasSize(1);
+        assertThat(marEvent.alerts().get(0).threshold()).isEqualTo(50);
+        assertThat(marEvent.alerts().get(0).yearMonth()).isEqualTo("2026-03");
+        assertThat(marState.getThreshold50Fired()).isTrue();
+        assertThat(marState.getThreshold80Fired()).isFalse();
+
+        // Verify Feb state wasn't changed by March evaluation
+        assertThat(febState.getThreshold50Fired()).isTrue();
+        assertThat(febState.getThreshold80Fired()).isFalse();
+
+        // Step 3: Add expense to April crossing 80% (also crosses 50%)
+        budgetAlertService.evaluateAlerts(1L, LocalDate.of(2026, 4, 20));
+
+        verify(eventPublisher, times(3)).publishEvent(eventCaptor.capture());
+        BudgetAlertEvent aprEvent = eventCaptor.getValue();
+        assertThat(aprEvent.userId()).isEqualTo(1L);
+        assertThat(aprEvent.alerts()).hasSize(2); // 50% and 80%
+        assertThat(aprEvent.alerts().get(0).threshold()).isEqualTo(50);
+        assertThat(aprEvent.alerts().get(0).yearMonth()).isEqualTo("2026-04");
+        assertThat(aprEvent.alerts().get(1).threshold()).isEqualTo(80);
+        assertThat(aprEvent.alerts().get(1).yearMonth()).isEqualTo("2026-04");
+        assertThat(aprState.getThreshold50Fired()).isTrue();
+        assertThat(aprState.getThreshold80Fired()).isTrue();
+        assertThat(aprState.getThreshold100Fired()).isFalse();
+
+        // Verify all three months have independent states
+        // Feb: only 50% fired
+        assertThat(febState.getThreshold50Fired()).isTrue();
+        assertThat(febState.getThreshold80Fired()).isFalse();
+        assertThat(febState.getThreshold100Fired()).isFalse();
+
+        // Mar: only 50% fired
+        assertThat(marState.getThreshold50Fired()).isTrue();
+        assertThat(marState.getThreshold80Fired()).isFalse();
+        assertThat(marState.getThreshold100Fired()).isFalse();
+
+        // Apr: 50% and 80% fired
+        assertThat(aprState.getThreshold50Fired()).isTrue();
+        assertThat(aprState.getThreshold80Fired()).isTrue();
+        assertThat(aprState.getThreshold100Fired()).isFalse();
+
+        // Verify messagingTemplate was NEVER called directly (only via event listener)
+        verify(messagingTemplate, never()).convertAndSendToUser(any(), any(), any());
     }
 
     // ==================== HELPER METHODS ====================
