@@ -93,7 +93,7 @@ class TransactionFilterIntegrationTest {
     @Test
     void filterByCategory() {
         ResponseEntity<List> response = client.get()
-            .uri("/api/transactions?category=" + foodCategoryId)
+            .uri("/api/transactions?categoryId=" + foodCategoryId)
             .retrieve().toEntity(List.class);
         assertThat(response.getBody()).hasSize(2);
     }
@@ -117,7 +117,7 @@ class TransactionFilterIntegrationTest {
     @Test
     void combinedFilters() {
         ResponseEntity<List> response = client.get()
-            .uri("/api/transactions?category=" + travelCategoryId + "&amountMin=100")
+            .uri("/api/transactions?categoryId=" + travelCategoryId + "&amountMin=100")
             .retrieve().toEntity(List.class);
         assertThat(response.getBody()).hasSize(1);
     }

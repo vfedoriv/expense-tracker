@@ -26,13 +26,13 @@ public class TransactionController {
     public List<TransactionResponse> getAll(
         @AuthenticationPrincipal UserPrincipal principal,
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) Long category,
+        @RequestParam(required = false) Long categoryId,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
         @RequestParam(required = false) BigDecimal amountMin,
         @RequestParam(required = false) BigDecimal amountMax
     ) {
-        TransactionFilter filter = new TransactionFilter(search, category, dateFrom, dateTo, amountMin, amountMax);
+        TransactionFilter filter = new TransactionFilter(search, categoryId, dateFrom, dateTo, amountMin, amountMax);
         return transactionService.findAll(principal.getId(), filter)
             .stream()
             .map(TransactionResponse::from)
