@@ -84,7 +84,56 @@ class BudgetAlertServiceTest {
         budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
         budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
 
-        // 50% threshold should only fire once
         verify(messagingTemplate, times(1)).convertAndSendToUser(eq("1"), anyString(), any(BudgetAlertMessage.class));
+    }
+
+    @Test
+    void sendCurrentStatus_sendsHighestCrossedThresholdOnly() {
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("85.00")));
+
+        budgetAlertService.sendCurrentStatus(1L, 2026, 3);
+
+        // Should send only one alert (the highest crossed: 80%)
+        ArgumentCaptor<BudgetAlertMessage> alertCaptor = ArgumentCaptor.forClass(BudgetAlertMessage.class);
+        verify(messagingTemplate, times(1)).convertAndSendToUser(eq("1"), anyString(), alertCaptor.capture());
+        assertThat(alertCaptor.getValue().threshold()).isEqualTo(80);
+    }
+
+    @Test
+    void sendCurrentStatus_thenTransactionChange_firesNewThreshold() {
+        // Subscribe at 50%
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("50.00")));
+        budgetAlertService.sendCurrentStatus(1L, 2026, 3);
+
+        // Transaction pushes to 80%
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("80.00")));
+        budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
+
+        // Subscribe sent 50% alert, transaction change sends 80% alert = 2 total
+        verify(messagingTemplate, times(2)).convertAndSendToUser(eq("1"), anyString(), any(BudgetAlertMessage.class));
+    }
+
+    @Test
+    void checkAndSendAlerts_afterDeletion_reCrossedThresholdFires() {
+        // At 80%
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("80.00")));
+        budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
+
+        // Delete drops to 40%
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("40.00")));
+        budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
+
+        // Add back to 80%
+        when(budgetService.getSummary(1L, 2026, 3))
+            .thenReturn(BudgetSummaryResponse.withBudget(2026, 3, new BigDecimal("100.00"), new BigDecimal("80.00")));
+        budgetAlertService.checkAndSendAlerts(1L, 2026, 3);
+
+        // First call: 50% + 80% = 2, second call: no alerts (below 50%), third call: 50% + 80% again = 2 => total 4
+        verify(messagingTemplate, times(4)).convertAndSendToUser(eq("1"), anyString(), any(BudgetAlertMessage.class));
     }
 }

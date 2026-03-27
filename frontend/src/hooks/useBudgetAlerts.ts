@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import type { BudgetAlertMessage } from '../types'
-import { getStoredEmail } from '../contexts/AuthContext'
+import { FAKE_AUTH, getStoredEmail } from '../contexts/AuthContext'
 
 export function useBudgetAlerts(
   yearMonth: string,
@@ -13,30 +13,40 @@ export function useBudgetAlerts(
   onAlertRef.current = onAlert
 
   useEffect(() => {
-    const email = getStoredEmail()
-    if (!email) return
+    const connectHeaders: Record<string, string> = {}
+    if (FAKE_AUTH) {
+      connectHeaders['X-User-Email'] = getStoredEmail()
+    }
+
+    console.log('[WS] Connecting to /ws for budget alerts, month:', yearMonth)
 
     const client = new Client({
       webSocketFactory: () => new SockJS('/ws'),
-      connectHeaders: {
-        'X-User-Email': email,
-      },
+      connectHeaders,
       reconnectDelay: 5000,
       onConnect: () => {
+        console.log('[WS] Connected. Subscribing to /user/topic/budget-alerts')
         client.subscribe('/user/topic/budget-alerts', (msg) => {
           try {
             const alert = JSON.parse(msg.body) as BudgetAlertMessage
+            console.log('[WS] Received budget alert:', alert.threshold + '%', alert.message)
             onAlertRef.current(alert)
-          } catch {
-            // ignore malformed messages
+          } catch (e) {
+            console.warn('[WS] Failed to parse budget alert message:', e)
           }
         })
 
-        // Send subscribe message to request current month alert check
+        console.log('[WS] Sending subscribe message for month:', yearMonth)
         client.publish({
           destination: '/app/budget-alerts/subscribe',
           body: JSON.stringify({ month: yearMonth }),
         })
+      },
+      onDisconnect: () => {
+        console.log('[WS] Disconnected')
+      },
+      onStompError: (frame) => {
+        console.error('[WS] STOMP error:', frame.headers['message'], frame.body)
       },
     })
 
@@ -44,6 +54,7 @@ export function useBudgetAlerts(
     clientRef.current = client
 
     return () => {
+      console.log('[WS] Deactivating client')
       client.deactivate()
     }
   }, [yearMonth])

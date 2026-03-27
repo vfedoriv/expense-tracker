@@ -47,12 +47,13 @@ public class TransactionService {
             .notes(request.notes())
             .build();
         Transaction saved = transactionRepository.save(transaction);
-        eventPublisher.publishEvent(new TransactionChangedEvent(userId));
+        eventPublisher.publishEvent(new TransactionChangedEvent(userId, saved.getTransactionDate()));
         return saved;
     }
 
     public Transaction update(Long id, Long userId, TransactionRequest request) {
         Transaction transaction = findByIdAndUser(id, userId);
+        LocalDate oldDate = transaction.getTransactionDate();
         validateCategoryBelongsToUser(request.categoryId(), userId);
         transaction.setTitle(request.title());
         transaction.setAmount(request.amount());
@@ -61,14 +62,14 @@ public class TransactionService {
         transaction.setCategoryId(request.categoryId());
         transaction.setNotes(request.notes());
         Transaction saved = transactionRepository.save(transaction);
-        eventPublisher.publishEvent(new TransactionChangedEvent(userId));
+        eventPublisher.publishEvent(new TransactionChangedEvent(userId, oldDate, saved.getTransactionDate()));
         return saved;
     }
 
     public void delete(Long id, Long userId) {
         Transaction transaction = findByIdAndUser(id, userId);
         transactionRepository.delete(transaction);
-        eventPublisher.publishEvent(new TransactionChangedEvent(userId));
+        eventPublisher.publishEvent(new TransactionChangedEvent(userId, transaction.getTransactionDate()));
     }
 
     @Transactional(readOnly = true)

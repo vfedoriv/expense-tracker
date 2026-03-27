@@ -37,9 +37,10 @@ export default function DashboardPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      const lastDay = new Date(year, month, 0).getDate()
       const [b, txs] = await Promise.all([
         fetchWithEmail<BudgetSummary>(`/budgets/${year}/${month}`),
-        fetchWithEmail<Transaction[]>(`/transactions?dateFrom=${currentYM}-01&dateTo=${currentYM}-31`),
+        fetchWithEmail<Transaction[]>(`/transactions?dateFrom=${currentYM}-01&dateTo=${currentYM}-${pad(lastDay)}`),
       ])
       setBudget(b)
       setRecentTx(txs.slice(0, 5))

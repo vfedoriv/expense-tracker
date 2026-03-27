@@ -105,32 +105,30 @@ class BudgetAlertWebSocketIntegrationTest {
         StompSession session = connectStompSession(stompClient, alerts, "ws@test.com");
 
         try {
-            // Add 50% transaction and re-subscribe to trigger check
-            addTransaction("50.00");
-            Thread.sleep(200);
+            // Subscribe first with no spending - no alert expected
             sendSubscribe(session, year, month);
+            BudgetAlertMessage noInitial = alerts.poll(1, TimeUnit.SECONDS);
+            assertThat(noInitial).isNull();
+
+            // Add 50% transaction - async event fires 50% alert automatically
+            addTransaction("50.00");
             BudgetAlertMessage alert50 = alerts.poll(5, TimeUnit.SECONDS);
             assertThat(alert50).isNotNull();
             assertThat(alert50.threshold()).isEqualTo(50);
 
-            // Add to 80%, re-subscribe
+            // Add to 80% - async event fires 80% alert
             addTransaction("30.00");
-            Thread.sleep(200);
-            sendSubscribe(session, year, month);
             BudgetAlertMessage alert80 = alerts.poll(5, TimeUnit.SECONDS);
             assertThat(alert80).isNotNull();
             assertThat(alert80.threshold()).isEqualTo(80);
 
-            // Add to 100%, re-subscribe
+            // Add to 100% - async event fires 100% alert
             addTransaction("20.00");
-            Thread.sleep(200);
-            sendSubscribe(session, year, month);
             BudgetAlertMessage alert100 = alerts.poll(5, TimeUnit.SECONDS);
             assertThat(alert100).isNotNull();
             assertThat(alert100.threshold()).isEqualTo(100);
 
-            // Verify once-per-threshold: re-subscribing again should not fire again
-            sendSubscribe(session, year, month);
+            // No more alerts expected after all thresholds consumed
             BudgetAlertMessage noAlert = alerts.poll(1, TimeUnit.SECONDS);
             assertThat(noAlert).isNull();
         } finally {

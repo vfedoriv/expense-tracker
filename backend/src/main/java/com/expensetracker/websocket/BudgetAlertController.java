@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -39,14 +39,14 @@ public class BudgetAlertController {
         }
         try {
             YearMonth yearMonth = YearMonth.parse(message.month());
-            budgetAlertService.checkAndSendAlerts(userPrincipal.getId(), yearMonth.getYear(), yearMonth.getMonthValue());
+            budgetAlertService.sendCurrentStatus(userPrincipal.getId(), yearMonth.getYear(), yearMonth.getMonthValue());
         } catch (Exception e) {
             log.warn("Invalid month format in subscribe message: {}", message.month());
         }
     }
 
     private UserPrincipal extractUserPrincipal(Principal principal) {
-        if (principal instanceof UsernamePasswordAuthenticationToken auth
+        if (principal instanceof AbstractAuthenticationToken auth
             && auth.getPrincipal() instanceof UserPrincipal userPrincipal) {
             return userPrincipal;
         }

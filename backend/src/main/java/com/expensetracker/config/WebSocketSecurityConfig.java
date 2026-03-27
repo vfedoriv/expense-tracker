@@ -4,6 +4,7 @@ import com.expensetracker.security.UserPrincipal;
 import com.expensetracker.user.User;
 import com.expensetracker.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer {
 
     private final UserService userService;
@@ -32,12 +34,20 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
                     message, StompHeaderAccessor.class
                 );
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    // If already authenticated via OAuth2 HTTP session, keep the existing principal
+                    if (accessor.getUser() != null) {
+                        log.info("[WS] STOMP CONNECT: using existing session principal (name={})",
+                            accessor.getUser().getName());
+                        return message;
+                    }
+                    // Fake auth mode: use X-User-Email header
                     String email = accessor.getFirstNativeHeader("X-User-Email");
                     if (email == null || email.isBlank()) {
                         email = "admin@test.com";
                     }
                     User user = userService.findOrCreateByFakeEmail(email);
                     UserPrincipal principal = new UserPrincipal(user);
+                    log.info("[WS] STOMP CONNECT: fake auth for email={}, userId={}", email, user.getId());
                     UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(principal, null, List.of());
                     accessor.setUser(auth);
