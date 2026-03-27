@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchWithEmail, mutateWithEmail } from '../contexts/AuthContext'
 import Modal from '../components/Modal'
-import ToastContainer, { type Toast } from '../components/ToastContainer'
-import { useBudgetAlerts } from '../hooks/useBudgetAlerts'
-import type { BudgetAlertMessage, BudgetSummary, Transaction } from '../types'
+import type { BudgetSummary, Transaction } from '../types'
 
 function ProgressBar({ percent }: { percent: number }) {
   const clamped = Math.min(percent, 100)
@@ -33,18 +31,6 @@ export default function DashboardPage() {
   const [showBudgetModal, setShowBudgetModal] = useState(false)
   const [budgetInput, setBudgetInput] = useState('')
   const [budgetError, setBudgetError] = useState<string | null>(null)
-  const [toasts, setToasts] = useState<Toast[]>([])
-  let toastId = 0
-
-  const addToast = useCallback((alert: BudgetAlertMessage) => {
-    const type = alert.threshold >= 100 ? 'error' : 'warning'
-    setToasts(prev => [...prev, { id: ++toastId, message: alert.message, type }])
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== toastId))
-    }, 7000)
-  }, [])
-
-  useBudgetAlerts(currentYM, addToast)
 
   const [year, month] = currentYM.split('-').map(Number)
 
@@ -230,10 +216,6 @@ export default function DashboardPage() {
         </Modal>
       )}
 
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
-      />
     </div>
   )
 }

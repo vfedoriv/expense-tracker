@@ -1,8 +1,17 @@
+import { useCallback, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useAuth } from '../contexts/AuthContext'
+import { useBudgetAlerts } from '../hooks/useBudgetAlerts'
+import ToastContainer, { type Toast } from './ToastContainer'
+import type { BudgetAlertMessage } from '../types'
 
 interface LayoutProps {
   children: React.ReactNode
+}
+
+function currentYearMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
 const navItems = [
@@ -14,6 +23,17 @@ const navItems = [
 export default function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const [toasts, setToasts] = useState<Toast[]>([])
+  let toastId = 0
+
+  const handleAlert = useCallback((alert: BudgetAlertMessage) => {
+    const id = ++toastId
+    const type = alert.threshold >= 100 ? 'error' : 'warning'
+    setToasts(prev => [...prev, { id, message: alert.message, type }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 7000)
+  }, [])
+
+  useBudgetAlerts(currentYearMonth(), handleAlert)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,6 +82,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+      <ToastContainer toasts={toasts} onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))} />
     </div>
   )
 }

@@ -115,6 +115,7 @@ export default function TransactionsPage() {
     const amount = parseFloat(form.amount)
     if (isNaN(amount) || amount <= 0) { setFormError('Amount must be positive'); return }
     if (!form.transactionDate) { setFormError('Date is required'); return }
+    if (!form.categoryId) { setFormError('Category is required'); return }
 
     const body = {
       title: form.title.trim(),
@@ -402,7 +403,7 @@ export default function TransactionsPage() {
                 onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">No category</option>
+                <option value="">Select a category</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
