@@ -1,6 +1,6 @@
 app:
   auth:
-    fake: ${APP_AUTH_FAKE:true}
+    fake: ${app.auth.fake:true}
 
 spring:
   config:
@@ -8,9 +8,9 @@ spring:
   application:
     name: expense-tracker
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:expensetracker}
-    username: ${DB_USERNAME:expensetracker}
-    password: ${DB_PASSWORD:expensetracker}
+    url: jdbc:postgresql://${db.host:localhost}:${db.port:5432}/${db.name:expensetracker}
+    username: ${db.username:expensetracker}
+    password: ${db.password:expensetracker}
     hikari:
       maximum-pool-size: 10
   jpa:
