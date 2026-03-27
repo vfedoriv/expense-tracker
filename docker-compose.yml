@@ -23,12 +23,21 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/expensetracker
       SPRING_DATASOURCE_USERNAME: expensetracker
       SPRING_DATASOURCE_PASSWORD: expensetracker
+      APP_AUTH_FAKE: ${APP_AUTH_FAKE:-false}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_FAKE_AUTH: ${VITE_FAKE_AUTH:-false}
     ports:
       - "3000:80"
     depends_on:

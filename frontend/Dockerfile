@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package*.json .
 RUN npm ci
 COPY . .
+ARG VITE_FAKE_AUTH=false
+ENV VITE_FAKE_AUTH=$VITE_FAKE_AUTH
 RUN npm run build
 
 FROM nginx:alpine
