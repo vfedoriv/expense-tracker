@@ -3,6 +3,8 @@ app:
     fake: ${APP_AUTH_FAKE:true}
 
 spring:
+  config:
+    import: optional:file:backend/.env[.properties],optional:file:.env[.properties]
   application:
     name: expense-tracker
   datasource:

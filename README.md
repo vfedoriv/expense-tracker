@@ -20,7 +20,29 @@ A full-stack personal expense tracking application with real-time budget alerts.
 docker compose up postgres -d
 ```
 
-### 2. Run the backend
+### 2. Configure environment variables (optional)
+
+Both services support `.env` files so you don't need to `export` anything.
+
+**Backend** — copy the example and edit:
+```bash
+cp backend/.env.example backend/.env
+# edit backend/.env as needed
+```
+
+Spring Boot reads `backend/.env` automatically at startup. The file uses standard `KEY=VALUE` format.
+
+**Frontend** — copy the example and edit:
+```bash
+cp frontend/.env.example frontend/.env.local
+# edit frontend/.env.local as needed
+```
+
+Vite reads `.env.local` automatically. Only variables prefixed with `VITE_` are exposed to the browser.
+
+> If no `.env` files are created, both services start in **fake auth mode** with default local database settings — no configuration needed for development.
+
+### 3. Run the backend
 
 ```bash
 cd backend
@@ -29,9 +51,9 @@ mvn spring-boot:run
 
 Backend starts at `http://localhost:8080`.
 
-By default, **fake authentication** is active (`app.auth.fake=true`). The frontend sends an `X-User-Email` header on every request; the backend creates or looks up a user by that email automatically. No OAuth credentials are required in this mode.
+By default, **fake authentication** is active (`APP_AUTH_FAKE=true`). The frontend sends an `X-User-Email` header on every request; the backend creates or looks up a user by that email automatically. No OAuth credentials are required in this mode.
 
-### 3. Run the frontend
+### 4. Run the frontend
 
 ```bash
 cd frontend
@@ -162,13 +184,19 @@ Alert payload:
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com/).
 2. Enable the **Google Identity** API and create an **OAuth 2.0 Client ID** (Web application).
 3. Add authorized redirect URI: `http://localhost:8080/login/oauth2/code/google`
-4. Set environment variables and disable fake auth:
+4. Add to `backend/.env`:
 
-```bash
-export APP_AUTH_FAKE=false
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=<your-client-id>
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=<your-client-secret>
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE=openid,profile,email
+```
+APP_AUTH_FAKE=false
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=<your-client-id>
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=<your-client-secret>
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE=openid,profile,email
+```
+
+5. Add to `frontend/.env.local`:
+
+```
+VITE_FAKE_AUTH=false
 ```
 
 ---
@@ -177,13 +205,13 @@ export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE=openid,profile,em
 
 1. Go to **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**.
 2. Set Homepage URL to `http://localhost:8080` and Authorization callback URL to `http://localhost:8080/login/oauth2/code/github`.
-3. Set environment variables and disable fake auth:
+3. Add to `backend/.env`:
 
-```bash
-export APP_AUTH_FAKE=false
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=<your-client-id>
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_SCOPE=user:email,read:user
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=<your-client-secret>
+```
+APP_AUTH_FAKE=false
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=<your-client-id>
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=<your-client-secret>
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_SCOPE=user:email,read:user
 ```
 
 > **Note:** GitHub may not provide an email address depending on user privacy settings. The app uses `provider + provider_user_id` as the primary identity key, so accounts always work even without an email.
