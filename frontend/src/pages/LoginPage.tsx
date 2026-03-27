@@ -1,7 +1,5 @@
-const FAKE_AUTH_MODE = import.meta.env.VITE_FAKE_AUTH === 'true' || !import.meta.env.VITE_FAKE_AUTH
-
 import { useNavigate } from 'react-router'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth, FAKE_AUTH } from '../contexts/AuthContext'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -31,7 +29,7 @@ export default function LoginPage() {
 
         <div className="space-y-3">
           <button
-            onClick={() => FAKE_AUTH_MODE ? handleFakeLogin('google-user@gmail.com') : handleOAuthLogin('google')}
+            onClick={() => FAKE_AUTH ? handleFakeLogin('google-user@gmail.com') : handleOAuthLogin('google')}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -44,7 +42,7 @@ export default function LoginPage() {
           </button>
 
           <button
-            onClick={() => FAKE_AUTH_MODE ? handleFakeLogin('github-user@github.com') : handleOAuthLogin('github')}
+            onClick={() => FAKE_AUTH ? handleFakeLogin('github-user@github.com') : handleOAuthLogin('github')}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -54,7 +52,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {FAKE_AUTH_MODE && (
+        {FAKE_AUTH && (
           <p className="text-center text-xs text-gray-400 mt-6">
             Demo mode — no real OAuth required
           </p>

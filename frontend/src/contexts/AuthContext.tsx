@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '../types'
 
+export const FAKE_AUTH = import.meta.env.VITE_FAKE_AUTH === 'true' || !import.meta.env.VITE_FAKE_AUTH
+
 interface AuthContextValue {
   user: User | null
   loading: boolean
@@ -15,11 +17,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('fakeUserEmail')
-    if (storedEmail) {
-      fetchUser(storedEmail)
+    if (FAKE_AUTH) {
+      const storedEmail = localStorage.getItem('fakeUserEmail')
+      if (storedEmail) {
+        fetchUser(storedEmail)
+      } else {
+        setLoading(false)
+      }
     } else {
-      setLoading(false)
+      // OAuth2 mode: check for existing session
+      fetch('/api/users/me', { credentials: 'include' })
+        .then(async res => {
+          if (res.ok) setUser(await res.json())
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
     }
   }, [])
 
@@ -41,8 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    localStorage.removeItem('fakeUserEmail')
-    setUser(null)
+    if (FAKE_AUTH) {
+      localStorage.removeItem('fakeUserEmail')
+      setUser(null)
+    } else {
+      fetch('/api/logout', { method: 'POST', credentials: 'include' })
+        .finally(() => {
+          setUser(null)
+          window.location.href = '/login'
+        })
+    }
   }
 
   return (
@@ -63,9 +83,13 @@ export function getStoredEmail(): string {
 }
 
 export async function fetchWithEmail<T>(path: string, email?: string): Promise<T> {
-  const userEmail = email ?? getStoredEmail()
+  const headers: Record<string, string> = {}
+  if (FAKE_AUTH) {
+    headers['X-User-Email'] = email ?? getStoredEmail()
+  }
+
   const res = await fetch(`/api${path}`, {
-    headers: { 'X-User-Email': userEmail },
+    headers,
     credentials: 'include',
   })
 
@@ -83,8 +107,10 @@ export async function mutateWithEmail<T>(
   path: string,
   body?: unknown
 ): Promise<T> {
-  const userEmail = getStoredEmail()
-  const headers: Record<string, string> = { 'X-User-Email': userEmail }
+  const headers: Record<string, string> = {}
+  if (FAKE_AUTH) {
+    headers['X-User-Email'] = getStoredEmail()
+  }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
   const res = await fetch(`/api${path}`, {
