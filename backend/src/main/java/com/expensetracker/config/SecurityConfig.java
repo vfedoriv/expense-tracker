@@ -1,6 +1,7 @@
 package com.expensetracker.config;
 
 import com.expensetracker.security.CustomOAuth2UserService;
+import com.expensetracker.security.CustomOidcUserService;
 import com.expensetracker.security.FakeAuthFilter;
 import com.expensetracker.security.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class SecurityConfig {
     private CustomOAuth2UserService customOAuth2UserService;
 
     @Autowired(required = false)
+    private CustomOidcUserService customOidcUserService;
+
+    @Autowired(required = false)
     private OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
 
     @Bean
@@ -46,7 +50,10 @@ public class SecurityConfig {
             http
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .oauth2Login(oauth2 -> oauth2
-                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService)
+                        .oidcUserService(customOidcUserService)
+                    )
                     .successHandler(oauth2SuccessHandler)
                 )
                 .logout(logout -> logout
