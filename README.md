@@ -22,25 +22,14 @@ docker compose up postgres -d
 
 ### 2. Configure environment variables (optional)
 
-Both services support `.env` files so you don't need to `export` anything.
+A single `.env` file at the project root is read by both the backend and the frontend:
 
-**Backend** — copy the example and edit:
 ```bash
-cp backend/.env.example backend/.env
-# edit backend/.env as needed
+cp .env.example .env
+# edit .env as needed
 ```
 
-Spring Boot reads `backend/.env` automatically at startup. The file uses standard `KEY=VALUE` format.
-
-**Frontend** — copy the example and edit:
-```bash
-cp frontend/.env.example frontend/.env.local
-# edit frontend/.env.local as needed
-```
-
-Vite reads `.env.local` automatically. Only variables prefixed with `VITE_` are exposed to the browser.
-
-> If no `.env` files are created, both services start in **fake auth mode** with default local database settings — no configuration needed for development.
+Both services pick it up automatically at startup — no `export` commands needed. If the file is absent, both services start in **fake auth mode** with default local database settings — no configuration needed for development.
 
 ### 3. Run the backend
 
@@ -184,19 +173,14 @@ Alert payload:
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com/).
 2. Enable the **Google Identity** API and create an **OAuth 2.0 Client ID** (Web application).
 3. Add authorized redirect URI: `http://localhost:8080/login/oauth2/code/google`
-4. Add to `backend/.env`:
+4. Add to `.env` in the project root:
 
 ```
 APP_AUTH_FAKE=false
+VITE_FAKE_AUTH=false
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=<your-client-id>
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=<your-client-secret>
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE=openid,profile,email
-```
-
-5. Add to `frontend/.env.local`:
-
-```
-VITE_FAKE_AUTH=false
 ```
 
 ---
@@ -205,10 +189,11 @@ VITE_FAKE_AUTH=false
 
 1. Go to **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**.
 2. Set Homepage URL to `http://localhost:8080` and Authorization callback URL to `http://localhost:8080/login/oauth2/code/github`.
-3. Add to `backend/.env`:
+3. Add to `.env` in the project root:
 
 ```
 APP_AUTH_FAKE=false
+VITE_FAKE_AUTH=false
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID=<your-client-id>
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET=<your-client-secret>
 SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_SCOPE=user:email,read:user
