@@ -32,23 +32,4 @@ logging:
   level:
     com.expensetracker: INFO
 
----
-# OAuth2 configuration — only loaded when APP_AUTH_FAKE=false
-spring:
-  config:
-    activate:
-      on-property: "APP_AUTH_FAKE=false"
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope: openid,profile,email
-            redirect-uri: "${APP_BASE_URL:http://localhost:3000}/login/oauth2/code/google"
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            scope: read:user,user:email
-            redirect-uri: "${APP_BASE_URL:http://localhost:3000}/login/oauth2/code/github"
+

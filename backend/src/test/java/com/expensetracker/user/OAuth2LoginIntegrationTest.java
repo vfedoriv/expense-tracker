@@ -41,13 +41,10 @@ class OAuth2LoginIntegrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("app.auth.fake", () -> "false");
-        // Provide fake OAuth2 credentials so Spring doesn't reject empty client-id
-        registry.add("spring.security.oauth2.client.registration.google.client-id", () -> "test-google-client-id");
-        registry.add("spring.security.oauth2.client.registration.google.client-secret", () -> "test-google-client-secret");
-        registry.add("spring.security.oauth2.client.registration.google.scope", () -> "openid,profile,email");
-        registry.add("spring.security.oauth2.client.registration.github.client-id", () -> "test-github-client-id");
-        registry.add("spring.security.oauth2.client.registration.github.client-secret", () -> "test-github-client-secret");
-        registry.add("spring.security.oauth2.client.registration.github.scope", () -> "user:email,read:user");
+        registry.add("GOOGLE_CLIENT_ID", () -> "test-google-client-id");
+        registry.add("GOOGLE_CLIENT_SECRET", () -> "test-google-client-secret");
+        registry.add("GITHUB_CLIENT_ID", () -> "test-github-client-id");
+        registry.add("GITHUB_CLIENT_SECRET", () -> "test-github-client-secret");
     }
 
     @Autowired
