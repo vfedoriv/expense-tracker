@@ -1,0 +1,30 @@
+app:
+  auth:
+    fake: ${APP_AUTH_FAKE:true}
+
+spring:
+  application:
+    name: expense-tracker
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:expensetracker}
+    username: ${DB_USERNAME:expensetracker}
+    password: ${DB_PASSWORD:expensetracker}
+    hikari:
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+  flyway:
+    enabled: true
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.expensetracker: INFO
