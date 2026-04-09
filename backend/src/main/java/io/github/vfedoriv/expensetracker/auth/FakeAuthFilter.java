@@ -23,7 +23,7 @@ import java.util.List;
 public class FakeAuthFilter extends OncePerRequestFilter {
 
     private static final String FAKE_PROVIDER = "fake";
-    private static final String FAKE_PROVIDER_USER_ID = "fake-user-1";
+    private static final String FAKE_PROVIDER_USER_ID = "fake-user-001";
     private static final String FAKE_EMAIL = "admin@test.com";
     private static final String FAKE_DISPLAY_NAME = "Admin User";
 
