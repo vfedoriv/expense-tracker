@@ -65,6 +65,10 @@ export function useWebSocket() {
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
+      // Clear any per-user alert state to avoid showing the previous user's alerts
+      setAlerts([]);
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timersRef.current.clear();
       return;
     }
 
@@ -98,9 +102,10 @@ export function useWebSocket() {
         client.deactivate();
       }
       clientRef.current = null;
-      // Clean up all timers
+      // Clean up all timers and clear alert state
       currentTimers.forEach((timer) => clearTimeout(timer));
       currentTimers.clear();
+      setAlerts([]);
     };
   }, [isAuthenticated, user?.id, addAlert]);
 

@@ -399,6 +399,8 @@ To enable Google SSO authentication, follow these steps:
 
    > **Note:** This URI is used in both local development (Vite dev server) and Docker mode (nginx proxies OAuth requests to the backend while preserving the frontend Host header). The backend sees `Host: localhost:5173` in both cases, so Spring's `{baseUrl}` resolves to `http://localhost:5173`.
    >
+   > **Important for Docker deployments:** While nginx preserves the Host header, the backend's hardcoded OAuth2 success redirect URL and CORS allowed origins in `SecurityConfig.java` (lines 128 and 135) are set to `http://localhost:5173`. If you deploy using a different hostname (e.g., a domain name or different port), you must update these hardcoded values in `SecurityConfig.java` to match your deployed hostname, otherwise OAuth2 authentication and CORS requests will be rejected. This setup is localhost-only by default.
+   >
    > **Advanced:** The `http://localhost:8080/login/oauth2/code/google` redirect URI is only needed if you access the backend directly without a frontend proxy (e.g., for API-only testing).
 
 7. Click **Create**

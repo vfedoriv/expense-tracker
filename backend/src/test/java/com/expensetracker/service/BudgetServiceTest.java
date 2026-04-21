@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -208,8 +209,9 @@ class BudgetServiceTest {
         budgetService.createOrUpdateBudget(1L, request);
 
         // Verify alert state is reset first, then alerts are evaluated
-        verify(budgetAlertService).resetAlertState(1L, (short) 2026, (short) 3);
-        verify(budgetAlertService).evaluateAlerts(eq(1L), eq(java.time.LocalDate.of(2026, 3, 1)));
+        var inOrder = inOrder(budgetAlertService);
+        inOrder.verify(budgetAlertService).resetAlertState(1L, (short) 2026, (short) 3);
+        inOrder.verify(budgetAlertService).evaluateAlerts(eq(1L), eq(java.time.LocalDate.of(2026, 3, 1)));
     }
 
     private MonthlyBudget createBudgetEntity(Long id, Short year, Short month, BigDecimal amount) {
