@@ -51,7 +51,7 @@ public class TransactionService {
 
         transaction = transactionRepository.save(transaction);
 
-        budgetAlertService.evaluateAlerts(userId);
+        budgetAlertService.evaluateAlerts(userId, transaction.getTransactionDate());
 
         return toResponse(transaction);
     }
@@ -83,7 +83,7 @@ public class TransactionService {
 
         transaction = transactionRepository.save(transaction);
 
-        budgetAlertService.evaluateAlerts(userId);
+        budgetAlertService.evaluateAlerts(userId, transaction.getTransactionDate());
 
         return toResponse(transaction);
     }
@@ -93,9 +93,12 @@ public class TransactionService {
         Transaction transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
             .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
+        // Capture transaction date before deletion for alert evaluation
+        LocalDate transactionDate = transaction.getTransactionDate();
+
         transactionRepository.delete(transaction);
 
-        budgetAlertService.evaluateAlerts(userId);
+        budgetAlertService.evaluateAlerts(userId, transactionDate);
     }
 
     private TransactionResponse toResponse(Transaction transaction) {

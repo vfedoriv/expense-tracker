@@ -9,6 +9,7 @@ import com.expensetracker.repository.MonthlyBudgetRepository;
 import com.expensetracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -16,11 +17,14 @@ public class BudgetService {
 
     private final MonthlyBudgetRepository monthlyBudgetRepository;
     private final UserRepository userRepository;
+    private final BudgetAlertService budgetAlertService;
 
     public BudgetService(MonthlyBudgetRepository monthlyBudgetRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         BudgetAlertService budgetAlertService) {
         this.monthlyBudgetRepository = monthlyBudgetRepository;
         this.userRepository = userRepository;
+        this.budgetAlertService = budgetAlertService;
     }
 
     /**
@@ -43,6 +47,13 @@ public class BudgetService {
             MonthlyBudget budget = existing.get();
             budget.setAmount(request.amount());
             budget = monthlyBudgetRepository.save(budget);
+
+            // Reset alert state when budget amount changes so thresholds are re-evaluated from scratch
+            budgetAlertService.resetAlertState(userId, year, month);
+            // Evaluate alerts for this month using the budget's year/month
+            LocalDate budgetDate = LocalDate.of(year, month, 1);
+            budgetAlertService.evaluateAlerts(userId, budgetDate);
+
             return new UpsertResult(toResponse(budget), false);
         } else {
             MonthlyBudget budget = new MonthlyBudget();
@@ -51,6 +62,11 @@ public class BudgetService {
             budget.setMonth(month);
             budget.setAmount(request.amount());
             budget = monthlyBudgetRepository.save(budget);
+
+            // Evaluate alerts for the newly created budget's month
+            LocalDate budgetDate = LocalDate.of(year, month, 1);
+            budgetAlertService.evaluateAlerts(userId, budgetDate);
+
             return new UpsertResult(toResponse(budget), true);
         }
     }
