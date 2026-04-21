@@ -119,4 +119,15 @@ describe('BudgetAlertNotification', () => {
 
     expect(screen.getByText('$123.50 of $1000.00 spent')).toBeInTheDocument();
   });
+
+  it('has z-index higher than success toasts and offset from top to avoid overlap', () => {
+    const alert = createAlert();
+    render(<BudgetAlertNotification alerts={[alert]} onDismiss={vi.fn()} />);
+
+    const container = screen.getByLabelText('Budget alert notifications');
+    // z-[100] is higher than the z-[60] used by TransactionsPage success toasts
+    expect(container.className).toContain('z-[100]');
+    // top-16 offsets below the area where success toasts appear (top-4)
+    expect(container.className).toContain('top-16');
+  });
 });

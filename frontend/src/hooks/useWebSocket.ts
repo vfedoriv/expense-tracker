@@ -4,7 +4,8 @@ import SockJS from 'sockjs-client';
 import { useAuth } from './useAuth';
 import type { BudgetAlertMessage, BudgetAlertToast } from '../types';
 
-const TOAST_DISMISS_MS = 8000;
+const TOAST_DISMISS_MS = 15000;
+const TOAST_SHOW_DELAY_MS = 500;
 const RECONNECT_DELAY_MS = 5000;
 
 function getSeverity(threshold: number): 'info' | 'warning' | 'danger' {
@@ -21,7 +22,7 @@ function buildToastMessage(threshold: number): string {
 }
 
 export function useWebSocket() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [alerts, setAlerts] = useState<BudgetAlertToast[]>([]);
   const clientRef = useRef<Client | null>(null);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -47,24 +48,34 @@ export function useWebSocket() {
       message: buildToastMessage(msg.threshold),
     };
 
-    setAlerts((prev) => [...prev, toast]);
+    // Delay showing the alert so it appears after any success toasts,
+    // preventing it from being hidden behind simultaneous notifications
+    const showTimer = setTimeout(() => {
+      setAlerts((prev) => [...prev, toast]);
+      timersRef.current.delete(`show-${id}`);
 
-    const timer = setTimeout(() => {
-      setAlerts((prev) => prev.filter((a) => a.id !== id));
-      timersRef.current.delete(id);
-    }, TOAST_DISMISS_MS);
-    timersRef.current.set(id, timer);
+      const dismissTimer = setTimeout(() => {
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
+        timersRef.current.delete(id);
+      }, TOAST_DISMISS_MS);
+      timersRef.current.set(id, dismissTimer);
+    }, TOAST_SHOW_DELAY_MS);
+    timersRef.current.set(`show-${id}`, showTimer);
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
+      // Clear any per-user alert state to avoid showing the previous user's alerts
+      setAlerts([]);
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+      timersRef.current.clear();
       return;
     }
 
-    // In SSO mode, the session cookie is sent automatically.
-    // The /ws endpoint uses the authenticated session for user identification.
+    // The backend WebSocketAuthInterceptor requires userId as a query parameter
+    // on the handshake URL to authenticate the WebSocket connection.
     const client = new Client({
-      webSocketFactory: () => new SockJS('/ws'),
+      webSocketFactory: () => new SockJS(`/ws?userId=${user.id}`),
       reconnectDelay: RECONNECT_DELAY_MS,
       onConnect: () => {
         client.subscribe('/user/topic/budget-alerts', (message) => {
@@ -91,11 +102,12 @@ export function useWebSocket() {
         client.deactivate();
       }
       clientRef.current = null;
-      // Clean up all timers
+      // Clean up all timers and clear alert state
       currentTimers.forEach((timer) => clearTimeout(timer));
       currentTimers.clear();
+      setAlerts([]);
     };
-  }, [isAuthenticated, addAlert]);
+  }, [isAuthenticated, user?.id, addAlert]);
 
   return { alerts, dismissAlert };
 }

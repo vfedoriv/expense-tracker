@@ -60,7 +60,7 @@ export function BudgetAlertNotification({ alerts, onDismiss }: BudgetAlertNotifi
 
   return (
     <div
-      className="pointer-events-none fixed right-0 top-0 z-50 flex flex-col items-end gap-3 p-4 sm:p-6"
+      className="pointer-events-none fixed right-0 top-16 z-[100] flex flex-col items-end gap-3 p-4 sm:p-6"
       aria-live="polite"
       aria-label="Budget alert notifications"
     >

@@ -282,6 +282,62 @@ class TransactionServiceTest {
         assertThat(result).hasSize(1);
     }
 
+    @Test
+    void createTransaction_pastMonth_evaluatesAlertsForThatMonth() {
+        // Transaction date is in January (a past month)
+        LocalDate pastDate = LocalDate.of(2026, 1, 15);
+        TransactionRequest request = new TransactionRequest(
+            "Past purchase", new BigDecimal("500.00"), pastDate, 10L, null
+        );
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(categoryRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(testCategory));
+
+        Transaction savedTransaction = createTransactionEntity(1L, "Past purchase", new BigDecimal("500.00"),
+            pastDate, null);
+        when(transactionRepository.save(any(Transaction.class))).thenReturn(savedTransaction);
+
+        transactionService.createTransaction(1L, request);
+
+        // Verify evaluateAlerts is called with the transaction's date (January), not current month
+        verify(budgetAlertService).evaluateAlerts(1L, pastDate);
+    }
+
+    @Test
+    void updateTransaction_evaluatesAlertsForTransactionDate() {
+        LocalDate transactionDate = LocalDate.of(2026, 2, 10);
+        TransactionRequest request = new TransactionRequest(
+            "Updated", new BigDecimal("100.00"), transactionDate, 10L, null
+        );
+
+        Transaction existingTransaction = createTransactionEntity(1L, "Old title", new BigDecimal("50.00"),
+            transactionDate, null);
+        when(transactionRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(existingTransaction));
+        when(categoryRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(testCategory));
+
+        Transaction savedTransaction = createTransactionEntity(1L, "Updated", new BigDecimal("100.00"),
+            transactionDate, null);
+        when(transactionRepository.save(any(Transaction.class))).thenReturn(savedTransaction);
+
+        transactionService.updateTransaction(1L, 1L, request);
+
+        verify(budgetAlertService).evaluateAlerts(1L, transactionDate);
+    }
+
+    @Test
+    void deleteTransaction_evaluatesAlertsForDeletedTransactionDate() {
+        LocalDate transactionDate = LocalDate.of(2026, 1, 20);
+        Transaction existingTransaction = createTransactionEntity(1L, "Test", new BigDecimal("50.00"),
+            transactionDate, null);
+        when(transactionRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(existingTransaction));
+
+        transactionService.deleteTransaction(1L, 1L);
+
+        verify(transactionRepository).delete(existingTransaction);
+        // Verify evaluateAlerts is called with the DELETED transaction's date
+        verify(budgetAlertService).evaluateAlerts(1L, transactionDate);
+    }
+
     private Transaction createTransactionEntity(Long id, String title, BigDecimal amount,
                                                  LocalDate transactionDate, String notes) {
         Transaction transaction = new Transaction();

@@ -392,10 +392,17 @@ To enable Google SSO authentication, follow these steps:
 3. Select **Web application** as the application type
 4. Set the name (e.g., "Expense Tracker Web Client")
 5. Add **Authorized JavaScript origins:**
-   - `http://localhost:5173` (frontend dev server)
-   - `http://localhost:8080` (backend, for Docker mode)
+   - `http://localhost:5173`
+   - `http://localhost:8080` (optional, only if accessing the backend directly)
 6. Add **Authorized redirect URIs:**
-   - `http://localhost:8080/login/oauth2/code/google`
+   - `http://localhost:5173/login/oauth2/code/google`
+
+   > **Note:** This URI is used in both local development (Vite dev server) and Docker mode (nginx proxies OAuth requests to the backend while preserving the frontend Host header). The backend sees `Host: localhost:5173` in both cases, so Spring's `{baseUrl}` resolves to `http://localhost:5173`.
+   >
+   > **Important for Docker deployments:** While nginx preserves the Host header, the backend's hardcoded OAuth2 success redirect URL and CORS allowed origins in `SecurityConfig.java` (lines 128 and 135) are set to `http://localhost:5173`. If you deploy using a different hostname (e.g., a domain name or different port), you must update these hardcoded values in `SecurityConfig.java` to match your deployed hostname, otherwise OAuth2 authentication and CORS requests will be rejected. This setup is localhost-only by default.
+   >
+   > **Advanced:** The `http://localhost:8080/login/oauth2/code/google` redirect URI is only needed if you access the backend directly without a frontend proxy (e.g., for API-only testing).
+
 7. Click **Create**
 8. Copy the **Client ID** and **Client Secret**
 
@@ -430,8 +437,12 @@ To enable GitHub SSO authentication, follow these steps:
 3. Fill in the registration form:
    - **Application name:** Expense Tracker
    - **Homepage URL:** `http://localhost:5173`
-   - **Authorization callback URL:** `http://localhost:8080/login/oauth2/code/github`
+   - **Authorization callback URL:** `http://localhost:5173/login/oauth2/code/github`
 4. Click **Register application**
+
+> **Note:** This callback URL is used in both local development (Vite dev server) and Docker mode (nginx proxies OAuth requests to the backend while preserving the frontend Host header). The backend sees `Host: localhost:5173` in both cases, so no separate configuration is needed for Docker mode.
+>
+> **Advanced:** If you access the backend directly without a frontend proxy (e.g., for API-only testing), you would need to change the callback URL to `http://localhost:8080/login/oauth2/code/github` or register a separate GitHub OAuth app.
 
 ### 2. Generate a Client Secret
 
